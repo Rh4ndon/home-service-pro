@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HomeService Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #edf2f5;
+        --page: #f0f3f5;
+        --panel: #f4f7f8;
+        --card: #f8fafb;
+        --soft: #dfe8ee;
+        --line: rgba(25, 37, 47, 0.12);
+        --text: #1d2734;
+        --muted: #5e6977;
+        --primary: #1b8de8;
+        --primary-dark: #0f79d4;
+        --blue-deep: #0d71c7;
+        --cta: #0c7bd4;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Inter", sans-serif;
+      }
+      a { color: inherit; text-decoration: none; }
+      img { max-width: 100%; display: block; }
+      button { font: inherit; }
+
+      .page {
+        width: min(1180px, calc(100% - 32px));
+        margin: 20px auto 0;
+      }
+
+      .site-shell {
+        background: rgba(255,255,255,0.12);
+        border-radius: 0;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 0 10px;
+      }
+
+      .brand {
+        font-size: clamp(2.2rem, 2.3vw, 3.5rem);
+        line-height: 1;
+        letter-spacing: -0.08em;
+        font-weight: 800;
+        color: #232d39;
+      }
+
+      .brand .pro {
+        color: var(--primary);
+      }
+
+      .nav-wrap {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        color: rgba(27, 35, 45, 0.72);
+        font-size: 0.92rem;
+        font-weight: 500;
+      }
+
+      .nav a {
+        position: relative;
+        display: inline-block;
+        padding: 10px 0 14px;
+        transition: color 0.2s ease;
+      }
+
+      .nav a.active {
+        color: #1d2d3b;
+      }
+
+      .nav a.active::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 3px;
+        border-radius: 999px;
+        background: var(--primary);
+      }
+
+      .auth {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .nav-link,
+      .btn-small {
+        border: 0;
+        background: transparent;
+        color: #1d2d3b;
+        cursor: pointer;
+        font-weight: 500;
+      }
+
+      .btn-small {
+        background: var(--primary);
+        color: white;
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-weight: 600;
+        box-shadow: 0 10px 18px rgba(28, 140, 240, 0.2);
+      }
+
+      .hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 48px;
+        padding: 30px 0 0;
+      }
+
+      .hero-copy {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+
+      .hero-copy h1 {
+        margin: 0;
+        font-size: clamp(3.2rem, 4vw, 6rem);
+        line-height: 0.95;
+        letter-spacing: -0.08em;
+        font-weight: 800;
+        color: #1d2936;
+      }
+
+      .hero-copy .block {
+        display: block;
+      }
+
+      .hero-copy p {
+        margin: 26px 0 0;
+        color: rgba(28, 41, 54, 0.7);
+        font-size: 1.12rem;
+        line-height: 1.6;
+        letter-spacing: -0.02em;
+      }
+
+      .hero-actions {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-top: 28px;
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        border-radius: 12px;
+        padding: 18px 28px;
+        font-weight: 700;
+        font-size: 1.06rem;
+        border: 1px solid rgba(22, 33, 42, 0.12);
+        cursor: pointer;
+      }
+
+      .primary-btn {
+        background: linear-gradient(180deg, #1d8fe7 0%, #0d79d4 100%);
+        color: white;
+        box-shadow: 0 12px 26px rgba(29, 140, 240, 0.24);
+      }
+
+      .secondary-btn {
+        background: rgba(255,255,255,0.25);
+        color: #1d2735;
+      }
+
+      .hero-visual {
+        flex: 0 0 560px;
+        height: 280px;
+        border-radius: 18px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 14px 28px rgba(21, 29, 36, 0.08);
+        background: #dee7ef;
+      }
+
+      .hero-visual::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(90deg, rgba(14, 17, 20, 0.18), rgba(14, 17, 20, 0.02) 35%, rgba(41, 49, 57, 0.1)),
+          url('https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=80');
+        background-size: cover;
+        background-position: center;
+        filter: grayscale(1) contrast(1.08) brightness(0.94);
+      }
+
+      .section {
+        margin-top: 36px;
+      }
+
+      .why-box {
+        background: rgba(240,245,247,0.9);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 30px 26px 26px;
+      }
+
+      .section-header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .section-header h2 {
+        margin: 0;
+        font-size: clamp(2.4rem, 2.8vw, 4rem);
+        line-height: 1;
+        letter-spacing: -0.08em;
+        font-weight: 800;
+        color: #1d2936;
+      }
+
+      .section-header p {
+        margin: 12px 0 0;
+        color: rgba(33, 46, 57, 0.7);
+        font-size: 1.08rem;
+        letter-spacing: -0.02em;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .feature-card {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(29, 39, 54, 0.1);
+        border-radius: 12px;
+        padding: 20px 18px 18px;
+        min-height: 146px;
+      }
+
+      .icon-box {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: rgba(28, 141, 232, 0.12);
+        color: var(--primary);
+      }
+
+      .icon-box svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .feature-card h3 {
+        margin: 18px 0 8px;
+        font-size: 1.05rem;
+        letter-spacing: -0.05em;
+        color: #1d2936;
+      }
+
+      .feature-card p {
+        margin: 0;
+        color: rgba(33, 46, 57, 0.68);
+        font-size: 0.92rem;
+        line-height: 1.55;
+      }
+
+      .services-box {
+        background: rgba(255,255,255,0.05);
+        border: 0;
+      }
+
+      .services-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 10px;
+      }
+
+      .service-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(29, 39, 54, 0.09);
+        border-radius: 12px;
+        padding: 18px 18px 16px;
+        min-height: 180px;
+      }
+
+      .service-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .service-icon {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: rgba(28, 141, 232, 0.12);
+        color: var(--primary);
+      }
+
+      .service-icon svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .service-card h3 {
+        margin: 0;
+        font-size: 1.08rem;
+        letter-spacing: -0.04em;
+      }
+
+      .service-card ul {
+        margin: 12px 0 0 18px;
+        padding: 0;
+        color: rgba(33, 46, 57, 0.74);
+        font-size: 0.96rem;
+        line-height: 1.8;
+      }
+
+      .steps-box {
+        background: transparent;
+        border: 0;
+      }
+
+      .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 22px;
+        margin-top: 10px;
+      }
+
+      .step {
+        text-align: center;
+        padding: 10px 14px;
+      }
+
+      .step-number {
+        display: inline-block;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        font-size: 2rem;
+        line-height: 56px;
+        font-weight: 800;
+        color: var(--primary);
+        background: rgba(28, 141, 232, 0.09);
+        margin-bottom: 12px;
+      }
+
+      .step h3 {
+        margin: 0;
+        font-size: 1.08rem;
+        letter-spacing: -0.04em;
+      }
+
+      .step p {
+        margin: 10px 0 0;
+        color: rgba(33, 46, 57, 0.68);
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+
+      .cta-band {
+        margin-top: 46px;
+        width: 100%;
+        padding: 46px 0 52px;
+        background: linear-gradient(180deg, #1a8ce8 0%, #0e7bd6 100%);
+        color: white;
+        text-align: center;
+      }
+
+      .cta-band h2 {
+        margin: 0;
+        font-size: clamp(2.4rem, 2.9vw, 4rem);
+        letter-spacing: -0.08em;
+        font-weight: 800;
+      }
+
+      .cta-band p {
+        margin: 14px 0 0;
+        color: rgba(255,255,255,0.9);
+        font-size: 1.05rem;
+        font-weight: 500;
+      }
+
+      .cta-band .cta-btn {
+        margin-top: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: rgba(255,255,255,0.96);
+        color: var(--primary-dark);
+        min-width: 260px;
+        padding: 18px 26px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1.15rem;
+        border: 0;
+        box-shadow: 0 10px 20px rgba(12, 77, 146, 0.18);
+      }
+
+      .cta-band .cta-btn::after {
+        content: "↗";
+        font-size: 1.15em;
+        line-height: 1;
+        transform: translateY(-1px);
+      }
+
+      footer {
+        background: #041922;
+        color: rgba(255,255,255,0.9);
+        padding: 0 0 12px;
+        margin-top: 0;
+      }
+
+      .footer-inner {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1.4fr 1fr 1fr 1fr;
+        gap: 52px;
+        padding: 52px 0 30px;
+      }
+
+      .footer-brand {
+        color: white;
+      }
+
+      .footer-brand .brand-line {
+        font-size: clamp(1.8rem, 2vw, 2.6rem);
+        line-height: 1.2;
+        letter-spacing: -0.07em;
+        font-weight: 800;
+      }
+
+      .footer-brand .brand-line span {
+        color: var(--primary);
+      }
+
+      .footer-brand p {
+        margin: 18px 0 0;
+        color: rgba(255,255,255,0.78);
+        font-size: 1rem;
+        line-height: 1.6;
+        max-width: 250px;
+      }
+
+      .footer-links {
+        display: block;
+      }
+
+      .footer-links h4 {
+        margin: 0 0 16px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: white;
+      }
+
+      .footer-links a {
+        display: block;
+        margin: 10px 0;
+        color: rgba(255,255,255,0.75);
+        font-size: 0.98rem;
+      }
+
+      .footer-bottom {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        border-top: 1px solid rgba(255,255,255,0.12);
+        padding: 18px 0 4px;
+        text-align: center;
+        color: rgba(255,255,255,0.7);
+        font-size: 0.94rem;
+      }
+
+      @media (max-width: 980px) {
+        .hero {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .hero-visual {
+          width: 100%;
+          flex-basis: auto;
+        }
+        .features-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .services-grid,
+        .steps-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          width: min(100% - 20px, 1180px);
+        }
+        .topbar {
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+        .nav-wrap {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .nav {
+          gap: 14px;
+          flex-wrap: wrap;
+        }
+        .hero-copy h1 {
+          font-size: 2.9rem;
+        }
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+        .footer-inner {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page site-shell">
+      <header class="topbar">
+        <div class="brand">HomeService<span class="pro">Pro</span></div>
+
+        <div class="nav-wrap">
+          <nav class="nav" aria-label="Main navigation">
+            <a class="active" href="#">Home</a>
+            <a href="#">About</a>
+            <a href="#">Services</a>
+            <a href="#">Features</a>
+            <a href="#">Contact</a>
+          </nav>
+
+          <div class="auth">
+            <button class="nav-link" type="button">Log In</button>
+            <button class="btn-small" type="button">Sign Up</button>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-copy">
+            <h1>
+              <span class="block">Appliance Repair,</span>
+              <span class="block">On Demand</span>
+            </h1>
+            <p>Professional repair services for all your home appliances. Fast, reliable, and affordable.</p>
+
+            <div class="hero-actions">
+              <button class="primary-btn" type="button">Book a Service</button>
+              <button class="secondary-btn" type="button">Learn More</button>
+            </div>
+          </div>
+
+          <div class="hero-visual" aria-label="Technician repairing a refrigerator"></div>
+        </section>
+
+        <section class="section why-box" aria-labelledby="why-title">
+          <div class="section-header">
+            <h2 id="why-title">Why Choose HomeService Pro</h2>
+            <p>Professional service, guaranteed results</p>
+          </div>
+
+          <div class="features-grid">
+            <article class="feature-card">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18" /></svg>
+              </div>
+              <h3>Fast Service</h3>
+              <p>Same-day repairs available</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1v22M17 5l-5 5-5-5M7 19l5-5 5 5"/></svg>
+              </div>
+              <h3>Affordable Pricing</h3>
+              <p>Transparent pricing, no hidden fees</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 12.5l3 3 7-7"/><path d="M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0z"/></svg>
+              </div>
+              <h3>Quality Guaranteed</h3>
+              <p>Backed by warranty</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18a6 6 0 0 1 12 0"/><path d="M9 18v-7M15 18v-7M12 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+              </div>
+              <h3>Expert Technicians</h3>
+              <p>Certified professionals</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section services-box" aria-labelledby="services-title">
+          <div class="section-header">
+            <h2 id="services-title">Our Services</h2>
+            <p>We repair all major appliances and brands</p>
+          </div>
+
+          <div class="services-grid">
+            <article class="service-card">
+              <div class="service-head">
+                <span class="service-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H4zM8 19h8"/><path d="M9 10h6"/></svg>
+                </span>
+                <h3>Kitchen Appliances</h3>
+              </div>
+              <ul>
+                <li>Refrigerators</li>
+                <li>Dishwashers</li>
+                <li>Ovens &amp; Stoves</li>
+                <li>Microwaves</li>
+              </ul>
+            </article>
+
+            <article class="service-card">
+              <div class="service-head">
+                <span class="service-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7h14v10M8 7V5h8v2M9 11h6M9 15h6"/></svg>
+                </span>
+                <h3>Laundry Appliances</h3>
+              </div>
+              <ul>
+                <li>Washing Machines</li>
+                <li>Dryers</li>
+                <li>Washer Dryer Combos</li>
+                <li>Spin Cycles</li>
+              </ul>
+            </article>
+
+            <article class="service-card">
+              <div class="service-head">
+                <span class="service-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18h12M8 18V9h8v9M10 6h4"/><path d="M7 9l1-3h8l1 3"/></svg>
+                </span>
+                <h3>HVAC &amp; Comfort</h3>
+              </div>
+              <ul>
+                <li>Air Conditioners</li>
+                <li>Heaters</li>
+                <li>Ventilation</li>
+                <li>Water Heaters</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section steps-box" aria-labelledby="steps-title">
+          <div class="section-header">
+            <h2 id="steps-title">How It Works</h2>
+            <p>Get your device fixed in three simple steps</p>
+          </div>
+
+          <div class="steps-grid">
+            <div class="step">
+              <span class="step-number">1</span>
+              <h3>Book Online</h3>
+              <p>Schedule your repair through our easy booking system.</p>
+            </div>
+
+            <div class="step">
+              <span class="step-number">2</span>
+              <h3>Expert Diagnosis</h3>
+              <p>Our technicians diagnose and fix your device with precision.</p>
+            </div>
+
+            <div class="step">
+              <span class="step-number">3</span>
+              <h3>Fast Delivery</h3>
+              <p>Get your repaired device back quickly and efficiently.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <section class="cta-band" aria-label="Get started">
+      <h2>Ready to Get Started?</h2>
+      <p>Book your repair service today</p>
+      <button class="cta-btn" type="button">Book a Service Now</button>
+    </section>
+
+    <footer>
+      <div class="footer-inner">
+          <div class="footer-brand">
+            <div class="brand-line">HomeService<span>Pro</span></div>
+            <p>Professional repair services for all home appliances</p>
+          </div>
+
+          <div class="footer-links">
+            <h4>Quick Links</h4>
+            <a href="#">Home</a>
+            <a href="#">About</a>
+            <a href="#">Services</a>
+            <a href="#">Features</a>
+          </div>
+
+          <div class="footer-links">
+            <h4>Services</h4>
+            <a href="#">Refrigerator Repair</a>
+            <a href="#">Washer/Dryer Repair</a>
+            <a href="#">HVAC Repair</a>
+            <a href="#">Oven Repair</a>
+          </div>
+
+          <div class="footer-links">
+            <h4>Contact</h4>
+            <a href="#">☎ 1-800-HOME-PRO</a>
+            <a href="#">✉ hello@homeservicepro.com</a>
+            <a href="#">◉ Nationwide Service</a>
+          </div>
+        </div>
+
+        <div class="footer-bottom">© 2026 HomeService Pro. All rights reserved.</div>
+      </footer>
+    </div>
+  </body>
+</html>
