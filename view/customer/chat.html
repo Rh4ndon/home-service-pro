@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Messages - HomeService Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    .chat-layout {
+      display: flex;
+      height: calc(100vh - 0px);
+      overflow: hidden;
+    }
+
+    .chat-sidebar {
+      width: 320px;
+      min-width: 320px;
+      background: var(--card-bg, #fff);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .chat-sidebar-header h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .chat-search {
+      position: relative;
+    }
+
+    .chat-search input {
+      width: 100%;
+      padding: 10px 12px 10px 38px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.875rem;
+      background: var(--bg, #f5f7fa);
+      outline: none;
+    }
+
+    .chat-search input:focus {
+      border-color: var(--primary);
+    }
+
+    .chat-search svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--muted);
+    }
+
+    .chat-contacts {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .chat-contact {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    .chat-contact:hover {
+      background: var(--bg, #f5f7fa);
+    }
+
+    .chat-contact.active {
+      background: rgba(27, 141, 232, 0.08);
+      border-left: 3px solid var(--primary);
+    }
+
+    .chat-contact-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .chat-contact-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .chat-contact-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+
+    .chat-contact-preview {
+      font-size: 0.8rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-contact-meta {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .chat-contact-time {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .chat-contact-unread {
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
+    }
+
+    .chat-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card-bg, #fff);
+    }
+
+    .chat-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chat-header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1b8de8, #0d71c7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: #fff;
+    }
+
+    .chat-header-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .chat-header-status {
+      font-size: 0.78rem;
+      color: #22c55e;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .chat-header-status::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+
+    .chat-header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-header-actions button {
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 10px;
+      background: var(--bg, #f5f7fa);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text, #1a1a2e);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .chat-header-actions button:hover {
+      background: rgba(27, 141, 232, 0.1);
+      color: var(--primary);
+    }
+
+    .chat-header-actions button svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: var(--bg, #f5f7fa);
+    }
+
+    .chat-bubble {
+      max-width: 65%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      position: relative;
+    }
+
+    .chat-bubble.received {
+      align-self: flex-start;
+      background: var(--card-bg, #fff);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-bubble.sent {
+      align-self: flex-end;
+      background: var(--primary);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-bubble-time {
+      font-size: 0.7rem;
+      margin-top: 6px;
+      opacity: 0.6;
+    }
+
+    .chat-bubble.sent .chat-bubble-time {
+      text-align: right;
+      color: #fff;
+    }
+
+    .chat-input-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      background: var(--card-bg, #fff);
+    }
+
+    .chat-input-bar input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 0.88rem;
+      outline: none;
+      background: var(--bg, #f5f7fa);
+    }
+
+    .chat-input-bar input:focus {
+      border-color: var(--primary);
+    }
+
+    .chat-send-btn {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 12px;
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .chat-send-btn:hover {
+      background: #0d71c7;
+    }
+
+    .chat-send-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .chat-map-panel {
+      width: 340px;
+      min-width: 340px;
+      background: var(--card-bg, #fff);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-map-placeholder {
+      flex: 1;
+      background:
+        linear-gradient(rgba(27,141,232,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(27,141,232,0.06) 1px, transparent 1px),
+        linear-gradient(135deg, #e8f0fe 0%, #d4e4f7 100%);
+      background-size: 30px 30px, 30px 30px, 100% 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .chat-map-placeholder::after {
+      content: 'Map View';
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary);
+      background: rgba(255,255,255,0.85);
+      padding: 10px 24px;
+      border-radius: 10px;
+      border: 1px solid rgba(27,141,232,0.2);
+    }
+
+    .chat-map-info {
+      padding: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .chat-map-info-label {
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+      color: var(--text, #1a1a2e);
+    }
+
+    .chat-map-info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.82rem;
+      color: var(--muted, #6b7280);
+      margin-bottom: 10px;
+    }
+
+    .chat-map-info-row svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: var(--primary);
+    }
+
+    .chat-map-info-row span {
+      color: var(--text, #1a1a2e);
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-text">HomeService<span>Pro</span></div>
+      <div class="brand-sub">Customer Portal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Main Menu</div>
+        <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a href="book-service.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+          Book Service
+        </a>
+        <a href="my-tickets.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M15 5v2"/><path d="M15 11v2"/><path d="M15 17v2"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
+          My Tickets
+        </a>
+        <a href="my-appliances.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          My Appliances
+        </a>
+        <a href="chat.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Messages
+        </a>
+        <a href="profile.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">JD</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">Juan Dela Cruz</div>
+        <div class="sidebar-user-role">Customer</div>
+      </div>
+      <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" style="padding: 0;">
+    <div class="chat-layout">
+
+      <!-- Chat Sidebar -->
+      <div class="chat-sidebar">
+        <div class="chat-sidebar-header">
+          <h2>Messages</h2>
+          <div class="chat-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search conversations..." />
+          </div>
+        </div>
+        <div class="chat-contacts">
+          <div class="chat-contact active">
+            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #1b8de8, #0d71c7);">PS</div>
+            <div class="chat-contact-info">
+              <div class="chat-contact-name">Pedro Santos</div>
+              <div class="chat-contact-preview">Almost there!</div>
+            </div>
+            <div class="chat-contact-meta">
+              <div class="chat-contact-time">2:34 PM</div>
+              <div class="chat-contact-unread">2</div>
+            </div>
+          </div>
+          <div class="chat-contact">
+            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">MC</div>
+            <div class="chat-contact-info">
+              <div class="chat-contact-name">Maria Clara</div>
+              <div class="chat-contact-preview">Thank you for the repair!</div>
+            </div>
+            <div class="chat-contact-meta">
+              <div class="chat-contact-time">Yesterday</div>
+            </div>
+          </div>
+          <div class="chat-contact">
+            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">CR</div>
+            <div class="chat-contact-info">
+              <div class="chat-contact-name">Carlo Reyes</div>
+              <div class="chat-contact-preview">Support - How can I help?</div>
+            </div>
+            <div class="chat-contact-meta">
+              <div class="chat-contact-time">Aug 16</div>
+            </div>
+          </div>
+          <div class="chat-contact">
+            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #22c55e, #16a34a);">AB</div>
+            <div class="chat-contact-info">
+              <div class="chat-contact-name">Andres Bonifacio</div>
+              <div class="chat-contact-preview">Your repair is scheduled.</div>
+            </div>
+            <div class="chat-contact-meta">
+              <div class="chat-contact-time">Aug 14</div>
+            </div>
+          </div>
+          <div class="chat-contact">
+            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #ef4444, #dc2626);">CA</div>
+            <div class="chat-contact-info">
+              <div class="chat-contact-name">Corazon Aquino</div>
+              <div class="chat-contact-preview">See you tomorrow!</div>
+            </div>
+            <div class="chat-contact-meta">
+              <div class="chat-contact-time">Aug 12</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Main -->
+      <div class="chat-main">
+        <div class="chat-header">
+          <div class="chat-header-left">
+            <div class="chat-header-avatar">PS</div>
+            <div>
+              <div class="chat-header-name">Pedro Santos</div>
+              <div class="chat-header-status">Online</div>
+            </div>
+          </div>
+          <div class="chat-header-actions">
+            <a href="call.html" style="text-decoration:none; color:inherit;">
+              <button title="Voice Call">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </button>
+            </a>
+            <button title="Video Call">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            </button>
+            <button title="Info">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="chat-messages">
+          <div class="chat-bubble received">
+            Hi! I'm Pedro Santos. I'll be handling your Washing Machine repair.
+            <div class="chat-bubble-time">2:20 PM</div>
+          </div>
+          <div class="chat-bubble sent">
+            Great, thank you! When can you come?
+            <div class="chat-bubble-time">2:22 PM</div>
+          </div>
+          <div class="chat-bubble received">
+            I'm on my way now. ETA is about 15 minutes.
+            <div class="chat-bubble-time">2:25 PM</div>
+          </div>
+          <div class="chat-bubble sent">
+            Okay, I'll be waiting. My address is 123 Rizal St, Makati City.
+            <div class="chat-bubble-time">2:27 PM</div>
+          </div>
+          <div class="chat-bubble received">
+            Got it. I can see your location on the map. Almost there!
+            <div class="chat-bubble-time">2:32 PM</div>
+          </div>
+          <div class="chat-bubble sent">
+            Perfect, thank you!
+            <div class="chat-bubble-time">2:34 PM</div>
+          </div>
+        </div>
+
+        <div class="chat-input-bar">
+          <input type="text" placeholder="Type a message..." />
+          <button class="chat-send-btn" title="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Map Panel -->
+      <div class="chat-map-panel">
+        <div class="chat-map-placeholder"></div>
+        <div class="chat-map-info">
+          <div class="chat-map-info-label">Technician Location</div>
+          <div class="chat-map-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>123 Rizal St, Makati City</span>
+          </div>
+          <div class="chat-map-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ETA: <span style="margin-left:4px;">12 minutes</span>
+          </div>
+          <div class="chat-map-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            0917-123-4567
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Logout Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Log Out</h3>
+        <button class="modal-close" onclick="closeModal('logoutModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared.js"></script>
+</body>
+</html>

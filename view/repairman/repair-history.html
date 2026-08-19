@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repair History - HomeServicePro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-text">HomeService<span>Pro</span></div>
+      <div class="brand-sub">Repairman Portal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Menu</div>
+        <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a href="my-schedule.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          My Schedule
+        </a>
+        <a href="tickets.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+          Tickets
+        </a>
+        <a href="chat.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Messages
+        </a>
+        <a href="repair-history.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Repair History
+        </a>
+        <a href="profile.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">PS</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">Pedro Santos</div>
+        <div class="sidebar-user-role">Repairman</div>
+      </div>
+      <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Repair History</h1>
+        <p>View all your past repair jobs and their details.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" onclick="openModal('modalExport')">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export History
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card" style="margin-bottom: 24px;">
+      <div class="card-body" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Date From</label>
+          <input type="date" value="2026-01-01">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Date To</label>
+          <input type="date" value="2026-08-19">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Status</label>
+          <select style="padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 0.92rem; color: var(--text); background: var(--card);">
+            <option value="all">All Status</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0; flex: 1;">
+          <label>Search</label>
+          <input type="text" id="searchHistory" placeholder="Search by client, appliance, issue..." oninput="filterTable('searchHistory','historyTable')">
+        </div>
+      </div>
+    </div>
+
+    <!-- History Table -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Past Repairs</h2>
+        <span style="font-size: 0.85rem; color: var(--muted);">Showing 10 records</span>
+      </div>
+      <div class="card-body-flush">
+        <div class="table-wrap">
+          <table id="historyTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Client</th>
+                <th>Appliance</th>
+                <th>Issue</th>
+                <th>Status</th>
+                <th>Duration</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Aug 12, 2026</td>
+                <td>Corazon Aquino</td>
+                <td>Microwave Oven</td>
+                <td>Microwave not heating</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>2 hours</td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Aug 11, 2026</td>
+                <td>Ramon Magsaysay</td>
+                <td>Gas Range</td>
+                <td>Stove burner not igniting</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>1.5 hours</td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Aug 10, 2026</td>
+                <td>Gabriela Silang</td>
+                <td>Water Heater</td>
+                <td>Heater not producing hot water</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>3 hours</td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Aug 8, 2026</td>
+                <td>Emilio Aguinaldo</td>
+                <td>Air Conditioner</td>
+                <td>AC leaking water</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>2.5 hours</td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Aug 6, 2026</td>
+                <td>Trinidad Tecson</td>
+                <td>Refrigerator</td>
+                <td>Fridge door seal broken</td>
+                <td><span class="badge badge-danger">Cancelled</span></td>
+                <td>--</td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Aug 4, 2026</td>
+                <td>Diego Silang</td>
+                <td>Washing Machine</td>
+                <td>Washer making grinding noise</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>1 hour</td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Aug 2, 2026</td>
+                <td>Melchora Aquino</td>
+                <td>Television</td>
+                <td>TV flickering display</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>2 hours</td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Jul 30, 2026</td>
+                <td>Lapu-Lapu</td>
+                <td>Electric Fan</td>
+                <td>Fan not turning on</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>45 minutes</td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Jul 28, 2026</td>
+                <td>Tandang Sora</td>
+                <td>Dishwasher</td>
+                <td>Dishwasher not cleaning properly</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>1.5 hours</td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Jul 25, 2026</td>
+                <td>Kumintang Ilaya</td>
+                <td>Air Conditioner</td>
+                <td>AC not blowing cold air</td>
+                <td><span class="badge badge-danger">Cancelled</span></td>
+                <td>--</td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: History Detail -->
+  <div class="modal-overlay" id="modalHistoryDetail">
+    <div class="modal" style="width: min(560px, calc(100% - 32px));">
+      <div class="modal-header">
+        <h3>Repair Detail - Aug 12, 2026</h3>
+        <button class="modal-close" onclick="closeModal('modalHistoryDetail')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+          <div><strong>Client:</strong> Corazon Aquino</div>
+          <div><strong>Date:</strong> Aug 12, 2026</div>
+          <div><strong>Appliance:</strong> Microwave Oven</div>
+          <div><strong>Status:</strong> <span class="badge badge-success">Completed</span></div>
+          <div><strong>Duration:</strong> 2 hours</div>
+          <div><strong>Ticket ID:</strong> #1035</div>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <strong>Issue Reported:</strong>
+          <p style="margin-top: 4px; color: var(--muted);">Client reported that the microwave was not heating food. The turntable was rotating but no heat was produced. Display panel and buttons were functioning normally.</p>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <strong>Diagnosis:</strong>
+          <p style="margin-top: 4px; color: var(--muted);">Faulty magnetron identified as the root cause. The high-voltage diode was also found to be defective. Capacitor tested within normal range.</p>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <strong>Work Performed:</strong>
+          <p style="margin-top: 4px; color: var(--muted);">Replaced magnetron and high-voltage diode. Cleaned waveguide cover and interior. Tested heating at various power levels. All functions restored to normal operation.</p>
+        </div>
+        <div>
+          <strong>Parts Used:</strong>
+          <p style="margin-top: 4px; color: var(--muted);">Magnetron (Samsung OM75P), High-Voltage Diode (2KV 350mA)</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalHistoryDetail')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Export -->
+  <div class="modal-overlay" id="modalExport">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Export Repair History</h3>
+        <button class="modal-close" onclick="closeModal('modalExport')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to export your repair history? This will generate a CSV file with all your past repair records.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalExport')">Cancel</button>
+        <button class="btn btn-primary" onclick="doAction('modalExport','Repair history exported successfully! Check your downloads folder.')">Export</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Log Out</h3>
+        <button class="modal-close" onclick="closeModal('logoutModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared.js"></script>
+</body>
+</html>

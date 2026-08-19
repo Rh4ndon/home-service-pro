@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - HomeServicePro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-text">HomeService<span>Pro</span></div>
+      <div class="brand-sub">Repairman Portal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Menu</div>
+        <a href="dashboard.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a href="my-schedule.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          My Schedule
+        </a>
+        <a href="tickets.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+          Tickets
+        </a>
+        <a href="chat.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Messages
+        </a>
+        <a href="repair-history.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Repair History
+        </a>
+        <a href="profile.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">PS</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">Pedro Santos</div>
+        <div class="sidebar-user-role">Repairman</div>
+      </div>
+      <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Welcome back, Pedro! Here's your overview for today.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Ticket
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon blue">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="stat-info">
+          <h3>3</h3>
+          <p>Today's Jobs</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon yellow">
+          <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+        </div>
+        <div class="stat-info">
+          <h3>5</h3>
+          <p>Pending Tickets</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="stat-info">
+          <h3>8</h3>
+          <p>Completed This Week</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon red">
+          <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="stat-info">
+          <h3>4.8</h3>
+          <p>Average Rating</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Today's Schedule -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Today's Schedule</h2>
+          <a href="my-schedule.html" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="card-body-flush">
+          <div class="list-item">
+            <div class="list-avatar" style="background: linear-gradient(135deg, #1b8de8, #0d71c7);">08</div>
+            <div class="list-info">
+              <h4>8:00 AM - Aircon Repair</h4>
+              <p>Maria Clara - Split-type AC not cooling</p>
+            </div>
+            <span class="badge badge-info">In Progress</span>
+          </div>
+          <div class="list-item">
+            <div class="list-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">10</div>
+            <div class="list-info">
+              <h4>10:30 AM - Washing Machine</h4>
+              <p>Jose Rizal - Washer draining issue</p>
+            </div>
+            <span class="badge badge-warning">Upcoming</span>
+          </div>
+          <div class="list-item">
+            <div class="list-avatar" style="background: linear-gradient(135deg, #22c55e, #16a34a);">02</div>
+            <div class="list-info">
+              <h4>2:00 PM - Refrigerator</h4>
+              <p>Andres Bonifacio - Fridge not freezing</p>
+            </div>
+            <span class="badge badge-neutral">Assigned</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Notifications</h2>
+          <span class="badge badge-danger">3 New</span>
+        </div>
+        <div class="card-body-flush">
+          <div class="list-item">
+            <div class="list-avatar" style="background: var(--danger);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div class="list-info">
+              <h4>New ticket assigned to you</h4>
+              <p>Ticket #1045 - Refrigerator repair from Ana Dela Cruz - 5 min ago</p>
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="list-avatar" style="background: var(--success);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="list-info">
+              <h4>Payment received</h4>
+              <p>₱1,500 from Ramon Magsaysay for AC repair - 30 min ago</p>
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="list-avatar" style="background: var(--warning);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M14 9l-2-3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6l-2-3"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            </div>
+            <div class="list-info">
+              <h4>Schedule update</h4>
+              <p>Client Corazon Aquino rescheduled to Aug 20, 2:00 PM - 1 hr ago</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card" style="margin-top: 20px;">
+      <div class="card-header">
+        <h2>Quick Actions</h2>
+      </div>
+      <div class="card-body" style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <button class="btn btn-primary" onclick="openModal('modalNewTicket')">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Create New Ticket
+        </button>
+        <a href="my-schedule.html" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          View Schedule
+        </a>
+        <a href="tickets.html" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+          My Tickets
+        </a>
+        <a href="profile.html" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Edit Profile
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: New Ticket -->
+  <div class="modal-overlay" id="modalNewTicket">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Create New Ticket</h3>
+        <button class="modal-close" onclick="closeModal('modalNewTicket')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to create a new repair ticket? You will be redirected to the ticket creation form.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalNewTicket')">Cancel</button>
+        <button class="btn btn-primary" onclick="doAction('modalNewTicket','New ticket form opened!')">Proceed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Log Out</h3>
+        <button class="modal-close" onclick="closeModal('logoutModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared.js"></script>
+</body>
+</html>

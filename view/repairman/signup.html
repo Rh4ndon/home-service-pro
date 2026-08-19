@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Join as Repairman - HomeService Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../shared.css" />
+  </head>
+  <body>
+    <div class="auth-page">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-brand">HomeService<span>Pro</span></div>
+          <div class="auth-subtitle">Join as a Repairman</div>
+        </div>
+        <div class="auth-body">
+          <form onsubmit="return false;">
+            <div class="form-group">
+              <label for="fullName">Full Name</label>
+              <input type="text" id="fullName" placeholder="John Doe" />
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" placeholder="you@example.com" />
+            </div>
+            <div class="form-group">
+              <label for="mobile">Mobile Number</label>
+              <input type="tel" id="mobile" placeholder="+1 (555) 000-0000" />
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" placeholder="Create a password" />
+            </div>
+            <div class="form-group">
+              <label for="confirmPassword">Confirm Password</label>
+              <input type="password" id="confirmPassword" placeholder="Confirm your password" />
+            </div>
+            <button class="btn btn-primary" type="button" onclick="openModal('confirmSignup')">Create Account</button>
+          </form>
+        </div>
+        <div class="auth-footer">
+          Already have an account? <a href="login.html">Log in</a>
+        </div>
+        <div class="auth-back">
+          <a href="landing-page.html">&larr; Back to Home</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="confirmSignup">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Confirm Registration</h3>
+          <button class="modal-close" onclick="closeModal('confirmSignup')">&times;</button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to join as a repairman? Please ensure all your details are correct before proceeding.
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-cancel" onclick="closeModal('confirmSignup')">Cancel</button>
+          <button class="btn btn-primary" onclick="window.location.href='dashboard.html'">Confirm &amp; Sign Up</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../shared.js"></script>
+  </body>
+</html>

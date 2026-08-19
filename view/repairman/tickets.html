@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tickets - HomeServicePro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-text">HomeService<span>Pro</span></div>
+      <div class="brand-sub">Repairman Portal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Menu</div>
+        <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a href="my-schedule.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          My Schedule
+        </a>
+        <a href="tickets.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+          Tickets
+        </a>
+        <a href="chat.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Messages
+        </a>
+        <a href="repair-history.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Repair History
+        </a>
+        <a href="profile.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">PS</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">Pedro Santos</div>
+        <div class="sidebar-user-role">Repairman</div>
+      </div>
+      <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Tickets</h1>
+        <p>Manage and track your assigned repair tickets.</p>
+      </div>
+      <div class="header-actions">
+        <input type="text" id="searchTicket" placeholder="Search tickets..." style="padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 0.9rem; width: 240px;" oninput="filterTable('searchTicket','ticketTable')">
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="filterTicketTab(this, 'all')">All (10)</button>
+      <button class="tab" onclick="filterTicketTab(this, 'assigned')">Assigned to Me (4)</button>
+      <button class="tab" onclick="filterTicketTab(this, 'progress')">In Progress (3)</button>
+      <button class="tab" onclick="filterTicketTab(this, 'completed')">Completed (3)</button>
+    </div>
+
+    <!-- Tickets Table -->
+    <div class="card">
+      <div class="card-body-flush">
+        <div class="table-wrap">
+          <table id="ticketTable">
+            <thead>
+              <tr>
+                <th>Ticket ID</th>
+                <th>Client</th>
+                <th>Appliance</th>
+                <th>Issue</th>
+                <th>Date Opened</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-status="assigned">
+                <td>#1045</td>
+                <td>Ana Dela Cruz</td>
+                <td>Refrigerator</td>
+                <td>Fridge not cooling properly</td>
+                <td>Aug 18, 2026</td>
+                <td><span class="badge badge-neutral">Assigned</span></td>
+                <td class="action-btns">
+                  <button class="btn btn-primary btn-sm" onclick="openModal('modalAcceptTicket')">Accept</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
+                </td>
+              </tr>
+              <tr data-status="assigned">
+                <td>#1046</td>
+                <td>Benigno Aquino</td>
+                <td>Air Conditioner</td>
+                <td>AC making loud noise</td>
+                <td>Aug 18, 2026</td>
+                <td><span class="badge badge-neutral">Assigned</span></td>
+                <td class="action-btns">
+                  <button class="btn btn-primary btn-sm" onclick="openModal('modalAcceptTicket')">Accept</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
+                </td>
+              </tr>
+              <tr data-status="assigned">
+                <td>#1047</td>
+                <td>Leonor Rivera</td>
+                <td>Television</td>
+                <td>TV has no sound</td>
+                <td>Aug 17, 2026</td>
+                <td><span class="badge badge-neutral">Assigned</span></td>
+                <td class="action-btns">
+                  <button class="btn btn-primary btn-sm" onclick="openModal('modalAcceptTicket')">Accept</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
+                </td>
+              </tr>
+              <tr data-status="assigned">
+                <td>#1048</td>
+                <td>Gregorio del Pilar</td>
+                <td>Washing Machine</td>
+                <td>Washer not spinning</td>
+                <td>Aug 17, 2026</td>
+                <td><span class="badge badge-neutral">Assigned</span></td>
+                <td class="action-btns">
+                  <button class="btn btn-primary btn-sm" onclick="openModal('modalAcceptTicket')">Accept</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
+                </td>
+              </tr>
+              <tr data-status="progress">
+                <td>#1040</td>
+                <td>Maria Clara</td>
+                <td>Air Conditioner</td>
+                <td>Split-type AC not cooling</td>
+                <td>Aug 15, 2026</td>
+                <td><span class="badge badge-info">In Progress</span></td>
+                <td class="action-btns">
+                  <a href="chat.html" class="btn btn-primary btn-sm">Chat</a>
+                  <a href="call.html" class="btn btn-success btn-sm">Call</a>
+                  <button class="btn btn-success btn-sm" onclick="openModal('modalUpdateStatus')">Mark Complete</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
+                </td>
+              </tr>
+              <tr data-status="progress">
+                <td>#1041</td>
+                <td>Jose Rizal</td>
+                <td>Electric Fan</td>
+                <td>Fan oscillation broken</td>
+                <td>Aug 14, 2026</td>
+                <td><span class="badge badge-info">In Progress</span></td>
+                <td class="action-btns">
+                  <a href="chat.html" class="btn btn-primary btn-sm">Chat</a>
+                  <a href="call.html" class="btn btn-success btn-sm">Call</a>
+                  <button class="btn btn-success btn-sm" onclick="openModal('modalUpdateStatus')">Mark Complete</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
+                </td>
+              </tr>
+              <tr data-status="progress">
+                <td>#1042</td>
+                <td>Emilio Jacinto</td>
+                <td>Dishwasher</td>
+                <td>Dishwasher leaking water</td>
+                <td>Aug 14, 2026</td>
+                <td><span class="badge badge-info">In Progress</span></td>
+                <td class="action-btns">
+                  <a href="chat.html" class="btn btn-primary btn-sm">Chat</a>
+                  <a href="call.html" class="btn btn-success btn-sm">Call</a>
+                  <button class="btn btn-success btn-sm" onclick="openModal('modalUpdateStatus')">Mark Complete</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
+                </td>
+              </tr>
+              <tr data-status="completed">
+                <td>#1035</td>
+                <td>Corazon Aquino</td>
+                <td>Microwave Oven</td>
+                <td>Microwave not heating</td>
+                <td>Aug 12, 2026</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
+                </td>
+              </tr>
+              <tr data-status="completed">
+                <td>#1036</td>
+                <td>Ramon Magsaysay</td>
+                <td>Gas Range</td>
+                <td>Stove burner not igniting</td>
+                <td>Aug 11, 2026</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
+                </td>
+              </tr>
+              <tr data-status="completed">
+                <td>#1037</td>
+                <td>Gabriela Silang</td>
+                <td>Water Heater</td>
+                <td>Heater not producing hot water</td>
+                <td>Aug 10, 2026</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td class="action-btns">
+                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: View Ticket Detail -->
+  <div class="modal-overlay" id="modalViewTicket">
+    <div class="modal" style="width: min(560px, calc(100% - 32px));">
+      <div class="modal-header">
+        <h3>Ticket Detail - #1045</h3>
+        <button class="modal-close" onclick="closeModal('modalViewTicket')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+          <div><strong>Client:</strong> Ana Dela Cruz</div>
+          <div><strong>Date Opened:</strong> Aug 18, 2026</div>
+          <div><strong>Appliance:</strong> Refrigerator</div>
+          <div><strong>Status:</strong> <span class="badge badge-neutral">Assigned</span></div>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <strong>Issue Description:</strong>
+          <p style="margin-top: 4px; color: var(--muted);">Client reports that the refrigerator is not cooling properly. The freezer compartment is not reaching the desired temperature and ice is melting. Compressor seems to be running but no cold air is being produced.</p>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <strong>Appliance Details:</strong>
+          <p style="margin-top: 4px; color: var(--muted);">Brand: Samsung | Model: RT28K5131S8 | Type: Double Door | Age: 3 years</p>
+        </div>
+        <div>
+          <strong>Client Address:</strong>
+          <p style="margin-top: 4px; color: var(--muted);">123 Rizal St, Brgy. Loyola Heights, Quezon City</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalViewTicket')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Accept Ticket -->
+  <div class="modal-overlay" id="modalAcceptTicket">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Accept Ticket</h3>
+        <button class="modal-close" onclick="closeModal('modalAcceptTicket')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to accept this ticket? You will be assigned as the repairman and the client will be notified.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalAcceptTicket')">Cancel</button>
+        <button class="btn btn-primary" onclick="doAction('modalAcceptTicket','Ticket accepted successfully!')">Accept Ticket</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Update Status -->
+  <div class="modal-overlay" id="modalUpdateStatus">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Update Ticket Status</h3>
+        <button class="modal-close" onclick="closeModal('modalUpdateStatus')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to mark this ticket as completed? The client will be notified and the repair will be logged in your history.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalUpdateStatus')">Cancel</button>
+        <button class="btn btn-success" onclick="doAction('modalUpdateStatus','Ticket marked as completed!')">Mark Complete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Log Out</h3>
+        <button class="modal-close" onclick="closeModal('logoutModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared.js"></script>
+  <script>
+    function filterTicketTab(btn, status) {
+      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+      btn.classList.add('active');
+      var rows = document.getElementById('ticketTable').querySelectorAll('tbody tr');
+      rows.forEach(function(row) {
+        if (status === 'all') {
+          row.style.display = '';
+        } else {
+          row.style.display = row.getAttribute('data-status') === status ? '' : 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

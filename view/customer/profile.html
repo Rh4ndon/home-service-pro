@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile - HomeService Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 28px;
+      border-bottom: 1px solid var(--line);
+    }
+    .profile-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--blue-deep));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.6rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .profile-name {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+    .profile-email {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .section-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .profile-section {
+      padding: 24px 28px;
+    }
+    .profile-section + .profile-section {
+      border-top: 1px solid var(--line);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-text">HomeService<span>Pro</span></div>
+      <div class="brand-sub">Customer Portal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Main Menu</div>
+        <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a href="book-service.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+          Book Service
+        </a>
+        <a href="my-tickets.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M15 5v2"/><path d="M15 11v2"/><path d="M15 17v2"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
+          My Tickets
+        </a>
+        <a href="my-appliances.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          My Appliances
+        </a>
+        <a href="chat.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Messages
+        </a>
+        <a href="profile.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Other</div>
+        <a href="../customer/landing-page.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Back to Home
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">JD</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">Juan Dela Cruz</div>
+        <div class="sidebar-user-role">Customer</div>
+      </div>
+      <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>My Profile</h1>
+        <p>Manage your personal information and settings.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:24px;">
+      <!-- Profile Header -->
+      <div class="profile-header">
+        <div class="profile-avatar">JD</div>
+        <div>
+          <div class="profile-name">Juan Dela Cruz</div>
+          <div class="profile-email">juan.delacruz@email.com</div>
+        </div>
+      </div>
+
+      <!-- Personal Information -->
+      <div class="profile-section">
+        <div class="section-label">Personal Information</div>
+        <form id="personalInfoForm" onsubmit="return false;">
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="profileName">Full Name</label>
+              <input type="text" id="profileName" value="Juan Dela Cruz" />
+            </div>
+            <div class="form-group">
+              <label for="profileEmail">Email Address</label>
+              <input type="email" id="profileEmail" value="juan.delacruz@email.com" />
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Address -->
+      <div class="profile-section">
+        <div class="section-label">Address</div>
+        <form id="addressForm" onsubmit="return false;">
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="addressLine1">Address Line 1</label>
+              <input type="text" id="addressLine1" value="123 Rizal Avenue" />
+            </div>
+            <div class="form-group">
+              <label for="addressLine2">Address Line 2</label>
+              <input type="text" id="addressLine2" value="Unit 4B, Sunshine Towers" />
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="brgy">Barangay</label>
+              <input type="text" id="brgy" value="San Antonio" />
+            </div>
+            <div class="form-group">
+              <label for="city">City / Municipality</label>
+              <input type="text" id="city" value="Makati City" />
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="province">Province</label>
+              <input type="text" id="province" value="Metro Manila" />
+            </div>
+            <div class="form-group">
+              <label for="region">Region</label>
+              <input type="text" id="region" value="NCR" />
+            </div>
+          </div>
+          <div class="form-group" style="max-width:280px;">
+            <label for="zipCode">Zip Code</label>
+            <input type="text" id="zipCode" value="1203" />
+          </div>
+        </form>
+      </div>
+
+      <!-- Contact Information -->
+      <div class="profile-section">
+        <div class="section-label">Contact Information</div>
+        <form id="contactForm" onsubmit="return false;">
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="prlMobile">Primary Mobile No.</label>
+              <input type="tel" id="prlMobile" value="+63 917 123 4567" />
+            </div>
+            <div class="form-group">
+              <label for="prlTel">Primary Telephone No.</label>
+              <input type="tel" id="prlTel" value="(02) 8888-1234" />
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="secMobile">Secondary Mobile No.</label>
+              <input type="tel" id="secMobile" value="+63 928 765 4321" />
+            </div>
+            <div class="form-group">
+              <label for="secTel">Secondary Telephone No.</label>
+              <input type="tel" id="secTel" value="" placeholder="Optional" />
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Save Button -->
+      <div class="profile-section" style="padding-top:0;">
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+          <button class="btn btn-secondary" onclick="window.location.reload()">Cancel</button>
+          <button class="btn btn-primary" onclick="openModal('saveProfileModal')">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- SAVE PROFILE CONFIRMATION MODAL -->
+  <div class="modal-overlay" id="saveProfileModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Save Changes</h3>
+        <button class="modal-close" onclick="closeModal('saveProfileModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to save the changes to your profile information?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('saveProfileModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="doAction('saveProfileModal','Profile updated successfully!')">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Log Out</h3>
+        <button class="modal-close" onclick="closeModal('logoutModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="window.location.href='../customer/landing-page.html'">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared.js"></script>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Tickets - HomeService Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-text">HomeService<span>Pro</span></div>
+      <div class="brand-sub">Admin Portal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Main</div>
+        <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a href="manage-repairmen.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Manage Repairmen
+        </a>
+        <a href="manage-customers.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+          Manage Customers
+        </a>
+        <a href="manage-tickets.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>
+          Manage Tickets
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">AU</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">Admin User</div>
+        <div class="sidebar-user-role">Administrator</div>
+      </div>
+      <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Manage Tickets</h1>
+        <p>Monitor and manage all repair tickets.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="flex-wrap:wrap;gap:12px;">
+        <div class="tabs" style="border:0;margin:0;">
+          <button class="tab active" onclick="filterTickets(this,'all')">All</button>
+          <button class="tab" onclick="filterTickets(this,'open')">Open</button>
+          <button class="tab" onclick="filterTickets(this,'in-progress')">In Progress</button>
+          <button class="tab" onclick="filterTickets(this,'completed')">Completed</button>
+          <button class="tab" onclick="filterTickets(this,'cancelled')">Cancelled</button>
+        </div>
+        <input type="text" id="searchTickets" placeholder="Search tickets..." style="padding:8px 14px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;width:240px;outline:none;" oninput="filterTable('searchTickets','ticketsTable')">
+      </div>
+      <div class="card-body-flush">
+        <div class="table-wrap">
+          <table id="ticketsTable">
+            <thead>
+              <tr>
+                <th>Ticket ID</th>
+                <th>Client</th>
+                <th>Assigned Repairman</th>
+                <th>Appliance</th>
+                <th>Issue</th>
+                <th>Date Opened</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-status="open">
+                <td>#1045</td>
+                <td>Maria Reyes</td>
+                <td>Juan Dela Rosa</td>
+                <td>Air Conditioner</td>
+                <td>Not Cooling</td>
+                <td>Jan 10, 2026</td>
+                <td><span class="badge badge-warning">Open</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('viewTicketModal')">
+                      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-info" style="background:var(--info);color:#fff;" onclick="openModal('reassignModal')">Reassign</button>
+                    <button class="btn btn-sm btn-danger" onclick="openModal('closeTicketModal')">Close</button>
+                  </div>
+                </td>
+              </tr>
+              <tr data-status="open">
+                <td>#1044</td>
+                <td>Jose Bautista</td>
+                <td>Ramon Cruz</td>
+                <td>Refrigerator</td>
+                <td>Leaking</td>
+                <td>Jan 10, 2026</td>
+                <td><span class="badge badge-warning">Open</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('viewTicketModal')">
+                      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-info" style="background:var(--info);color:#fff;" onclick="openModal('reassignModal')">Reassign</button>
+                    <button class="btn btn-sm btn-danger" onclick="openModal('closeTicketModal')">Close</button>
+                  </div>
+                </td>
+              </tr>
+              <tr data-status="in-progress">
+                <td>#1041</td>
+                <td>Ana Santos</td>
+                <td>Pedro Mendoza</td>
+                <td>Washing Machine</td>
+                <td>Error Code E2</td>
+                <td>Jan 8, 2026</td>
+                <td><span class="badge badge-info">In Progress</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('viewTicketModal')">
+                      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-info" style="background:var(--info);color:#fff;" onclick="openModal('reassignModal')">Reassign</button>
+                    <button class="btn btn-sm btn-danger" onclick="openModal('closeTicketModal')">Close</button>
+                  </div>
+                </td>
+              </tr>
+              <tr data-status="in-progress">
+                <td>#1038</td>
+                <td>Liza Gonzales</td>
+                <td>Carlo Villanueva</td>
+                <td>Microwave</td>
+                <td>Not Heating</td>
+                <td>Jan 5, 2026</td>
+                <td><span class="badge badge-info">In Progress</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('viewTicketModal')">
+                      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-info" style="background:var(--info);color:#fff;" onclick="openModal('reassignModal')">Reassign</button>
+                    <button class="btn btn-sm btn-danger" onclick="openModal('closeTicketModal')">Close</button>
+                  </div>
+                </td>
+              </tr>
+              <tr data-status="completed">
+                <td>#1035</td>
+                <td>Mark Torres</td>
+                <td>Juan Dela Rosa</td>
+                <td>Air Conditioner</td>
+                <td>Unusual Noise</td>
+                <td>Jan 3, 2026</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('viewTicketModal')">
+                      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr data-status="completed">
+                <td>#1032</td>
+                <td>Maria Reyes</td>
+                <td>Ramon Cruz</td>
+                <td>Refrigerator</td>
+                <td>Not Cooling</td>
+                <td>Dec 28, 2025</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('viewTicketModal')">
+                      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr data-status="cancelled">
+                <td>#1028</td>
+                <td>Jose Bautista</td>
+                <td>Pedro Mendoza</td>
+                <td>Dishwasher</td>
+                <td>Drainage Issue</td>
+                <td>Dec 22, 2025</td>
+                <td><span class="badge badge-neutral">Cancelled</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('viewTicketModal')">
+                      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- View Ticket Detail Modal -->
+  <div class="modal-overlay" id="viewTicketModal">
+    <div class="modal" style="width:min(600px,calc(100% - 32px));">
+      <div class="modal-header">
+        <h3>Ticket Detail</h3>
+        <button class="modal-close" onclick="closeModal('viewTicketModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Ticket ID</div>
+            <div style="font-size:1.1rem;font-weight:700;">#1045</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Status</div>
+            <div><span class="badge badge-warning">Open</span></div>
+          </div>
+        </div>
+
+        <h4 style="font-size:0.92rem;font-weight:700;margin-bottom:12px;color:var(--text);">Client Information</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Client Name</div>
+            <div style="font-size:0.92rem;font-weight:500;">Maria Reyes</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Client ID</div>
+            <div style="font-size:0.92rem;font-weight:500;">C001</div>
+          </div>
+        </div>
+
+        <h4 style="font-size:0.92rem;font-weight:700;margin-bottom:12px;color:var(--text);">Appliance &amp; Issue</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Appliance</div>
+            <div style="font-size:0.92rem;font-weight:500;">Air Conditioner</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Issue</div>
+            <div style="font-size:0.92rem;font-weight:500;">Not Cooling</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Full Issue Description</div>
+            <div style="font-size:0.92rem;font-weight:500;line-height:1.6;">Customer reports that the air conditioner unit is running but not producing cold air. Unit was last serviced 6 months ago. Refrigerant may be low or compressor may need inspection. Customer requests urgent appointment.</div>
+          </div>
+        </div>
+
+        <h4 style="font-size:0.92rem;font-weight:700;margin-bottom:12px;color:var(--text);">Schedule &amp; Assignment</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Scheduled Date</div>
+            <div style="font-size:0.92rem;font-weight:500;">Jan 12, 2026 - 10:00 AM</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Assigned Repairman</div>
+            <div style="font-size:0.92rem;font-weight:500;">Juan Dela Rosa (R001)</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Date Opened</div>
+            <div style="font-size:0.92rem;font-weight:500;">Jan 10, 2026</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Repair History</div>
+            <div style="font-size:0.92rem;font-weight:500;">No prior repairs for this appliance</div>
+          </div>
+        </div>
+
+        <h4 style="font-size:0.92rem;font-weight:700;margin-bottom:12px;color:var(--text);">Status Timeline</h4>
+        <div style="padding:14px 16px;background:var(--panel);border-radius:10px;">
+          <div style="display:flex;gap:14px;margin-bottom:12px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--primary);margin-top:5px;flex-shrink:0;"></div>
+            <div>
+              <div style="font-size:0.88rem;font-weight:600;">Ticket Created</div>
+              <div style="font-size:0.82rem;color:var(--muted);">Jan 10, 2026 at 2:30 PM</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;margin-bottom:12px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--warning);margin-top:5px;flex-shrink:0;"></div>
+            <div>
+              <div style="font-size:0.88rem;font-weight:600;">Assigned to Juan Dela Rosa</div>
+              <div style="font-size:0.82rem;color:var(--muted);">Jan 10, 2026 at 3:15 PM</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--info);margin-top:5px;flex-shrink:0;"></div>
+            <div>
+              <div style="font-size:0.88rem;font-weight:600;">Scheduled for Jan 12, 2026 - 10:00 AM</div>
+              <div style="font-size:0.82rem;color:var(--muted);">Jan 11, 2026 at 9:00 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('viewTicketModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reassign Modal -->
+  <div class="modal-overlay" id="reassignModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Reassign Ticket</h3>
+        <button class="modal-close" onclick="closeModal('reassignModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Current Repairman</label>
+          <input type="text" value="Juan Dela Rosa" disabled style="background:var(--panel);color:var(--muted);">
+        </div>
+        <div class="form-group">
+          <label>Select New Repairman</label>
+          <select>
+            <option value="" disabled selected>Choose a repairman...</option>
+            <option>Ramon Cruz</option>
+            <option>Pedro Mendoza</option>
+            <option>Carlo Villanueva</option>
+            <option>Roberto Garcia</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Reason for Reassignment</label>
+          <textarea placeholder="Enter the reason for reassigning this ticket..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('reassignModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="doAction('reassignModal','Ticket reassigned successfully!')">Confirm Reassignment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Close Ticket Confirmation Modal -->
+  <div class="modal-overlay" id="closeTicketModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Close Ticket</h3>
+        <button class="modal-close" onclick="closeModal('closeTicketModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to close this ticket? The ticket will be marked as closed and no further actions can be taken.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('closeTicketModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="doAction('closeTicketModal','Ticket closed successfully!')">Close Ticket</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Log Out</h3>
+        <button class="modal-close" onclick="closeModal('logoutModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared.js"></script>
+  <script>
+    function filterTickets(btn, status) {
+      var tabs = btn.parentElement.querySelectorAll('.tab');
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      btn.classList.add('active');
+
+      var rows = document.getElementById('ticketsTable').querySelectorAll('tbody tr');
+      rows.forEach(function(row) {
+        if (status === 'all') {
+          row.style.display = '';
+        } else {
+          row.style.display = row.getAttribute('data-status') === status ? '' : 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

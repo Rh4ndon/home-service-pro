@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Customers - HomeService Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-text">HomeService<span>Pro</span></div>
+      <div class="brand-sub">Admin Portal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Main</div>
+        <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a href="manage-repairmen.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Manage Repairmen
+        </a>
+        <a href="manage-customers.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+          Manage Customers
+        </a>
+        <a href="manage-tickets.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>
+          Manage Tickets
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">AU</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">Admin User</div>
+        <div class="sidebar-user-role">Administrator</div>
+      </div>
+      <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Manage Customers</h1>
+        <p>View and manage all registered customers.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>All Customers</h2>
+        <input type="text" id="searchCustomers" placeholder="Search customers..." style="padding:8px 14px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;width:240px;outline:none;" oninput="filterTable('searchCustomers','customersTable')">
+      </div>
+      <div class="card-body-flush">
+        <div class="table-wrap">
+          <table id="customersTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>City</th>
+                <th>Total Tickets</th>
+                <th>Registered Since</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>C001</td>
+                <td>Maria Reyes</td>
+                <td>maria.reyes@email.com</td>
+                <td>Quezon City</td>
+                <td>3</td>
+                <td>Jan 15, 2025</td>
+                <td><span class="badge badge-success">Active</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('viewCustomerModal')">
+                      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('editCustomerModal')">
+                      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="openModal('deactivateCustomerModal')">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>C002</td>
+                <td>Ana Santos</td>
+                <td>ana.santos@email.com</td>
+                <td>Makati City</td>
+                <td>5</td>
+                <td>Mar 22, 2025</td>
+                <td><span class="badge badge-success">Active</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('viewCustomerModal')">
+                      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('editCustomerModal')">
+                      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="openModal('deactivateCustomerModal')">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>C003</td>
+                <td>Jose Bautista</td>
+                <td>jose.bautista@email.com</td>
+                <td>Pasig City</td>
+                <td>2</td>
+                <td>Jun 8, 2025</td>
+                <td><span class="badge badge-success">Active</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('viewCustomerModal')">
+                      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('editCustomerModal')">
+                      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="openModal('deactivateCustomerModal')">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>C004</td>
+                <td>Liza Gonzales</td>
+                <td>liza.gonzales@email.com</td>
+                <td>Mandaluyong</td>
+                <td>1</td>
+                <td>Sep 30, 2025</td>
+                <td><span class="badge badge-success">Active</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('viewCustomerModal')">
+                      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('editCustomerModal')">
+                      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="openModal('deactivateCustomerModal')">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>C005</td>
+                <td>Mark Torres</td>
+                <td>mark.torres@email.com</td>
+                <td>Taguig City</td>
+                <td>4</td>
+                <td>Feb 14, 2025</td>
+                <td><span class="badge badge-danger">Inactive</span></td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('viewCustomerModal')">
+                      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="openModal('editCustomerModal')">
+                      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="openModal('deactivateCustomerModal')">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- View Customer Profile Modal -->
+  <div class="modal-overlay" id="viewCustomerModal">
+    <div class="modal" style="width:min(560px,calc(100% - 32px));">
+      <div class="modal-header">
+        <h3>Customer Profile</h3>
+        <button class="modal-close" onclick="closeModal('viewCustomerModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+          <div class="list-avatar" style="width:56px;height:56px;font-size:1.1rem;background:linear-gradient(135deg,#3b82f6,#2563eb);">MR</div>
+          <div>
+            <h3 style="font-size:1.15rem;font-weight:700;">Maria Reyes</h3>
+            <p style="font-size:0.88rem;color:var(--muted);">C001 &middot; maria.reyes@email.com</p>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Full Address</div>
+            <div style="font-size:0.92rem;font-weight:500;">12 Mabini St., Brgy. Commonwealth, Quezon City, Metro Manila, 1121</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Primary Mobile</div>
+            <div style="font-size:0.92rem;font-weight:500;">09181234567</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Secondary Mobile</div>
+            <div style="font-size:0.92rem;font-weight:500;">09271234567</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Primary Tel No.</div>
+            <div style="font-size:0.92rem;font-weight:500;">(02) 8921-4567</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Secondary Tel No.</div>
+            <div style="font-size:0.92rem;font-weight:500;">(02) 8712-3456</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Total Appliances</div>
+            <div style="font-size:0.92rem;font-weight:500;">2 (Refrigerator, Washing Machine)</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Total Tickets</div>
+            <div style="font-size:0.92rem;font-weight:500;">3</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;">
+            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Ticket History</div>
+            <div style="font-size:0.88rem;font-weight:500;line-height:1.8;">
+              #1032 - Refrigerator Not Cooling (Completed, Jan 20, 2025)<br>
+              #1041 - Washing Machine Error (In Progress, Jan 8, 2026)<br>
+              #1044 - Refrigerator Leaking (Open, Jan 10, 2026)
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('viewCustomerModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Customer Modal -->
+  <div class="modal-overlay" id="editCustomerModal">
+    <div class="modal" style="width:min(540px,calc(100% - 32px));">
+      <div class="modal-header">
+        <h3>Edit Customer</h3>
+        <button class="modal-close" onclick="closeModal('editCustomerModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" value="Maria Reyes">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" value="maria.reyes@email.com">
+        </div>
+        <div class="form-group">
+          <label>Address Line 1</label>
+          <input type="text" value="12 Mabini St.">
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Barangay</label>
+            <input type="text" value="Commonwealth">
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" value="Quezon City">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Province</label>
+            <input type="text" value="Metro Manila">
+          </div>
+          <div class="form-group">
+            <label>Zip Code</label>
+            <input type="text" value="1121">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Primary Mobile</label>
+            <input type="text" value="09181234567">
+          </div>
+          <div class="form-group">
+            <label>Secondary Mobile</label>
+            <input type="text" value="09271234567">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('editCustomerModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="doAction('editCustomerModal','Customer updated successfully!')">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deactivate Customer Confirmation Modal -->
+  <div class="modal-overlay" id="deactivateCustomerModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Confirm Deactivation</h3>
+        <button class="modal-close" onclick="closeModal('deactivateCustomerModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to deactivate this customer? They will not be able to book new repairs until reactivated.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('deactivateCustomerModal')">Cancel</button>
+        <button class="btn btn-warning" onclick="doAction('deactivateCustomerModal','Customer deactivated successfully!')">Deactivate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Log Out</h3>
+        <button class="modal-close" onclick="closeModal('logoutModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared.js"></script>
+</body>
+</html>

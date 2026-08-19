@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - HomeServicePro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-text">HomeService<span>Pro</span></div>
+      <div class="brand-sub">Repairman Portal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Menu</div>
+        <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a href="my-schedule.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          My Schedule
+        </a>
+        <a href="tickets.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+          Tickets
+        </a>
+        <a href="chat.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Messages
+        </a>
+        <a href="repair-history.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Repair History
+        </a>
+        <a href="profile.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">PS</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">Pedro Santos</div>
+        <div class="sidebar-user-role">Repairman</div>
+      </div>
+      <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>My Profile</h1>
+        <p>Manage your personal information and professional details.</p>
+      </div>
+    </div>
+
+    <!-- Profile Header -->
+    <div class="card" style="margin-bottom: 24px;">
+      <div class="card-body" style="display: flex; align-items: center; gap: 24px;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--blue-deep)); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.8rem; color: #fff; flex-shrink: 0;">PS</div>
+        <div>
+          <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--text); margin-bottom: 4px;">Pedro Santos</h2>
+          <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 6px;">pedro.santos@email.com</p>
+          <div class="stars" style="font-size: 1.1rem;">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+          <span style="font-size: 0.85rem; color: var(--muted); margin-left: 6px;">4.8 / 5.0 (47 reviews)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Personal Information -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Personal Information</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" value="Pedro Santos">
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" value="pedro.santos@email.com">
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <input type="text" value="456 Tandang Sora Ave, Quezon City">
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Mobile Number</label>
+              <input type="text" value="0917-555-1234">
+            </div>
+            <div class="form-group">
+              <label>Telephone Number</label>
+              <input type="text" value="(02) 8888-5678">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Availability -->
+      <div>
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="card-header">
+            <h2>Availability</h2>
+          </div>
+          <div class="card-body">
+            <div class="avail-row" style="display: flex; align-items: center; gap: 14px;">
+              <label class="toggle">
+                <input type="checkbox" checked onchange="toggleAvailability(this)">
+                <span class="toggle-slider"></span>
+              </label>
+              <div>
+                <span class="avail-label" style="font-weight: 700; color: var(--success); font-size: 0.95rem;">Available</span>
+                <p style="font-size: 0.82rem; color: var(--muted); margin-top: 2px;">Toggle to set your availability for new assignments.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Education -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Education</h2>
+          </div>
+          <div class="card-body">
+            <div style="margin-bottom: 14px;">
+              <div style="font-weight: 600; color: var(--text); font-size: 0.95rem;">TESDA National Certification</div>
+              <p style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">Certified Electronics Technician | 2018</p>
+            </div>
+            <div style="margin-bottom: 14px;">
+              <div style="font-weight: 600; color: var(--text); font-size: 0.95rem;">AMA Computer Learning Center</div>
+              <p style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">Diploma in Computer Technology | 2015 - 2017</p>
+            </div>
+            <div>
+              <div style="font-weight: 600; color: var(--text); font-size: 0.95rem;">Quezon City High School</div>
+              <p style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">High School Diploma | 2011 - 2015</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skills Section -->
+    <div class="card" style="margin-top: 24px;">
+      <div class="card-header">
+        <h2>Skills</h2>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('modalAddSkill')">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Skill
+        </button>
+      </div>
+      <div class="card-body" style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
+          Air Conditioner Repair
+          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
+        </span>
+        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
+          Refrigerator Repair
+          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
+        </span>
+        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
+          Washing Machine Repair
+          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
+        </span>
+        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
+          Television Repair
+          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
+        </span>
+        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
+          Microwave Oven Repair
+          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
+        </span>
+        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
+          Gas Range Repair
+          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
+        </span>
+        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
+          Electric Fan Repair
+          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
+        </span>
+      </div>
+    </div>
+
+    <!-- Certifications -->
+    <div class="card" style="margin-top: 24px;">
+      <div class="card-header">
+        <h2>Certifications</h2>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('modalAddCert')">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Certification
+        </button>
+      </div>
+      <div class="card-body-flush">
+        <div class="list-item">
+          <div class="list-avatar" style="background: var(--success);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M12 15l-2 5l9-9l-9 9l2-5z"/><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87l6.91-1.01L12 2z"/></svg>
+          </div>
+          <div class="list-info">
+            <h4>TESDA NC II - Consumer Electronics Servicing</h4>
+            <p>Issued: March 2018 | Valid until: March 2023</p>
+          </div>
+          <span class="badge badge-warning">Expiring Soon</span>
+        </div>
+        <div class="list-item">
+          <div class="list-avatar" style="background: var(--primary);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M12 15l-2 5l9-9l-9 9l2-5z"/><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87l6.91-1.01L12 2z"/></svg>
+          </div>
+          <div class="list-info">
+            <h4>Samsung Authorized Service Provider</h4>
+            <p>Issued: June 2020 | Valid until: June 2026</p>
+          </div>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <div class="list-item">
+          <div class="list-avatar" style="background: var(--info);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M12 15l-2 5l9-9l-9 9l2-5z"/><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87l6.91-1.01L12 2z"/></svg>
+          </div>
+          <div class="list-info">
+            <h4>EPA 608 Certification - Refrigerant Handling</h4>
+            <p>Issued: September 2019 | Valid until: Lifetime</p>
+          </div>
+          <span class="badge badge-success">Active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px;">
+      <button class="btn btn-secondary">Cancel</button>
+      <button class="btn btn-primary" onclick="openModal('modalSaveProfile')">
+        <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save Changes
+      </button>
+    </div>
+  </main>
+
+  <!-- Modal: Save Profile -->
+  <div class="modal-overlay" id="modalSaveProfile">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Save Changes</h3>
+        <button class="modal-close" onclick="closeModal('modalSaveProfile')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to save the changes to your profile? This will update your information across the platform.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalSaveProfile')">Cancel</button>
+        <button class="btn btn-primary" onclick="doAction('modalSaveProfile','Profile saved successfully!')">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Skill -->
+  <div class="modal-overlay" id="modalAddSkill">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add Skill</h3>
+        <button class="modal-close" onclick="closeModal('modalAddSkill')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Skill Name</label>
+          <input type="text" placeholder="e.g., Dishwasher Repair">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalAddSkill')">Cancel</button>
+        <button class="btn btn-primary" onclick="doAction('modalAddSkill','Skill added successfully!')">Add Skill</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Remove Skill -->
+  <div class="modal-overlay" id="modalRemoveSkill">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Remove Skill</h3>
+        <button class="modal-close" onclick="closeModal('modalRemoveSkill')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to remove this skill from your profile?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalRemoveSkill')">Cancel</button>
+        <button class="btn btn-danger" onclick="doAction('modalRemoveSkill','Skill removed.')">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Certification -->
+  <div class="modal-overlay" id="modalAddCert">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add Certification</h3>
+        <button class="modal-close" onclick="closeModal('modalAddCert')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Certification Name</label>
+          <input type="text" placeholder="e.g., TESDA NC II">
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Issued Date</label>
+            <input type="date">
+          </div>
+          <div class="form-group">
+            <label>Valid Until</label>
+            <input type="date">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalAddCert')">Cancel</button>
+        <button class="btn btn-primary" onclick="doAction('modalAddCert','Certification added successfully!')">Add Certification</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Log Out</h3>
+        <button class="modal-close" onclick="closeModal('logoutModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared.js"></script>
+</body>
+</html>

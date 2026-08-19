@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Appliances - HomeService Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    .appliance-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 18px;
+    }
+    .appliance-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .appliance-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .appliance-card-info h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .appliance-card-info p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin: 2px 0;
+    }
+    .appliance-card-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .appliance-detail-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .appliance-detail-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .appliance-card-actions {
+      display: flex;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-text">HomeService<span>Pro</span></div>
+      <div class="brand-sub">Customer Portal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Main Menu</div>
+        <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a href="book-service.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+          Book Service
+        </a>
+        <a href="my-tickets.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M15 5v2"/><path d="M15 11v2"/><path d="M15 17v2"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
+          My Tickets
+        </a>
+        <a href="my-appliances.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          My Appliances
+        </a>
+        <a href="chat.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Messages
+        </a>
+        <a href="profile.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Other</div>
+        <a href="../customer/landing-page.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Back to Home
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">JD</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">Juan Dela Cruz</div>
+        <div class="sidebar-user-role">Customer</div>
+      </div>
+      <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>My Appliances</h1>
+        <p>Manage your registered home appliances.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="openModal('addApplianceModal')">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Appliance
+        </button>
+      </div>
+    </div>
+
+    <!-- APPLIANCE GRID -->
+    <div class="appliance-grid">
+
+      <!-- Appliance 1 -->
+      <div class="appliance-card">
+        <div class="appliance-card-top">
+          <div class="appliance-card-info">
+            <h3>Samsung RT38</h3>
+            <p>Refrigerator</p>
+          </div>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <div class="appliance-card-details">
+          <div>
+            <div class="appliance-detail-label">Make / Brand</div>
+            <div class="appliance-detail-value">Samsung</div>
+          </div>
+          <div>
+            <div class="appliance-detail-label">Year</div>
+            <div class="appliance-detail-value">2022</div>
+          </div>
+          <div style="grid-column: span 2;">
+            <div class="appliance-detail-label">Details</div>
+            <div class="appliance-detail-value">3-door inverter refrigerator, frost-free</div>
+          </div>
+        </div>
+        <div class="appliance-card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openModal('editApplianceModal')">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <button class="btn btn-secondary btn-sm" style="color:var(--danger);" onclick="openModal('deleteApplianceModal')">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Delete
+          </button>
+        </div>
+      </div>
+
+      <!-- Appliance 2 -->
+      <div class="appliance-card">
+        <div class="appliance-card-top">
+          <div class="appliance-card-info">
+            <h3>LG F4J5TN8W</h3>
+            <p>Washing Machine</p>
+          </div>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <div class="appliance-card-details">
+          <div>
+            <div class="appliance-detail-label">Make / Brand</div>
+            <div class="appliance-detail-value">LG</div>
+          </div>
+          <div>
+            <div class="appliance-detail-label">Year</div>
+            <div class="appliance-detail-value">2023</div>
+          </div>
+          <div style="grid-column: span 2;">
+            <div class="appliance-detail-label">Details</div>
+            <div class="appliance-detail-value">Front-load washer with turbo wash, 8kg capacity</div>
+          </div>
+        </div>
+        <div class="appliance-card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openModal('editApplianceModal')">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <button class="btn btn-secondary btn-sm" style="color:var(--danger);" onclick="openModal('deleteApplianceModal')">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Delete
+          </button>
+        </div>
+      </div>
+
+      <!-- Appliance 3 -->
+      <div class="appliance-card">
+        <div class="appliance-card-top">
+          <div class="appliance-card-info">
+            <h3>Carrier 42QHB012DS</h3>
+            <p>Air Conditioner</p>
+          </div>
+          <span class="badge badge-success">Active</span>
+        </div>
+        <div class="appliance-card-details">
+          <div>
+            <div class="appliance-detail-label">Make / Brand</div>
+            <div class="appliance-detail-value">Carrier</div>
+          </div>
+          <div>
+            <div class="appliance-detail-label">Year</div>
+            <div class="appliance-detail-value">2021</div>
+          </div>
+          <div style="grid-column: span 2;">
+            <div class="appliance-detail-label">Details</div>
+            <div class="appliance-detail-value">Split-type inverter AC, 1.5 HP</div>
+          </div>
+        </div>
+        <div class="appliance-card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openModal('editApplianceModal')">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <button class="btn btn-secondary btn-sm" style="color:var(--danger);" onclick="openModal('deleteApplianceModal')">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Delete
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ADD APPLIANCE MODAL -->
+  <div class="modal-overlay" id="addApplianceModal">
+    <div class="modal" style="max-width:540px;">
+      <div class="modal-header">
+        <h3>Add Appliance</h3>
+        <button class="modal-close" onclick="closeModal('addApplianceModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="addApplianceType">Appliance Type</label>
+          <select id="addApplianceType">
+            <option value="">Select type...</option>
+            <option value="refrigerator">Refrigerator</option>
+            <option value="washing-machine">Washing Machine</option>
+            <option value="air-conditioner">Air Conditioner</option>
+            <option value="microwave">Microwave</option>
+            <option value="oven">Oven / Stove</option>
+            <option value="dishwasher">Dishwasher</option>
+            <option value="electric-fan">Electric Fan</option>
+            <option value="water-heater">Water Heater</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="addApplianceName">Appliance Name</label>
+          <input type="text" id="addApplianceName" placeholder="e.g. Samsung RT38" />
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="addApplianceMake">Make / Brand</label>
+            <input type="text" id="addApplianceMake" placeholder="e.g. Samsung" />
+          </div>
+          <div class="form-group">
+            <label for="addApplianceYear">Year</label>
+            <input type="number" id="addApplianceYear" placeholder="e.g. 2023" min="1990" max="2026" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="addApplianceDetails">Details</label>
+          <textarea id="addApplianceDetails" placeholder="Additional details about the appliance..." style="min-height:70px;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('addApplianceModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="doAction('addApplianceModal','Appliance added successfully!')">Add Appliance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT APPLIANCE MODAL -->
+  <div class="modal-overlay" id="editApplianceModal">
+    <div class="modal" style="max-width:540px;">
+      <div class="modal-header">
+        <h3>Edit Appliance</h3>
+        <button class="modal-close" onclick="closeModal('editApplianceModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="editApplianceType">Appliance Type</label>
+          <select id="editApplianceType">
+            <option value="refrigerator" selected>Refrigerator</option>
+            <option value="washing-machine">Washing Machine</option>
+            <option value="air-conditioner">Air Conditioner</option>
+            <option value="microwave">Microwave</option>
+            <option value="oven">Oven / Stove</option>
+            <option value="dishwasher">Dishwasher</option>
+            <option value="electric-fan">Electric Fan</option>
+            <option value="water-heater">Water Heater</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="editApplianceName">Appliance Name</label>
+          <input type="text" id="editApplianceName" value="Samsung RT38" />
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="editApplianceMake">Make / Brand</label>
+            <input type="text" id="editApplianceMake" value="Samsung" />
+          </div>
+          <div class="form-group">
+            <label for="editApplianceYear">Year</label>
+            <input type="number" id="editApplianceYear" value="2022" min="1990" max="2026" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="editApplianceDetails">Details</label>
+          <textarea id="editApplianceDetails" style="min-height:70px;">3-door inverter refrigerator, frost-free</textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('editApplianceModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="doAction('editApplianceModal','Appliance updated successfully!')">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE APPLIANCE MODAL -->
+  <div class="modal-overlay" id="deleteApplianceModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Delete Appliance</h3>
+        <button class="modal-close" onclick="closeModal('deleteApplianceModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this appliance? This will also remove any linked repair tickets and cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('deleteApplianceModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="doAction('deleteApplianceModal','Appliance deleted successfully.')">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Log Out</h3>
+        <button class="modal-close" onclick="closeModal('logoutModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="window.location.href='../customer/landing-page.html'">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared.js"></script>
+</body>
+</html>
