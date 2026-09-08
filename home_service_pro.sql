@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Aug 19, 2026 at 08:33 AM
+-- Host: localhost
+-- Generation Time: Sep 08, 2026 at 06:38 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -28,33 +28,20 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `admin` (
-  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `ID` int(11) NOT NULL,
   `Name` varchar(255) NOT NULL,
   `Email` varchar(255) NOT NULL,
   `Password` varchar(255) NOT NULL,
   `Status` enum('active','inactive') NOT NULL DEFAULT 'active',
-  `Created_At` datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`ID`),
-  UNIQUE KEY `Email_UNIQUE` (`Email`)
+  `Created_At` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- --------------------------------------------------------
-
 --
--- Table structure for table `users`
+-- Dumping data for table `admin`
 --
 
-CREATE TABLE `users` (
-  `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `Name` varchar(255) NOT NULL,
-  `Email` varchar(255) NOT NULL,
-  `Password` varchar(255) NOT NULL,
-  `Role` enum('customer','repairman') NOT NULL,
-  `Status` enum('active','inactive','banned') NOT NULL DEFAULT 'active',
-  `Created_At` datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`ID`),
-  UNIQUE KEY `Email_UNIQUE` (`Email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT INTO `admin` (`ID`, `Name`, `Email`, `Password`, `Status`, `Created_At`) VALUES
+(1, 'Admin', 'admin@admin.com', '$2y$10$0qSJZq8bTJpCFqZb9bhJFejKU2E/0chSo1dBs.HilhdnceIfkDfFO', 'active', '2026-09-01 15:31:11');
 
 -- --------------------------------------------------------
 
@@ -69,6 +56,38 @@ CREATE TABLE `applianceissue` (
   `Detailed_Report` text DEFAULT NULL,
   `Ticket_ID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `applianceissue`
+--
+
+INSERT INTO `applianceissue` (`ID`, `Issue`, `Details`, `Detailed_Report`, `Ticket_ID`) VALUES
+(1, 'Not cooling', 'Not cooling', NULL, 1),
+(2, 'Not cooling', 'Not cooling', NULL, 2);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `chat_messages`
+--
+
+CREATE TABLE `chat_messages` (
+  `ID` int(11) NOT NULL,
+  `Sender_ID` int(11) NOT NULL,
+  `Sender_Role` enum('customer','repairman','admin') NOT NULL,
+  `Receiver_ID` int(11) NOT NULL,
+  `Receiver_Role` enum('customer','repairman','admin') NOT NULL,
+  `Message` text NOT NULL,
+  `Is_Read` tinyint(1) NOT NULL DEFAULT 0,
+  `Created_At` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `chat_messages`
+--
+
+INSERT INTO `chat_messages` (`ID`, `Sender_ID`, `Sender_Role`, `Receiver_ID`, `Receiver_Role`, `Message`, `Is_Read`, `Created_At`) VALUES
+(1, 3, 'customer', 1, 'repairman', 'Hello repairman!', 0, '2026-09-08 01:05:22');
 
 -- --------------------------------------------------------
 
@@ -87,6 +106,13 @@ CREATE TABLE `clientaddress` (
   `Zip_Code` varchar(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `clientaddress`
+--
+
+INSERT INTO `clientaddress` (`ID`, `Address_Line1`, `Address_Line2`, `Brgy`, `City_Min`, `Province`, `Region`, `Zip_Code`) VALUES
+(1, '', NULL, NULL, '', '', NULL, '');
+
 -- --------------------------------------------------------
 
 --
@@ -104,6 +130,15 @@ CREATE TABLE `clientappliances` (
   `Issue_ID` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `clientappliances`
+--
+
+INSERT INTO `clientappliances` (`ID`, `Client_ID`, `Name`, `Type`, `Make`, `Year`, `Details`, `Issue_ID`) VALUES
+(2, 1, 'Samsung RT38', 'refrigerator', 'Samsung', 2022, 'Not cooling', 1),
+(3, 1, 'Samsung RT38', 'refrigerator', 'Samsung', 2022, 'Not cooling', 2),
+(4, 1, 'Samsung RT38', 'refrigerator', 'Samsung', 2022, 'Test appliance', NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -117,6 +152,13 @@ CREATE TABLE `clientcontact` (
   `Sec_MobileNo` varchar(20) DEFAULT NULL,
   `Sec_TelNo` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `clientcontact`
+--
+
+INSERT INTO `clientcontact` (`ID`, `Prl_MobileNo`, `Prl_TelNo`, `Sec_MobileNo`, `Sec_TelNo`) VALUES
+(1, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -135,6 +177,13 @@ CREATE TABLE `repairhistory` (
   `Status` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `repairhistory`
+--
+
+INSERT INTO `repairhistory` (`ID`, `Repairman_ID`, `Repairer_ID`, `Schedule_ID`, `Ticket_ID`, `ClientAppliances_ID`, `Date`, `Status`) VALUES
+(2, 1, NULL, 1, 1, 2, '2026-09-08 00:59:11', 'Completed');
+
 -- --------------------------------------------------------
 
 --
@@ -150,6 +199,14 @@ CREATE TABLE `repairmanagerbackground` (
   `Ratings` decimal(3,2) DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `repairmanagerbackground`
+--
+
+INSERT INTO `repairmanagerbackground` (`ID`, `Skills`, `Education`, `Certifications`, `Assessment`, `Ratings`) VALUES
+(1, 'Dishwasher Repair', NULL, '[{\"name\":\"Test Certification\",\"issued\":\"2024-01-15\",\"valid_until\":\"2025-01-15\"}]', NULL, 0.00),
+(2, NULL, NULL, NULL, NULL, 0.00);
+
 -- --------------------------------------------------------
 
 --
@@ -163,6 +220,14 @@ CREATE TABLE `repairschedule` (
   `Status` varchar(50) NOT NULL DEFAULT 'Scheduled',
   `Repairman_ID` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `repairschedule`
+--
+
+INSERT INTO `repairschedule` (`ID`, `Client_ID`, `Date_Time`, `Status`, `Repairman_ID`) VALUES
+(1, 1, '2026-09-10 10:00:00', 'In Progress', 1),
+(2, 1, '2026-09-10 10:00:00', 'Scheduled', NULL);
 
 -- --------------------------------------------------------
 
@@ -179,6 +244,39 @@ CREATE TABLE `repairticket` (
   `Schedule_ID` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `repairticket`
+--
+
+INSERT INTO `repairticket` (`ID`, `Client_ID`, `Repairman_ID`, `Status`, `Details`, `Schedule_ID`) VALUES
+(1, 1, 1, 'Completed', 'Not cooling', 1),
+(2, 1, 1, 'Completed', 'Not cooling', 2);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `ID` int(11) NOT NULL,
+  `Name` varchar(255) NOT NULL,
+  `Email` varchar(255) NOT NULL,
+  `Password` varchar(255) NOT NULL,
+  `Role` enum('customer','repairman') NOT NULL,
+  `Status` enum('active','inactive','banned') NOT NULL DEFAULT 'active',
+  `Created_At` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`ID`, `Name`, `Email`, `Password`, `Role`, `Status`, `Created_At`) VALUES
+(1, 'John Doe', 'john@gmail.com', '$2y$10$H/IR5RASyhbVIDqeLC3KZOFjGOCrlQN/DHlBvqN08t1aOMzjllRmC', 'repairman', 'active', '2026-09-07 22:31:21'),
+(2, 'Jane Smith', 'jane@gmail.com', '$2y$10$fwdAj4z6PuvsXcNTbS4LwehqFlreRH4n77YTcezdne24pO2trb72q', 'repairman', 'active', '2026-09-07 22:37:10'),
+(3, 'Ben Dover', 'ben@gmail.com', '$2y$10$xSbNw2NCmeufAssMqAxE/uWxCQPvlqYdAjf4Ecz.ChoQFJvuWDtL2', 'customer', 'active', '2026-09-07 22:39:02');
+
 -- --------------------------------------------------------
 
 --
@@ -194,6 +292,13 @@ CREATE TABLE `user_clientprofile` (
   `ClientContact_ID` int(11) NOT NULL,
   `Status` enum('active','inactive') NOT NULL DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `user_clientprofile`
+--
+
+INSERT INTO `user_clientprofile` (`ID`, `User_ID`, `Name`, `Email`, `ClientAdd_ID`, `ClientContact_ID`, `Status`) VALUES
+(1, 3, 'Ben Dover', 'ben@gmail.com', 1, 1, 'active');
 
 -- --------------------------------------------------------
 
@@ -216,30 +321,24 @@ CREATE TABLE `user_repairmanprofile` (
   `Status` enum('active','inactive') NOT NULL DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- --------------------------------------------------------
-
 --
--- Table structure for table `chat_messages`
+-- Dumping data for table `user_repairmanprofile`
 --
 
-CREATE TABLE `chat_messages` (
-  `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `Sender_ID` int(11) NOT NULL,
-  `Sender_Role` enum('customer','repairman','admin') NOT NULL,
-  `Receiver_ID` int(11) NOT NULL,
-  `Receiver_Role` enum('customer','repairman','admin') NOT NULL,
-  `Message` text NOT NULL,
-  `Is_Read` tinyint(1) NOT NULL DEFAULT 0,
-  `Created_At` datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`ID`),
-  KEY `idx_chat_sender` (`Sender_ID`, `Sender_Role`),
-  KEY `idx_chat_receiver` (`Receiver_ID`, `Receiver_Role`),
-  KEY `idx_chat_created` (`Created_At`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT INTO `user_repairmanprofile` (`ID`, `User_ID`, `Name`, `Email`, `Address`, `MobileNo`, `TelNo`, `Availability`, `Details`, `Reviews`, `RepairmanBG_ID`, `Status`) VALUES
+(1, 1, 'John Doe', 'john@gmail.com', '123 Test St', '09171234567', '02-1234567', NULL, NULL, NULL, 1, 'active'),
+(2, NULL, 'Jane Smith', 'jane@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, 2, 'active');
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `admin`
+--
+ALTER TABLE `admin`
+  ADD PRIMARY KEY (`ID`),
+  ADD UNIQUE KEY `Email_UNIQUE` (`Email`);
 
 --
 -- Indexes for table `applianceissue`
@@ -247,6 +346,15 @@ CREATE TABLE `chat_messages` (
 ALTER TABLE `applianceissue`
   ADD PRIMARY KEY (`ID`),
   ADD KEY `fk_issue_ticket` (`Ticket_ID`);
+
+--
+-- Indexes for table `chat_messages`
+--
+ALTER TABLE `chat_messages`
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `idx_chat_sender` (`Sender_ID`,`Sender_Role`),
+  ADD KEY `idx_chat_receiver` (`Receiver_ID`,`Receiver_Role`),
+  ADD KEY `idx_chat_created` (`Created_At`);
 
 --
 -- Indexes for table `clientaddress`
@@ -306,6 +414,13 @@ ALTER TABLE `repairticket`
   ADD KEY `idx_repair_ticket_status` (`Status`);
 
 --
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`ID`),
+  ADD UNIQUE KEY `Email_UNIQUE` (`Email`);
+
+--
 -- Indexes for table `user_clientprofile`
 --
 ALTER TABLE `user_clientprofile`
@@ -333,73 +448,79 @@ ALTER TABLE `user_repairmanprofile`
 -- AUTO_INCREMENT for table `admin`
 --
 ALTER TABLE `admin`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `applianceissue`
 --
 ALTER TABLE `applianceissue`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `chat_messages`
+--
+ALTER TABLE `chat_messages`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `clientaddress`
 --
 ALTER TABLE `clientaddress`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `clientappliances`
 --
 ALTER TABLE `clientappliances`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `clientcontact`
 --
 ALTER TABLE `clientcontact`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `repairhistory`
 --
 ALTER TABLE `repairhistory`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `repairmanagerbackground`
 --
 ALTER TABLE `repairmanagerbackground`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `repairschedule`
 --
 ALTER TABLE `repairschedule`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `repairticket`
 --
 ALTER TABLE `repairticket`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `user_clientprofile`
 --
 ALTER TABLE `user_clientprofile`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `user_repairmanprofile`
 --
 ALTER TABLE `user_repairmanprofile`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
