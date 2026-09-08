@@ -492,28 +492,38 @@ table tr:hover td {
 
 .password-toggle {
   position: absolute;
-  right: 12px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  background: none;
-  border: none;
+  width: 32px;
+  height: 32px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
   cursor: pointer;
-  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
-  transition: color 0.15s ease;
+  color: var(--text);
+  transition: all 0.15s ease;
 }
 
 .password-toggle:hover {
-  color: var(--primary);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.password-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(27,141,232,0.2);
 }
 
 .password-toggle svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   stroke: currentColor;
+  stroke-width: 2;
 }
 
 .list-item {
