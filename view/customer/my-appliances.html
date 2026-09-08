@@ -102,14 +102,7 @@
           Profile
         </a>
       </div>
-      <div class="sidebar-section">
-        <div class="sidebar-section-label">Other</div>
-        <a href="../customer/landing-page.html" class="sidebar-link">
-          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Back to Home
-        </a>
-      </div>
-    </nav>
+      </nav>
     <div class="sidebar-user">
       <div class="sidebar-avatar">JD</div>
       <div class="sidebar-user-info">
@@ -139,112 +132,7 @@
 
     <!-- APPLIANCE GRID -->
     <div class="appliance-grid" id="applianceGrid">
-
-      <!-- Appliance 1 -->
-      <div class="appliance-card">
-        <div class="appliance-card-top">
-          <div class="appliance-card-info">
-            <h3>Samsung RT38</h3>
-            <p>Refrigerator</p>
-          </div>
-          <span class="badge badge-success">Active</span>
-        </div>
-        <div class="appliance-card-details">
-          <div>
-            <div class="appliance-detail-label">Make / Brand</div>
-            <div class="appliance-detail-value">Samsung</div>
-          </div>
-          <div>
-            <div class="appliance-detail-label">Year</div>
-            <div class="appliance-detail-value">2022</div>
-          </div>
-          <div style="grid-column: span 2;">
-            <div class="appliance-detail-label">Details</div>
-            <div class="appliance-detail-value">3-door inverter refrigerator, frost-free</div>
-          </div>
-        </div>
-        <div class="appliance-card-actions">
-          <button class="btn btn-secondary btn-sm" onclick="openModal('editApplianceModal')">
-            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit
-          </button>
-          <button class="btn btn-secondary btn-sm" style="color:var(--danger);" onclick="openModal('deleteApplianceModal')">
-            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            Delete
-          </button>
-        </div>
-      </div>
-
-      <!-- Appliance 2 -->
-      <div class="appliance-card">
-        <div class="appliance-card-top">
-          <div class="appliance-card-info">
-            <h3>LG F4J5TN8W</h3>
-            <p>Washing Machine</p>
-          </div>
-          <span class="badge badge-success">Active</span>
-        </div>
-        <div class="appliance-card-details">
-          <div>
-            <div class="appliance-detail-label">Make / Brand</div>
-            <div class="appliance-detail-value">LG</div>
-          </div>
-          <div>
-            <div class="appliance-detail-label">Year</div>
-            <div class="appliance-detail-value">2023</div>
-          </div>
-          <div style="grid-column: span 2;">
-            <div class="appliance-detail-label">Details</div>
-            <div class="appliance-detail-value">Front-load washer with turbo wash, 8kg capacity</div>
-          </div>
-        </div>
-        <div class="appliance-card-actions">
-          <button class="btn btn-secondary btn-sm" onclick="openModal('editApplianceModal')">
-            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit
-          </button>
-          <button class="btn btn-secondary btn-sm" style="color:var(--danger);" onclick="openModal('deleteApplianceModal')">
-            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            Delete
-          </button>
-        </div>
-      </div>
-
-      <!-- Appliance 3 -->
-      <div class="appliance-card">
-        <div class="appliance-card-top">
-          <div class="appliance-card-info">
-            <h3>Carrier 42QHB012DS</h3>
-            <p>Air Conditioner</p>
-          </div>
-          <span class="badge badge-success">Active</span>
-        </div>
-        <div class="appliance-card-details">
-          <div>
-            <div class="appliance-detail-label">Make / Brand</div>
-            <div class="appliance-detail-value">Carrier</div>
-          </div>
-          <div>
-            <div class="appliance-detail-label">Year</div>
-            <div class="appliance-detail-value">2021</div>
-          </div>
-          <div style="grid-column: span 2;">
-            <div class="appliance-detail-label">Details</div>
-            <div class="appliance-detail-value">Split-type inverter AC, 1.5 HP</div>
-          </div>
-        </div>
-        <div class="appliance-card-actions">
-          <button class="btn btn-secondary btn-sm" onclick="openModal('editApplianceModal')">
-            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit
-          </button>
-          <button class="btn btn-secondary btn-sm" style="color:var(--danger);" onclick="openModal('deleteApplianceModal')">
-            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            Delete
-          </button>
-        </div>
-      </div>
-
+      <p style="text-align:center;padding:40px;color:var(--muted);grid-column:1/-1;">Loading appliances...</p>
     </div>
   </main>
 
@@ -393,22 +281,57 @@
     if (sidebarUserName) sidebarUserName.textContent = userName || 'Customer';
     if (sidebarAvatar) sidebarAvatar.textContent = (userName || 'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
     var grid = document.getElementById('applianceGrid');
+    var TYPE_LABELS = {
+      'refrigerator': 'Refrigerator',
+      'washing-machine': 'Washing Machine',
+      'air-conditioner': 'Air Conditioner',
+      'microwave': 'Microwave',
+      'oven': 'Oven / Stove',
+      'dishwasher': 'Dishwasher',
+      'electric-fan': 'Electric Fan',
+      'water-heater': 'Water Heater',
+      'other': 'Other'
+    };
+
+    function typeLabel(t) { return TYPE_LABELS[t] || t || 'Appliance'; }
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function normalize(a) {
+      if (!a) a = {};
+      return {
+        id: a.ID || a.id,
+        name: a.Name || a.name || a.appliance_name || '',
+        type: a.Type || a.type || a.appliance_type || '',
+        make: a.Make || a.make || a.make_brand || a.brand || '',
+        year: a.Year || a.year || a.year_model || '',
+        details: a.Details || a.details || a.description || ''
+      };
+    }
 
     function renderAppliances(appliances) {
-      if (!appliances.length) { grid.innerHTML = '<p style="text-align:center;padding:40px;color:var(--muted);grid-column:1/-1;">No appliances registered yet.</p>'; return; }
-      grid.innerHTML = appliances.map(function(a) {
+      if (!appliances.length) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><svg viewBox="0 0 24 24" style="width:42px;height:42px;stroke:var(--soft);fill:none;stroke-width:1.5;margin-bottom:12px;"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/><line x1="15" y1="21" x2="15" y2="9"/></svg><p>No appliances registered yet. Click "Add Appliance" to get started.</p></div>';
+        return;
+      }
+      grid.innerHTML = appliances.map(function(raw) {
+        var a = normalize(raw);
         return '<div class="appliance-card">' +
           '<div class="appliance-card-top">' +
             '<div class="appliance-card-info">' +
-              '<h3>' + (a.appliance_name || a.name || '') + '</h3>' +
-              '<p>' + (a.appliance_type || a.type || '') + '</p>' +
+              '<h3>' + escapeHtml(a.name) + '</h3>' +
+              '<p>' + escapeHtml(typeLabel(a.type)) + '</p>' +
             '</div>' +
             '<span class="badge badge-success">Active</span>' +
           '</div>' +
           '<div class="appliance-card-details">' +
-            '<div><div class="appliance-detail-label">Make / Brand</div><div class="appliance-detail-value">' + (a.make_brand || a.brand || '') + '</div></div>' +
-            '<div><div class="appliance-detail-label">Year</div><div class="appliance-detail-value">' + (a.year_model || a.year || '') + '</div></div>' +
-            '<div style="grid-column: span 2;"><div class="appliance-detail-label">Details</div><div class="appliance-detail-value">' + (a.details || a.description || '') + '</div></div>' +
+            '<div><div class="appliance-detail-label">Make / Brand</div><div class="appliance-detail-value">' + escapeHtml(a.make) + '</div></div>' +
+            '<div><div class="appliance-detail-label">Year</div><div class="appliance-detail-value">' + escapeHtml(String(a.year)) + '</div></div>' +
+            '<div style="grid-column: span 2;"><div class="appliance-detail-label">Details</div><div class="appliance-detail-value">' + escapeHtml(a.details) + '</div></div>' +
           '</div>' +
           '<div class="appliance-card-actions">' +
             '<button class="btn btn-secondary btn-sm edit-appliance-btn" data-id="' + a.id + '">' +
@@ -426,14 +349,15 @@
       var editBtn = e.target.closest('.edit-appliance-btn');
       if (editBtn) {
         var id = editBtn.getAttribute('data-id');
-        var appliance = allAppliances.find(function(a){ return a.id == id; });
+        var appliance = allAppliances.find(function(a){ return (a.ID || a.id) == id; });
         if (appliance) {
           editingId = id;
-          document.getElementById('editApplianceType').value = appliance.appliance_type || appliance.type || '';
-          document.getElementById('editApplianceName').value = appliance.appliance_name || appliance.name || '';
-          document.getElementById('editApplianceMake').value = appliance.make_brand || appliance.brand || '';
-          document.getElementById('editApplianceYear').value = appliance.year_model || appliance.year || '';
-          document.getElementById('editApplianceDetails').value = appliance.details || appliance.description || '';
+          var a = normalize(appliance);
+          document.getElementById('editApplianceType').value = a.type;
+          document.getElementById('editApplianceName').value = a.name;
+          document.getElementById('editApplianceMake').value = a.make;
+          document.getElementById('editApplianceYear').value = a.year;
+          document.getElementById('editApplianceDetails').value = a.details;
           openModal('editApplianceModal');
         }
       }
@@ -456,9 +380,9 @@
       fetch('../../controllers/customer/appliances.php', { method: 'POST', body: fd })
         .then(function(r){ return r.json(); })
         .then(function(data){
-          if (data.success) { closeModal('addApplianceModal'); document.getElementById('addApplianceType').value=''; document.getElementById('addApplianceName').value=''; document.getElementById('addApplianceMake').value=''; document.getElementById('addApplianceYear').value=''; document.getElementById('addApplianceDetails').value=''; loadAppliances(); } else { alert(data.message || 'Error adding appliance.'); }
+          if (isSuccess(data)) { closeModal('addApplianceModal'); document.getElementById('addApplianceType').value=''; document.getElementById('addApplianceName').value=''; document.getElementById('addApplianceMake').value=''; document.getElementById('addApplianceYear').value=''; document.getElementById('addApplianceDetails').value=''; showAlert(data.message || 'Appliance added successfully.', 'success'); loadAppliances(); } else { showAlert(data.message || 'Error adding appliance.', 'error'); }
         })
-        .catch(function(){ alert('Network error.'); });
+        .catch(function(){ showAlert('Network error.', 'error'); });
     });
 
     document.getElementById('editApplianceBtn').addEventListener('click', function() {
@@ -475,9 +399,9 @@
       fetch('../../controllers/customer/appliances.php', { method: 'POST', body: fd })
         .then(function(r){ return r.json(); })
         .then(function(data){
-          if (data.success) { closeModal('editApplianceModal'); loadAppliances(); } else { alert(data.message || 'Error updating appliance.'); }
+          if (isSuccess(data)) { closeModal('editApplianceModal'); showAlert(data.message || 'Appliance updated successfully.', 'success'); loadAppliances(); } else { showAlert(data.message || 'Error updating appliance.', 'error'); }
         })
-        .catch(function(){ alert('Network error.'); });
+        .catch(function(){ showAlert('Network error.', 'error'); });
     });
 
     document.getElementById('deleteApplianceBtn').addEventListener('click', function() {
@@ -489,20 +413,21 @@
       fetch('../../controllers/customer/appliances.php', { method: 'POST', body: fd })
         .then(function(r){ return r.json(); })
         .then(function(data){
-          if (data.success) { closeModal('deleteApplianceModal'); loadAppliances(); } else { alert(data.message || 'Error deleting appliance.'); }
+          if (isSuccess(data)) { closeModal('deleteApplianceModal'); showAlert(data.message || 'Appliance deleted successfully.', 'success'); loadAppliances(); } else { showAlert(data.message || 'Error deleting appliance.', 'error'); }
         })
-        .catch(function(){ alert('Network error.'); });
+        .catch(function(){ showAlert('Network error.', 'error'); });
     });
 
     function loadAppliances() {
       fetch('../../controllers/customer/appliances.php?user_id=' + userId)
         .then(function(r){ return r.json(); })
         .then(function(data){
+          if (!data || data.status === 'error') { grid.innerHTML = '<p style="text-align:center;padding:40px;color:var(--muted);grid-column:1/-1;">Unable to load appliances. Please refresh the page.</p>'; return; }
           allAppliances = data.appliances || data || [];
           if (!Array.isArray(allAppliances)) allAppliances = [];
           renderAppliances(allAppliances);
         })
-        .catch(function(){});
+        .catch(function(){ grid.innerHTML = '<p style="text-align:center;padding:40px;color:var(--muted);grid-column:1/-1;">Unable to load appliances. Please refresh the page.</p>'; });
     }
 
     document.getElementById('logoutBtn').addEventListener('click', function() {

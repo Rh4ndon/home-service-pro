@@ -41,6 +41,7 @@ function handle_post() {
 
     switch ($action) {
         case 'update':
+        case 'save_profile':
             handle_update($user_id);
             break;
         case 'update_availability':
@@ -83,9 +84,8 @@ function handle_update($user_id) {
 }
 
 function handle_update_availability($user_id) {
-    $availability = $_POST['availability'] ?? '';
-
-    if (empty($availability)) {
+    $availability = $_POST['available'] ?? ($_POST['availability'] ?? '');
+    if ($availability === '') {
         http_response_code(400);
         echo json_encode(["success" => false, "message" => "Availability is required."]);
         return;
@@ -188,6 +188,15 @@ function handle_add_cert($user_id) {
         'issued' => $issued,
         'valid_until' => $valid_until
     ];
+
+    // Attach an uploaded document, if any
+    if (!empty($_FILES['cert_file']) && $_FILES['cert_file']['error'] === UPLOAD_ERR_OK) {
+        $path = saveUploadedCertFile($_FILES['cert_file']['tmp_name'], $_FILES['cert_file']['name']);
+        if ($path) {
+            $idx = count($certs_array) - 1;
+            $certs_array[$idx]['file'] = $path;
+        }
+    }
 
     $new_certs = json_encode($certs_array);
 

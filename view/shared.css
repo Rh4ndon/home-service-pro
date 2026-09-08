@@ -623,6 +623,94 @@ table tr:hover td {
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* Toast Alerts */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(400px, calc(100vw - 40px));
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 30px rgba(11,26,38,0.16);
+  animation: toastIn 0.25s ease;
+  min-width: min(300px, calc(100vw - 40px));
+}
+
+.toast-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.toast-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.toast-msg {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.5;
+  padding-top: 7px;
+  word-break: break-word;
+}
+
+.toast-close {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px;
+}
+
+.toast-close:hover {
+  color: var(--text);
+}
+
+.toast-success { border-left: 4px solid var(--success); }
+.toast-success .toast-icon { background: var(--success-bg); color: #15803d; }
+.toast-error { border-left: 4px solid var(--danger); }
+.toast-error .toast-icon { background: var(--danger-bg); color: #dc2626; }
+.toast-warning { border-left: 4px solid var(--warning); }
+.toast-warning .toast-icon { background: var(--warning-bg); color: #b45309; }
+.toast-info { border-left: 4px solid var(--info); }
+.toast-info .toast-icon { background: var(--info-bg); color: #2563eb; }
+
+.toast-hide { animation: toastOut 0.25s ease forwards; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastOut {
+  to { opacity: 0; transform: translateX(20px); }
+}
+
 .modal-header {
   display: flex;
   align-items: center;

@@ -38,13 +38,23 @@ if (!in_array($role, ['customer', 'repairman'])) {
     exit;
 }
 
+if ($role === 'repairman') {
+    $mobile = trim($_POST['mobile'] ?? '');
+    if (!isPhilippineMobile($mobile)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Please enter a valid Philippine mobile number (e.g. 09171234567).']);
+        exit;
+    }
+    $mobile = normalizePhilippineMobile($mobile);
+}
+
 if (isEmailTaken($email)) {
     http_response_code(409);
     echo json_encode(['error' => 'Email already exists']);
     exit;
 }
 
-$userId = createUser($name, $email, $password, $role);
+$userId = createUser($name, $email, $password, $role, ($role === 'repairman' ? 'inactive' : 'active'));
 
 if ($role === 'customer') {
     insertRecord('clientaddress', [
@@ -72,18 +82,23 @@ if ($role === 'customer') {
     ]);
 
 } elseif ($role === 'repairman') {
+    $cert_entries = collectCertEntriesFromUploads();
+    $certs_json = $cert_entries ? json_encode($cert_entries) : null;
+
     insertOrder('repairmanagerbackground', [
         'Skills' => null,
         'Education' => null,
-        'Certifications' => null
+        'Certifications' => $certs_json
     ]);
     $bgId = mysqli_insert_id($conn);
 
     insertRecord('user_repairmanprofile', [
         'Name' => $name,
         'Email' => $email,
+        'MobileNo' => $mobile,
         'RepairmanBG_ID' => $bgId,
-        'User_ID' => $userId
+        'User_ID' => $userId,
+        'Status' => 'inactive'
     ]);
 }
 
@@ -92,5 +107,6 @@ echo json_encode([
     'id' => $userId,
     'name' => $name,
     'email' => $email,
-    'role' => $role
+    'role' => $role,
+    'pending_activation' => $role === 'repairman'
 ]);

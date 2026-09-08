@@ -63,7 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         try {
-            $profileId = addAdminRepairman($name, $email, $password, $address, $mobile, $tel);
+            $cert_entries = collectCertEntriesFromUploads();
+            $certs_json = $cert_entries ? json_encode($cert_entries) : null;
+            $skills = trim($_POST['skills'] ?? '');
+            $education = trim($_POST['education'] ?? '');
+            $profileId = addAdminRepairman($name, $email, $password, $address, $mobile, $tel, $certs_json, $skills, $education);
 
             echo json_encode([
                 'success' => true,
@@ -74,6 +78,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to create repairman: ' . $e->getMessage()]);
         }
+        exit;
+    }
+
+    if ($action === 'activate') {
+        $id = $_POST['id'] ?? '';
+        if (empty($id)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'ID is required']);
+            exit;
+        }
+
+        activateAdminRepairman($id);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Repairman activated successfully'
+        ]);
         exit;
     }
 

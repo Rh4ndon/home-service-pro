@@ -45,14 +45,7 @@
           Profile
         </a>
       </div>
-      <div class="sidebar-section">
-        <div class="sidebar-section-label">Other</div>
-        <a href="../customer/landing-page.html" class="sidebar-link">
-          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Back to Home
-        </a>
-      </div>
-    </nav>
+      </nav>
     <div class="sidebar-user">
       <div class="sidebar-avatar">JD</div>
       <div class="sidebar-user-info">
@@ -70,43 +63,54 @@
     <div class="page-header">
       <div>
         <h1>Book a Service</h1>
-        <p>Fill out the form below to schedule a repair appointment.</p>
+        <p>Choose a registered appliance or add a new one to schedule a repair appointment.</p>
       </div>
     </div>
 
     <div class="card">
       <div class="card-body">
         <form id="bookingForm" onsubmit="return false;">
-          <div class="grid-2">
-            <div class="form-group">
-              <label for="applianceType">Appliance Type</label>
-              <select id="applianceType">
-                <option value="">Select appliance type...</option>
-                <option value="refrigerator">Refrigerator</option>
-                <option value="washing-machine">Washing Machine</option>
-                <option value="air-conditioner">Air Conditioner</option>
-                <option value="microwave">Microwave</option>
-                <option value="oven">Oven / Stove</option>
-                <option value="dishwasher">Dishwasher</option>
-                <option value="electric-fan">Electric Fan</option>
-                <option value="water-heater">Water Heater</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="applianceName">Appliance Name</label>
-              <input type="text" id="applianceName" placeholder="e.g. Samsung RT38 Refrigerator" />
-            </div>
+          <div class="form-group">
+            <label for="applianceSelect">Select Your Appliance</label>
+            <select id="applianceSelect">
+              <option value="">Choose an appliance...</option>
+              <option value="new">Add a new / other appliance...</option>
+            </select>
+            <p style="font-size:0.8rem;color:var(--muted);margin-top:6px;">Pick from your registered appliances, or choose "Add a new / other appliance" to enter details manually.</p>
           </div>
 
-          <div class="grid-2">
-            <div class="form-group">
-              <label for="makeBrand">Make / Brand</label>
-              <input type="text" id="makeBrand" placeholder="e.g. Samsung, LG, Panasonic" />
+          <div id="newApplianceFields" style="display:none;">
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="applianceType">Appliance Type</label>
+                <select id="applianceType">
+                  <option value="">Select appliance type...</option>
+                  <option value="refrigerator">Refrigerator</option>
+                  <option value="washing-machine">Washing Machine</option>
+                  <option value="air-conditioner">Air Conditioner</option>
+                  <option value="microwave">Microwave</option>
+                  <option value="oven">Oven / Stove</option>
+                  <option value="dishwasher">Dishwasher</option>
+                  <option value="electric-fan">Electric Fan</option>
+                  <option value="water-heater">Water Heater</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="applianceName">Appliance Name</label>
+                <input type="text" id="applianceName" placeholder="e.g. Samsung RT38 Refrigerator" />
+              </div>
             </div>
-            <div class="form-group">
-              <label for="yearModel">Year</label>
-              <input type="number" id="yearModel" placeholder="e.g. 2022" min="1990" max="2026" />
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="makeBrand">Make / Brand</label>
+                <input type="text" id="makeBrand" placeholder="e.g. Samsung, LG, Panasonic" />
+              </div>
+              <div class="form-group">
+                <label for="yearModel">Year</label>
+                <input type="number" id="yearModel" placeholder="e.g. 2022" min="1990" max="2026" />
+              </div>
             </div>
           </div>
 
@@ -194,20 +198,96 @@
     if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
     var userId = localStorage.getItem('id');
     var userName = localStorage.getItem('name');
+    var allAppliances = [];
+    var TYPE_LABELS = {
+      'refrigerator': 'Refrigerator',
+      'washing-machine': 'Washing Machine',
+      'air-conditioner': 'Air Conditioner',
+      'microwave': 'Microwave',
+      'oven': 'Oven / Stove',
+      'dishwasher': 'Dishwasher',
+      'electric-fan': 'Electric Fan',
+      'water-heater': 'Water Heater',
+      'other': 'Other'
+    };
     var sidebarUserName = document.querySelector('.sidebar-user-name');
     var sidebarAvatar = document.querySelector('.sidebar-avatar');
     if (sidebarUserName) sidebarUserName.textContent = userName || 'Customer';
     if (sidebarAvatar) sidebarAvatar.textContent = (userName || 'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+
+    function typeLabel(t) { return TYPE_LABELS[t] || t || 'Appliance'; }
+    function normalize(a) {
+      if (!a) a = {};
+      return {
+        id: a.ID || a.id,
+        name: a.Name || a.name || a.appliance_name || '',
+        type: a.Type || a.type || a.appliance_type || '',
+        make: a.Make || a.make || a.make_brand || a.brand || '',
+        year: a.Year || a.year || a.year_model || ''
+      };
+    }
+
+    var applianceSelect = document.getElementById('applianceSelect');
+    var newApplianceFields = document.getElementById('newApplianceFields');
+
+    applianceSelect.addEventListener('change', function() {
+      newApplianceFields.style.display = (this.value === 'new') ? '' : 'none';
+    });
+
+    function loadAppliances() {
+      fetch('../../controllers/customer/appliances.php?user_id=' + userId)
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          var list = (data && data.appliances) || [];
+          if (!Array.isArray(list)) list = [];
+          allAppliances = list.map(normalize).filter(function(a){ return a.id; });
+          allAppliances.forEach(function(a) {
+            var opt = document.createElement('option');
+            opt.value = a.id;
+            var label = a.name || '';
+            if (a.type) { if (label) label += ' — '; label += typeLabel(a.type); }
+            if (a.make) label += ' (' + a.make + ')';
+            if (a.year) label += ', ' + a.year;
+            opt.textContent = label;
+            applianceSelect.appendChild(opt);
+          });
+          if (!allAppliances.length) {
+            applianceSelect.value = 'new';
+            newApplianceFields.style.display = '';
+          }
+        })
+        .catch(function(){ applianceSelect.value = 'new'; newApplianceFields.style.display = ''; });
+    }
+
     document.getElementById('confirmBtn').addEventListener('click', function() {
-      var applianceType = document.getElementById('applianceType').value;
-      var applianceName = document.getElementById('applianceName').value;
-      var makeBrand = document.getElementById('makeBrand').value;
-      var yearModel = document.getElementById('yearModel').value;
+      var selected = applianceSelect.value;
+      var applianceType, applianceName, makeBrand, yearModel, applianceId = null;
+      if (selected === 'new') {
+        applianceType = document.getElementById('applianceType').value;
+        applianceName = document.getElementById('applianceName').value;
+        makeBrand = document.getElementById('makeBrand').value;
+        yearModel = document.getElementById('yearModel').value;
+        if (!applianceType || !applianceName || !makeBrand || !yearModel) {
+          showAlert('Please fill in the appliance details.', 'warning');
+          return;
+        }
+      } else if (selected === '') {
+        showAlert('Please select an appliance or add a new one.', 'warning');
+        return;
+      } else {
+        var a = allAppliances.find(function(x){ return String(x.id) === String(selected); });
+        if (!a) { showAlert('Please select a valid appliance.', 'warning'); return; }
+        applianceId = a.id;
+        applianceType = a.type;
+        applianceName = a.name;
+        makeBrand = a.make;
+        yearModel = a.year;
+      }
       var issueDesc = document.getElementById('issueDesc').value;
       var preferredDate = document.getElementById('preferredDate').value;
       var preferredTime = document.getElementById('preferredTime').value;
-      if (!applianceType || !applianceName || !makeBrand || !yearModel || !issueDesc || !preferredDate || !preferredTime) {
-        alert('Please fill in all required fields.');
+      if (!issueDesc || !preferredDate || !preferredTime) {
+        showAlert('Please fill in all required fields.', 'warning');
         return;
       }
       var fd = new FormData();
@@ -217,26 +297,29 @@
       fd.append('appliance_name', applianceName);
       fd.append('make_brand', makeBrand);
       fd.append('year_model', yearModel);
+      if (applianceId) fd.append('appliance_id', applianceId);
       fd.append('issue_desc', issueDesc);
       fd.append('preferred_date', preferredDate);
       fd.append('preferred_time', preferredTime);
       fetch('../../controllers/customer/tickets.php', { method: 'POST', body: fd })
         .then(function(r){ return r.json(); })
         .then(function(data){
-          if (data.success) {
+          if (isSuccess(data)) {
             closeModal('confirmBookingModal');
             openModal('successBookingModal');
           } else {
-            alert(data.message || 'Error submitting booking.');
+            showAlert(data.message || 'Error submitting booking.', 'error');
           }
         })
-        .catch(function(){ alert('Network error. Please try again.'); });
+        .catch(function(){ showAlert('Network error. Please try again.', 'error'); });
     });
     document.getElementById('logoutBtn').addEventListener('click', function() {
       fetch('../../controllers/logout.php', { method: 'POST' })
         .then(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; })
         .catch(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; });
     });
+
+    loadAppliances();
   })();
   </script>
 </body>

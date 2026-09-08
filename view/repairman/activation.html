@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Activation - HomeService Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../shared.css" />
+  </head>
+  <body>
+    <div class="auth-page">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-brand">HomeService<span>Pro</span></div>
+          <div class="auth-subtitle">Account Pending Activation</div>
+        </div>
+        <div class="auth-body" style="text-align: center; padding: 24px 0;">
+          <div style="width: 72px; height: 72px; margin: 0 auto 20px; border-radius: 50%; background: rgba(241, 196, 15, 0.15); color: var(--warning); display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 34px; height: 34px;">
+              <rect x="6" y="11" width="12" height="11" rx="2"/>
+              <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+            </svg>
+          </div>
+          <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: 8px;">Thank you for signing up!</h2>
+          <p style="color: var(--muted); font-size: 0.92rem; line-height: 1.6; margin-bottom: 6px;">
+            Your repairman account has been created and is now <strong>pending admin approval</strong>.
+          </p>
+          <p style="color: var(--muted); font-size: 0.92rem; line-height: 1.6; margin-bottom: 4px;">
+            An administrator needs to verify your information and activate your account before you can use the system.
+          </p>
+          <p style="color: var(--muted); font-size: 0.92rem; line-height: 1.6;">
+            Please check back later or contact support. You can still view your submitted certificates on your profile once activated.
+          </p>
+        </div>
+        <div class="auth-footer">
+          <a href="login.html">Back to Login</a>
+        </div>
+        <div class="auth-back">
+          <a href="login.html">&larr; Go to Login</a>
+        </div>
+      </div>
+    </div>
+    <script src="../shared.js"></script>
+    <script>
+      localStorage.clear();
+    </script>
+  </body>
+</html>

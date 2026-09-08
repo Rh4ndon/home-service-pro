@@ -1,0 +1,7 @@
+After the repairman document and application was done in both repairman and admin ends
+--this is next
+on the repairman location and customer location we should use leaflet js as a map
+Both the customer and repairman should add there location address it should be coordinates so they should pin on map or option to use device location
+This coordinated will be used to find each other due to this is a web base app the user might be from different places so the coordinated and address are important
+the web app should show nearest repairman available like within 10km they should have option to adjust until 30km only since its already far 
+im thinking if we measure places base on radius or base on route or path on roads i think that is more practical.

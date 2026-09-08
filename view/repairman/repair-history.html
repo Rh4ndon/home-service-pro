@@ -66,7 +66,7 @@
         <p>View all your past repair jobs and their details.</p>
       </div>
       <div class="header-actions">
-        <button class="btn btn-secondary" onclick="openModal('modalExport')">
+        <button class="btn btn-secondary" onclick="exportHistory()">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export History
         </button>
@@ -78,24 +78,25 @@
       <div class="card-body" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
         <div class="form-group" style="margin-bottom: 0;">
           <label>Date From</label>
-          <input type="date" value="2026-01-01">
+          <input type="date" id="dateFrom">
         </div>
         <div class="form-group" style="margin-bottom: 0;">
           <label>Date To</label>
-          <input type="date" value="2026-08-19">
+          <input type="date" id="dateTo">
         </div>
         <div class="form-group" style="margin-bottom: 0;">
           <label>Status</label>
-          <select style="padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 0.92rem; color: var(--text); background: var(--card);">
+          <select id="statusFilter" style="padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 0.92rem; color: var(--text); background: var(--card);">
             <option value="all">All Status</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
         </div>
         <div class="form-group" style="margin-bottom: 0; flex: 1;">
           <label>Search</label>
-          <input type="text" id="searchHistory" placeholder="Search by client, appliance, issue..." oninput="filterTable('searchHistory','historyTable')">
+          <input type="text" id="searchHistory" placeholder="Search by client, appliance, issue..." oninput="filterHistoryRows()">
         </div>
+        <button class="btn btn-primary" onclick="loadHistory()">Apply Filters</button>
       </div>
     </div>
 
@@ -103,7 +104,7 @@
     <div class="card">
       <div class="card-header">
         <h2>Past Repairs</h2>
-        <span style="font-size: 0.85rem; color: var(--muted);">Showing 10 records</span>
+        <span id="historyCount" style="font-size: 0.85rem; color: var(--muted);">Loading...</span>
       </div>
       <div class="card-body-flush">
         <div class="table-wrap">
@@ -115,122 +116,11 @@
                 <th>Appliance</th>
                 <th>Issue</th>
                 <th>Status</th>
-                <th>Duration</th>
+                <th>Ticket ID</th>
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>Aug 12, 2026</td>
-                <td>Corazon Aquino</td>
-                <td>Microwave Oven</td>
-                <td>Microwave not heating</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td>2 hours</td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Aug 11, 2026</td>
-                <td>Ramon Magsaysay</td>
-                <td>Gas Range</td>
-                <td>Stove burner not igniting</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td>1.5 hours</td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Aug 10, 2026</td>
-                <td>Gabriela Silang</td>
-                <td>Water Heater</td>
-                <td>Heater not producing hot water</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td>3 hours</td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Aug 8, 2026</td>
-                <td>Emilio Aguinaldo</td>
-                <td>Air Conditioner</td>
-                <td>AC leaking water</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td>2.5 hours</td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Aug 6, 2026</td>
-                <td>Trinidad Tecson</td>
-                <td>Refrigerator</td>
-                <td>Fridge door seal broken</td>
-                <td><span class="badge badge-danger">Cancelled</span></td>
-                <td>--</td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Aug 4, 2026</td>
-                <td>Diego Silang</td>
-                <td>Washing Machine</td>
-                <td>Washer making grinding noise</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td>1 hour</td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Aug 2, 2026</td>
-                <td>Melchora Aquino</td>
-                <td>Television</td>
-                <td>TV flickering display</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td>2 hours</td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Jul 30, 2026</td>
-                <td>Lapu-Lapu</td>
-                <td>Electric Fan</td>
-                <td>Fan not turning on</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td>45 minutes</td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Jul 28, 2026</td>
-                <td>Tandang Sora</td>
-                <td>Dishwasher</td>
-                <td>Dishwasher not cleaning properly</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td>1.5 hours</td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Jul 25, 2026</td>
-                <td>Kumintang Ilaya</td>
-                <td>Air Conditioner</td>
-                <td>AC not blowing cold air</td>
-                <td><span class="badge badge-danger">Cancelled</span></td>
-                <td>--</td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalHistoryDetail')">View Details</button>
-                </td>
-              </tr>
-            </tbody>
+            <tbody></tbody>
           </table>
         </div>
       </div>
@@ -241,33 +131,25 @@
   <div class="modal-overlay" id="modalHistoryDetail">
     <div class="modal" style="width: min(560px, calc(100% - 32px));">
       <div class="modal-header">
-        <h3>Repair Detail - Aug 12, 2026</h3>
+        <h3 id="histDetailTitle">Repair Detail</h3>
         <button class="modal-close" onclick="closeModal('modalHistoryDetail')">&times;</button>
       </div>
       <div class="modal-body">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
-          <div><strong>Client:</strong> Corazon Aquino</div>
-          <div><strong>Date:</strong> Aug 12, 2026</div>
-          <div><strong>Appliance:</strong> Microwave Oven</div>
-          <div><strong>Status:</strong> <span class="badge badge-success">Completed</span></div>
-          <div><strong>Duration:</strong> 2 hours</div>
-          <div><strong>Ticket ID:</strong> #1035</div>
+          <div id="histClient"><strong>Client:</strong> --</div>
+          <div id="histDate"><strong>Date:</strong> --</div>
+          <div id="histAppliance"><strong>Appliance:</strong> --</div>
+          <div id="histStatus"><strong>Status:</strong> --</div>
+          <div id="histTicket"><strong>Ticket ID:</strong> --</div>
+          <div id="histSchedule"><strong>Schedule:</strong> --</div>
         </div>
         <div style="margin-bottom: 14px;">
           <strong>Issue Reported:</strong>
-          <p style="margin-top: 4px; color: var(--muted);">Client reported that the microwave was not heating food. The turntable was rotating but no heat was produced. Display panel and buttons were functioning normally.</p>
+          <p id="histIssue" style="margin-top: 4px; color: var(--muted);">--</p>
         </div>
         <div style="margin-bottom: 14px;">
-          <strong>Diagnosis:</strong>
-          <p style="margin-top: 4px; color: var(--muted);">Faulty magnetron identified as the root cause. The high-voltage diode was also found to be defective. Capacitor tested within normal range.</p>
-        </div>
-        <div style="margin-bottom: 14px;">
-          <strong>Work Performed:</strong>
-          <p style="margin-top: 4px; color: var(--muted);">Replaced magnetron and high-voltage diode. Cleaned waveguide cover and interior. Tested heating at various power levels. All functions restored to normal operation.</p>
-        </div>
-        <div>
-          <strong>Parts Used:</strong>
-          <p style="margin-top: 4px; color: var(--muted);">Magnetron (Samsung OM75P), High-Voltage Diode (2KV 350mA)</p>
+          <strong>Work Details:</strong>
+          <p id="histDetails" style="margin-top: 4px; color: var(--muted);">--</p>
         </div>
       </div>
       <div class="modal-footer">
@@ -284,11 +166,12 @@
         <button class="modal-close" onclick="closeModal('modalExport')">&times;</button>
       </div>
       <div class="modal-body">
-        <p>Are you sure you want to export your repair history? This will generate a CSV file with all your past repair records.</p>
+        <p>Are you sure you want to export your repair history? A CSV file will be generated containing your past repair records.</p>
+        <p style="margin-top: 8px; color: var(--muted); font-size: 0.88rem;" id="exportCount">0 record(s) will be exported.</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalExport')">Cancel</button>
-        <button class="btn btn-primary" onclick="doAction('modalExport','Repair history exported successfully! Check your downloads folder.')">Export</button>
+        <button class="btn btn-primary" onclick="doExport()">Export CSV</button>
       </div>
     </div>
   </div>
@@ -329,63 +212,116 @@
       }
       document.querySelectorAll('#logoutModal .btn-danger').forEach(function(btn) { btn.onclick = logout; });
 
+      var historyRows = [];
+
       function loadHistory() {
         if (!userId) return;
         var url = '../../controllers/repairman/repair-history.php?user_id=' + userId;
-        var dateFrom = document.querySelector('input[type="date"][value]');
-        var dateTo = document.querySelectorAll('input[type="date"][value]');
-        var statusSel = document.querySelector('select');
-        if (dateFrom) {
-          var fromEl = dateTo[0] || dateFrom;
-          var toEl = dateTo[1] || dateFrom;
-          if (fromEl && fromEl.value) url += '&date_from=' + fromEl.value;
-          if (toEl && toEl.value) url += '&date_to=' + toEl.value;
-        }
-        if (statusSel && statusSel.value && statusSel.value !== 'all') {
-          url += '&status=' + statusSel.value;
-        }
+        var fromEl = document.getElementById('dateFrom');
+        var toEl = document.getElementById('dateTo');
+        var statusSel = document.getElementById('statusFilter');
+        if (fromEl && fromEl.value) url += '&date_from=' + fromEl.value;
+        if (toEl && toEl.value) url += '&date_to=' + toEl.value;
+        if (statusSel && statusSel.value && statusSel.value !== 'all') url += '&status=' + statusSel.value;
+
+        var tbody = document.querySelector('#historyTable tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">Loading...</td></tr>';
 
         fetch(url)
           .then(function(r) { return r.json(); })
           .then(function(data) {
-            if (!data.history || !data.history.length) return;
-            var tbody = document.querySelector('#historyTable tbody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-
-            var countEl = document.querySelector('.card-header span[style]');
-            if (countEl) countEl.textContent = 'Showing ' + data.history.length + ' records';
-
-            data.history.forEach(function(item) {
-              var status = (item.repair_status || item.status || '').toLowerCase();
-              var badgeCls = status === 'completed' ? 'badge-success' : (status === 'cancelled' ? 'badge-danger' : 'badge-neutral');
-              var badgeLabel = status.charAt(0).toUpperCase() + status.slice(1);
-              var row = document.createElement('tr');
-              var date = item.repair_date || item.repair_date || item.completed_date || '';
-              if (date && date.length > 5) {
-                var d = new Date(date);
-                var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                var m = d.getMonth();
-                date = months[m] + ' ' + d.getDate() + ', ' + d.getFullYear();
-              }
-              var row = document.createElement('tr');
-              row.innerHTML = '<td>' + date + '</td>' +
-                '<td>' + (item.client_name || '') + '</td>' +
-                '<td>' + (item.appliance_name || item.appliance || '') + '</td>' +
-                '<td>' + (item.issue || item.issue_details || '') + '</td>' +
-                '<td><span class="badge ' + badgeCls + '">' + badgeLabel + '</span></td>' +
-                '<td>--</td>' +
-                '<td class="action-btns"><button class="btn btn-secondary btn-sm" onclick="openModal(\'modalHistoryDetail\')">View Details</button></td>';
-              tbody.appendChild(row);
-            });
+            historyRows = data.data || [];
+            renderHistory(historyRows);
           })
-          .catch(function() {});
+          .catch(function() {
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--danger);">Failed to load repair history.</td></tr>';
+          });
       }
 
-      var filterInputs = document.querySelectorAll('input[type="date"], select');
-      filterInputs.forEach(function(el) {
-        el.addEventListener('change', loadHistory);
-      });
+      function fmtDate(dt) {
+        if (!dt) return '--';
+        var d = new Date(String(dt).replace(' ', 'T'));
+        if (isNaN(d.getTime())) return dt;
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+      }
+
+      function renderHistory(rows) {
+        var tbody = document.querySelector('#historyTable tbody');
+        var countEl = document.getElementById('historyCount');
+        if (!tbody) return;
+        if (countEl) countEl.textContent = 'Showing ' + rows.length + ' record(s)';
+        if (!rows.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">No repair history found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = rows.map(function(item) {
+          var status = item.repair_status || '';
+          var badgeCls = status.toLowerCase() === 'completed' ? 'badge-success' : status.toLowerCase() === 'cancelled' ? 'badge-danger' : 'badge-neutral';
+          return '<tr data-search="' + escHtml((item.client_name || '') + ' ' + (item.appliance_name || '') + ' ' + (item.issue || '')).toLowerCase() + '">' +
+            '<td>' + fmtDate(item.repair_date) + '</td>' +
+            '<td>' + escHtml(item.client_name || '--') + '</td>' +
+            '<td>' + escHtml(item.appliance_name || item.appliance_type || '--') + '</td>' +
+            '<td>' + escHtml(item.issue || item.issue_details || '--') + '</td>' +
+            '<td><span class="badge ' + badgeCls + '">' + escHtml(status || '--') + '</span></td>' +
+            '<td>#' + (item.ticket_id || '--') + '</td>' +
+            '<td class="action-btns"><button class="btn btn-secondary btn-sm" onclick=\'openHistoryDetail(' + JSON.stringify(item).replace(/'/g, "\\'") + ')\'>View Details</button></td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      function filterHistoryRows() {
+        var q = (document.getElementById('searchHistory').value || '').toLowerCase().trim();
+        document.querySelectorAll('#historyTable tbody tr').forEach(function(tr) {
+          if (!tr.dataset.search) return;
+          tr.style.display = tr.dataset.search.indexOf(q) !== -1 ? '' : 'none';
+        });
+      }
+
+      function openHistoryDetail(item) {
+        document.getElementById('histDetailTitle').textContent = 'Repair Detail - ' + fmtDate(item.repair_date);
+        document.getElementById('histClient').innerHTML = '<strong>Client:</strong> ' + escHtml(item.client_name || '--');
+        document.getElementById('histDate').innerHTML = '<strong>Date:</strong> ' + fmtDate(item.repair_date);
+        document.getElementById('histAppliance').innerHTML = '<strong>Appliance:</strong> ' + escHtml(item.appliance_name || item.appliance_type || '--');
+        var status = item.repair_status || '--';
+        var badgeCls = status.toLowerCase() === 'completed' ? 'badge-success' : status.toLowerCase() === 'cancelled' ? 'badge-danger' : 'badge-neutral';
+        document.getElementById('histStatus').innerHTML = '<strong>Status:</strong> <span class="badge ' + badgeCls + '">' + escHtml(status) + '</span>';
+        document.getElementById('histTicket').innerHTML = '<strong>Ticket ID:</strong> #' + (item.ticket_id || '--');
+        document.getElementById('histSchedule').innerHTML = '<strong>Schedule:</strong> ' + fmtDate(item.schedule_date);
+        document.getElementById('histIssue').textContent = item.issue || item.issue_details || '--';
+        document.getElementById('histDetails').textContent = item.ticket_details || item.issue_details || '--';
+        openModal('modalHistoryDetail');
+      }
+
+      function exportHistory() {
+        document.getElementById('exportCount').textContent = historyRows.length + ' record(s) will be exported.';
+        openModal('modalExport');
+      }
+
+      function doExport() {
+        closeModal('modalExport');
+        var headers = ['Date', 'Client', 'Appliance', 'Issue', 'Status', 'Ticket ID', 'Schedule'];
+        var lines = [headers.join(',')];
+        historyRows.forEach(function(r) {
+          lines.push([
+            fmtDate(r.repair_date), r.client_name || '', r.appliance_name || r.appliance_type || '',
+            (r.issue || '').replace(/,/g, ';'), r.repair_status || '', '#' + (r.ticket_id || ''), fmtDate(r.schedule_date)
+          ].join(','));
+        });
+        var blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'repair-history.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+
+      function escHtml(str) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(str));
+        return d.innerHTML;
+      }
 
       loadHistory();
     })();

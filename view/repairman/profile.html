@@ -74,8 +74,8 @@
         <div>
           <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--text); margin-bottom: 4px;">Pedro Santos</h2>
           <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 6px;">pedro.santos@email.com</p>
-          <div class="stars" style="font-size: 1.1rem;">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
-          <span style="font-size: 0.85rem; color: var(--muted); margin-left: 6px;">4.8 / 5.0 (47 reviews)</span>
+          <div class="stars" style="font-size: 1.1rem;" id="profileStars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+          <span id="profileRating" style="font-size: 0.85rem; color: var(--muted); display:block; margin-left: 6px;"></span>
         </div>
       </div>
     </div>
@@ -325,6 +325,10 @@
             <input type="date">
           </div>
         </div>
+        <div class="form-group">
+          <label>Certificate Document (PDF / image)</label>
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif">
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalAddCert')">Cancel</button>
@@ -393,14 +397,16 @@
         data += '&mobile=' + encodeURIComponent(inputs[3] ? inputs[3].value : '');
         data += '&tel=' + encodeURIComponent(inputs[4] ? inputs[4].value : '');
         closeModal('modalSaveProfile');
-        postAction(data).then(function() { alert('Profile saved successfully!'); }).catch(function() {});
+        postAction(data).then(function() { showAlert('Profile saved successfully!', 'success'); }).catch(function() {});
       };
 
       var availToggle = document.querySelector('.avail-row input[type="checkbox"]');
       if (availToggle) {
         availToggle.addEventListener('change', function() {
           var available = this.checked ? 1 : 0;
-          postAction('user_id=' + userId + '&action=update_availability&available=' + available);
+          postAction('user_id=' + userId + '&action=update_availability&available=' + available)
+            .then(function(res) { if (res && res.success !== undefined && !res.success) showAlert(res.message || 'Failed.', 'error'); })
+            .catch(function() {});
         });
       }
 
@@ -425,10 +431,22 @@
         var certName = inputs[0] ? inputs[0].value.trim() : '';
         var issued = inputs[1] ? inputs[1].value : '';
         var valid = inputs[2] ? inputs[2].value : '';
-        if (!certName) return;
-        postAction('user_id=' + userId + '&action=add_cert&cert_name=' + encodeURIComponent(certName) +
-          '&issued=' + encodeURIComponent(issued) + '&valid_until=' + encodeURIComponent(valid))
-          .then(function() { location.reload(); }).catch(function() {});
+        var fileInput = inputs[3];
+        if (!certName) { showAlert('Please enter a certification name.', 'error'); return; }
+        var fd = new FormData();
+        fd.append('user_id', userId);
+        fd.append('action', 'add_cert');
+        fd.append('cert_name', certName);
+        fd.append('issued', issued);
+        fd.append('valid_until', valid);
+        if (fileInput && fileInput.files.length) fd.append('cert_file', fileInput.files[0]);
+        fetch('../../controllers/repairman/profile.php', { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(res) {
+            if (res.success) { showAlert('Certificate added successfully.', 'success'); location.reload(); }
+            else { showAlert(res.message || 'Failed to add certificate.', 'error'); closeModal('modalAddCert'); }
+          })
+          .catch(function() {});
       };
 
       if (!userId) return;
@@ -437,96 +455,141 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.error) return;
-          var p = data.profile || data;
+          var p = data.data || {};
 
           var inputs = document.querySelectorAll('.card-body input');
           if (inputs.length >= 5) {
-            if (p.name) inputs[0].value = p.name;
-            if (p.email) inputs[1].value = p.email;
-            if (p.address) inputs[2].value = p.address;
-            if (p.mobile) inputs[3].value = p.mobile;
-            if (p.tel) inputs[4].value = p.tel;
+            if (p.Name) inputs[0].value = p.Name;
+            if (p.Email) inputs[1].value = p.Email;
+            if (p.Address) inputs[2].value = p.Address;
+            if (p.MobileNo) inputs[3].value = p.MobileNo;
+            if (p.TelNo) inputs[4].value = p.TelNo;
           }
 
-          if (p.name) {
-            if (profileNameEl) profileNameEl.textContent = p.name;
+          if (p.Name) {
+            if (profileNameEl) profileNameEl.textContent = p.Name;
             var emailEl = profileNameEl ? profileNameEl.nextElementSibling : null;
-            if (emailEl && p.email) emailEl.textContent = p.email;
+            if (emailEl && p.Email) emailEl.textContent = p.Email;
           }
 
-          var availToggle = document.querySelector('.avail-row input[type="checkbox"]');
-          if (availToggle && p.available !== undefined) {
-            availToggle.checked = !!p.available;
-            var label = document.querySelector('.avail-label');
-            if (label) {
-              label.textContent = p.available ? 'Available' : 'Unavailable';
-              label.style.color = p.available ? '#22c55e' : '#ef4444';
+          var av = String(p.Availability ?? '1');
+          if (availToggle) {
+            availToggle.checked = (av === '1' || av.toLowerCase() === 'available');
+            var alabel = document.querySelector('.avail-label');
+            if (alabel) {
+              alabel.textContent = availToggle.checked ? 'Available' : 'Unavailable';
+              alabel.style.color = availToggle.checked ? '#22c55e' : '#ef4444';
             }
           }
 
-          if (p.skills) {
-            var skillsArr = typeof p.skills === 'string' ? p.skills.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : p.skills;
+          var rating = parseFloat(String(p.Ratings ?? '').replace(',', '.')) || 0;
+          if (rating > 0) {
+            var stars = document.getElementById('profileStars');
+            var ratingSpan = document.getElementById('profileRating');
+            if (stars) {
+              stars.innerHTML = '';
+              for (var s = 1; s <= 5; s++) stars.innerHTML += s <= Math.round(rating) ? '&#9733;' : '&#9734;';
+            }
+            if (ratingSpan) ratingSpan.textContent = rating.toFixed(1) + ' / 5.0';
+          } else {
+            var ratingSpan2 = document.getElementById('profileRating');
+            if (ratingSpan2) ratingSpan2.textContent = 'No ratings yet';
+          }
+
+          if (p.Skills) {
+            var skillsArr = typeof p.Skills === 'string' ? p.Skills.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : p.Skills;
             var skillsContainer = document.querySelector('.card-body[style*="flex"]');
             if (skillsContainer && skillsContainer.closest('.card').querySelector('h2').textContent === 'Skills') {
               skillsContainer.innerHTML = '';
+              if (!skillsArr.length) {
+                skillsContainer.innerHTML = '<span style="color:var(--muted);font-size:0.9rem;">No skills listed yet.</span>';
+              }
               skillsArr.forEach(function(skill) {
                 var span = document.createElement('span');
                 span.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:var(--panel);border-radius:10px;font-size:0.9rem;font-weight:500;';
-                span.innerHTML = skill + ' <button style="background:none;border:0;color:var(--danger);cursor:pointer;font-size:1.1rem;line-height:1;" onclick="openModal(\'modalRemoveSkill\')">&times;</button>';
+                span.innerHTML = escHtml(skill) + ' <button style="background:none;border:0;color:var(--danger);cursor:pointer;font-size:1.1rem;line-height:1;" onclick="openModal(\'modalRemoveSkill\')">&times;</button>';
                 skillsContainer.appendChild(span);
               });
             }
           }
 
-          if (p.education) {
-            var eduArr = Array.isArray(p.education) ? p.education : [];
+          if (p.Education) {
+            var eduArr = Array.isArray(p.Education) ? p.Education : [];
+            if (typeof p.Education === 'string' && p.Education.trim()) {
+              eduArr = [{ title: 'Education', description: p.Education }];
+            }
             var eduCards = document.querySelectorAll('.card');
             eduCards.forEach(function(card) {
               var h2 = card.querySelector('h2');
               if (h2 && h2.textContent === 'Education') {
                 var cardBody = card.querySelector('.card-body');
-                if (cardBody && eduArr.length) {
-                  cardBody.innerHTML = '';
-                  eduArr.forEach(function(edu) {
-                    var div = document.createElement('div');
-                    div.style.cssText = 'margin-bottom:14px;';
-                    div.innerHTML = '<div style="font-weight:600;color:var(--text);font-size:0.95rem;">' + (edu.title || edu.name || '') + '</div>' +
-                      '<p style="font-size:0.85rem;color:var(--muted);margin-top:2px;">' + (edu.detail || edu.description || '') + '</p>';
-                    cardBody.appendChild(div);
-                  });
+                if (cardBody) {
+                  if (eduArr.length) {
+                    cardBody.innerHTML = '';
+                    eduArr.forEach(function(edu) {
+                      var div = document.createElement('div');
+                      div.style.cssText = 'margin-bottom:14px;';
+                      div.innerHTML = '<div style="font-weight:600;color:var(--text);font-size:0.95rem;">' + escHtml(edu.title || edu.name || '') + '</div>' +
+                        '<p style="font-size:0.85rem;color:var(--muted);margin-top:2px;">' + escHtml(edu.detail || edu.description || '') + '</p>';
+                      cardBody.appendChild(div);
+                    });
+                  } else {
+                    cardBody.innerHTML = '<span style="color:var(--muted);font-size:0.9rem;">No education background listed yet.</span>';
+                  }
                 }
               }
             });
           }
 
-          if (p.certifications) {
-            var certArr = Array.isArray(p.certifications) ? p.certifications : [];
+          if (p.Certifications) {
+            var certArr = null;
+            try { certArr = JSON.parse(p.Certifications); } catch (e) { certArr = null; }
+            if (!Array.isArray(certArr)) certArr = p.Certifications ? [{ name: String(p.Certifications) }] : [];
             var certCards = document.querySelectorAll('.card');
             certCards.forEach(function(card) {
               var h2 = card.querySelector('h2');
               if (h2 && h2.textContent === 'Certifications') {
                 var listContainer = card.querySelector('.card-body-flush');
-                if (listContainer && certArr.length) {
-                  listContainer.innerHTML = '';
-                  certArr.forEach(function(cert) {
-                    var isExpired = cert.expired || (cert.valid_until && new Date(cert.valid_until) < new Date());
-                    var isExpiring = !isExpired && cert.valid_until && (new Date(cert.valid_until) - new Date()) < 30 * 24 * 60 * 60 * 1000;
-                    var badgeCls = isExpired ? 'badge-danger' : (isExpiring ? 'badge-warning' : 'badge-success');
-                    var badgeLabel = isExpired ? 'Expired' : (isExpiring ? 'Expiring Soon' : 'Active');
-                    var item = document.createElement('div');
-                    item.className = 'list-item';
-                    item.innerHTML = '<div class="list-avatar" style="background:var(--success);"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M12 15l-2 5l9-9l-9 9l2-5z"/><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87l6.91-1.01L12 2z"/></svg></div>' +
-                      '<div class="list-info"><h4>' + (cert.name || cert.cert_name || '') + '</h4>' +
-                      '<p>Issued: ' + (cert.issued || '') + ' | Valid until: ' + (cert.valid_until || '') + '</p></div>' +
-                      '<span class="badge ' + badgeCls + '">' + badgeLabel + '</span>';
-                    listContainer.appendChild(item);
-                  });
+                if (listContainer) {
+                  if (certArr.length) {
+                    listContainer.innerHTML = '';
+                    certArr.forEach(function(cert) {
+                      var issued = cert.issued || '—';
+                      var valid = cert.valid_until || '—';
+                      var isExpired = cert.valid_until && new Date(cert.valid_until) < new Date();
+                      var isExpiring = !isExpired && cert.valid_until && (new Date(cert.valid_until) - new Date()) < 30 * 24 * 60 * 60 * 1000;
+                      var badgeCls = isExpired ? 'badge-danger' : (isExpiring ? 'badge-warning' : 'badge-success');
+                      var badgeLabel = isExpired ? 'Expired' : (isExpiring ? 'Expiring Soon' : 'Active');
+                      var docHtml = cert.file
+                        ? '<a href="' + escAttr(cert.file) + '" target="_blank" class="btn btn-secondary btn-sm">View Document</a>'
+                        : '';
+                      var item = document.createElement('div');
+                      item.className = 'list-item';
+                      item.innerHTML = '<div class="list-avatar" style="background:var(--success);"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M12 15l-2 5l9-9l-9 9l2-5z"/><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87l6.91-1.01L12 2z"/></svg></div>' +
+                        '<div class="list-info"><h4>' + escHtml(cert.name || '') + '</h4>' +
+                        '<p>Issued: ' + escHtml(issued) + ' | Valid until: ' + escHtml(valid) + '</p></div>' +
+                        '<span class="badge ' + badgeCls + '">' + badgeLabel + '</span>' +
+                        docHtml;
+                      listContainer.appendChild(item);
+                    });
+                  } else {
+                    listContainer.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:0.9rem;text-align:center;">No certifications yet.</div>';
+                  }
                 }
               }
             });
           }
         })
         .catch(function() {});
+
+      function escHtml(str) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(str));
+        return d.innerHTML;
+      }
+      function escAttr(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
     })();
   </script>
 </body>

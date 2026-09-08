@@ -32,7 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_POST['make_brand'] ?? '',
                 $_POST['year'] ?? $_POST['year_model'] ?? '',
                 $_POST['issue_desc'] ?? '',
-                $date_time
+                $date_time,
+                $_POST['appliance_id'] ?? null
             );
             echo json_encode([
                 'status' => 'success',
@@ -47,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'cancel') {
-        $id = $_POST['id'] ?? 0;
+        $id = $_POST['ticket_id'] ?? $_POST['id'] ?? 0;
         if (!$id) { echo json_encode(['status' => 'error', 'message' => 'Ticket ID is required.']); exit; }
 
         cancelCustomerTicket($id, $client_id);

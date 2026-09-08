@@ -59,7 +59,11 @@ if ($role === 'admin') {
 
     if ($user['Status'] !== 'active') {
         http_response_code(403);
-        echo json_encode(['error' => 'Account is not active']);
+        if ($role === 'repairman') {
+            echo json_encode(['error' => 'Your account is pending admin approval. You cannot access the system yet.', 'code' => 'pending_activation']);
+        } else {
+            echo json_encode(['error' => 'Account is not active', 'code' => 'inactive']);
+        }
         exit;
     }
 

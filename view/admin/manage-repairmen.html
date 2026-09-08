@@ -267,23 +267,38 @@
       <div class="modal-body">
         <div class="form-group">
           <label>Full Name</label>
-          <input type="text" placeholder="Enter full name">
+          <input type="text" id="addName" placeholder="Enter full name">
         </div>
         <div class="form-group">
           <label>Email Address</label>
-          <input type="email" placeholder="Enter email address">
+          <input type="email" id="addEmail" placeholder="Enter email address">
+        </div>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input type="tel" id="addMobile" placeholder="09171234567">
+        </div>
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" id="addAddress" placeholder="Enter home address">
         </div>
         <div class="form-group">
           <label>Skills</label>
-          <input type="text" placeholder="e.g. Refrigerator, Aircon, Plumbing">
+          <input type="text" id="addSkills" placeholder="e.g. Refrigerator, Aircon, Plumbing">
         </div>
         <div class="form-group">
           <label>Education</label>
-          <textarea placeholder="Enter educational background"></textarea>
+          <textarea id="addEducation" placeholder="Enter educational background"></textarea>
         </div>
         <div class="form-group">
-          <label>Certifications</label>
-          <textarea placeholder="Enter certifications"></textarea>
+          <label>Certificates</label>
+          <div id="addCertRows">
+            <div class="cert-row" style="display:grid; grid-template-columns: 1.2fr 1.4fr auto; gap: 8px; margin-bottom: 8px; align-items: center;">
+              <input type="text" class="cert-name" placeholder="e.g., TESDA NC II">
+              <input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif">
+              <button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeAdminCertRow(this)" title="Remove" hidden>&times;</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addAdminCertRow()">+ Add another certificate</button>
         </div>
       </div>
       <div class="modal-footer">
@@ -303,28 +318,30 @@
       <div class="modal-body">
         <div class="form-group">
           <label>Full Name</label>
-          <input type="text" value="Juan Dela Rosa">
+          <input type="text" id="editName">
         </div>
         <div class="form-group">
           <label>Email Address</label>
-          <input type="email" value="juan.delarosa@email.com">
+          <input type="email" id="editEmail">
         </div>
         <div class="form-group">
-          <label>Skills</label>
-          <input type="text" value="Refrigerator, Aircon">
+          <label>Address</label>
+          <input type="text" id="editAddress">
         </div>
-        <div class="form-group">
-          <label>Education</label>
-          <textarea>TESDA NCII Refrigeration and Air Conditioning</textarea>
-        </div>
-        <div class="form-group">
-          <label>Certifications</label>
-          <textarea>TESDA NCII Refrigeration &amp; Air Conditioning Servicing, DOLE Safety Training Certificate</textarea>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Mobile Number</label>
+            <input type="tel" id="editMobile">
+          </div>
+          <div class="form-group">
+            <label>Telephone Number</label>
+            <input type="tel" id="editTel">
+          </div>
         </div>
         <div class="form-group">
           <label>Availability</label>
-          <select>
-            <option selected>Available</option>
+          <select id="editAvailability">
+            <option>Available</option>
             <option>Unavailable</option>
           </select>
         </div>
@@ -332,6 +349,23 @@
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('editRepairmanModal')">Cancel</button>
         <button class="btn btn-primary" onclick="doAction('editRepairmanModal','Repairman updated successfully!')">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activate Confirmation Modal -->
+  <div class="modal-overlay" id="activateModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Confirm Activation</h3>
+        <button class="modal-close" onclick="closeModal('activateModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to activate this repairman? They will be able to log in and accept repair requests immediately.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('activateModal')">Cancel</button>
+        <button class="btn btn-success" id="activateBtn">Activate</button>
       </div>
     </div>
   </div>
@@ -390,6 +424,20 @@
 
   <script src="../shared.js"></script>
   <script>
+  function addAdminCertRow() {
+    var rows = document.getElementById('addCertRows');
+    var row = document.createElement('div');
+    row.className = 'cert-row';
+    row.style.cssText = 'display:grid; grid-template-columns: 1.2fr 1.4fr auto; gap: 8px; margin-bottom: 8px; align-items: center;';
+    row.innerHTML = '<input type="text" class="cert-name" placeholder="e.g., TESDA NC II">' +
+      '<input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif">' +
+      '<button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeAdminCertRow(this)" title="Remove">&times;</button>';
+    rows.appendChild(row);
+  }
+  function removeAdminCertRow(btn) {
+    var row = btn.closest('.cert-row');
+    if (row.parentNode) row.parentNode.removeChild(row);
+  }
   (function() {
     if (!localStorage.getItem('is_logged_in') || localStorage.getItem('role') !== 'admin') {
       window.location.href = 'login.html';
@@ -415,6 +463,15 @@
       return s;
     }
 
+    function escHtml(str) {
+      var d = document.createElement('div');
+      d.appendChild(document.createTextNode(str));
+      return d.innerHTML;
+    }
+    function escAttr(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
     function renderAvailability(avail) {
       var a = (avail || 'available').toLowerCase();
       if (a === 'unavailable') return '<span class="badge badge-danger">Unavailable</span>';
@@ -424,7 +481,7 @@
 
     function renderStatus(status) {
       var s = (status || 'active').toLowerCase();
-      if (s === 'inactive') return '<span class="badge badge-danger">Inactive</span>';
+      if (s === 'inactive') return '<span class="badge badge-warning">Pending Activation</span>';
       return '<span class="badge badge-success">Active</span>';
     }
 
@@ -441,8 +498,11 @@
         var skills = r.Skills || '';
         var rating = r.Ratings || 0;
         var avail = r.Availability || 'available';
-        var status = r.Status || 'active';
+        var status = (r.Status || 'active').toLowerCase();
         var profileId = r.ID;
+        var activateBtn = status === 'inactive'
+          ? '<button class="btn btn-sm btn-success" data-action="activate" data-id="' + profileId + '">Activate</button>'
+          : '';
         html += '<tr data-id="' + profileId + '">' +
           '<td>' + profileId + '</td>' +
           '<td>' + name + '</td>' +
@@ -456,6 +516,7 @@
             '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
           '<button class="btn btn-sm btn-secondary" data-action="edit" data-id="' + profileId + '">' +
             '<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+          activateBtn +
           '<button class="btn btn-sm btn-warning" data-action="deactivate" data-id="' + profileId + '">Deactivate</button>' +
           '<button class="btn btn-sm btn-danger" data-action="delete" data-id="' + profileId + '">' +
             '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
@@ -506,7 +567,22 @@
               var skills = r.Skills || 'N/A';
               var rating = parseFloat(r.Ratings) || 0;
               var education = r.Education || 'N/A';
-              var certs = r.Certifications || 'N/A';
+              var certs = r.Certifications || '';
+              var certsHtml = 'N/A';
+              if (certs) {
+                var certArr = null;
+                try { certArr = JSON.parse(certs); } catch (e) { certArr = null; }
+                if (Array.isArray(certArr)) {
+                  if (!certArr.length) certsHtml = 'N/A';
+                  else certsHtml = certArr.map(function(c) {
+                    var label = escHtml(c.name || 'Certificate');
+                    if (c.file) label += ' <a href="' + escAttr(c.file) + '" target="_blank" class="btn btn-secondary btn-sm" style="margin-left:6px;">View Document</a>';
+                    return '<div style="margin-bottom:6px;line-height:1.6;">' + label + '</div>';
+                  }).join('');
+                } else {
+                  certsHtml = escHtml(certs);
+                }
+              }
               var ini = name.split(' ').map(function(w){return w.charAt(0);}).join('').substring(0,2).toUpperCase();
               var stars = renderStars(rating);
               var body = document.querySelector('#viewProfileModal .modal-body');
@@ -522,7 +598,7 @@
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Skills</div><div style="font-size:0.92rem;font-weight:500;">' + skills + '</div></div>' +
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Rating</div><div style="font-size:0.92rem;"><span class="stars">' + stars + '</span> ' + rating.toFixed(1) + '</div></div>' +
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Education</div><div style="font-size:0.92rem;font-weight:500;">' + education + '</div></div>' +
-                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Certifications</div><div style="font-size:0.92rem;font-weight:500;">' + certs + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Certifications</div><div style="font-size:0.92rem;font-weight:500;">' + certsHtml + '</div></div>' +
                   '</div>';
               }
               openModal('viewProfileModal');
@@ -536,19 +612,30 @@
             if (data.success && data.repairman) {
               var r = data.repairman;
               var modal = document.getElementById('editRepairmanModal');
-              var inputs = modal.querySelectorAll('input');
-              var textareas = modal.querySelectorAll('textarea');
-              var select = modal.querySelector('select');
-              if (inputs[0]) inputs[0].value = r.Name || '';
-              if (inputs[1]) inputs[1].value = r.Email || '';
-              if (inputs[2]) inputs[2].value = r.Skills || '';
-              if (textareas[0]) textareas[0].value = r.Education || '';
-              if (textareas[1]) textareas[1].value = r.Certifications || '';
-              if (select) select.value = r.Availability || 'Available';
+              var nameInput = document.getElementById('editName');
+              var emailInput = document.getElementById('editEmail');
+              var addressInput = document.getElementById('editAddress');
+              var mobileInput = document.getElementById('editMobile');
+              var telInput = document.getElementById('editTel');
+              var availSelect = document.getElementById('editAvailability');
+              if (nameInput) nameInput.value = r.Name || '';
+              if (emailInput) emailInput.value = r.Email || '';
+              if (addressInput) addressInput.value = r.Address || '';
+              if (mobileInput) mobileInput.value = r.MobileNo || '';
+              if (telInput) telInput.value = r.TelNo || '';
+              if (availSelect) {
+                var avail = String(r.Availability || 'available').toLowerCase();
+                var label = (avail === '0' || avail === 'unavailable') ? 'Unavailable' : 'Available';
+                for (var o = 0; o < availSelect.options.length; o++) {
+                  availSelect.options[o].selected = availSelect.options[o].value === label || availSelect.options[o].text === label;
+                }
+              }
               openModal('editRepairmanModal');
             }
           })
           .catch(function(err) { console.error('Fetch repairman error:', err); });
+      } else if (action === 'activate') {
+        openModal('activateModal');
       } else if (action === 'deactivate') {
         openModal('deactivateModal');
       } else if (action === 'delete') {
@@ -559,27 +646,54 @@
     var addBtn = document.querySelector('#addRepairmanModal .btn-primary');
     if (addBtn) {
       addBtn.addEventListener('click', function() {
-        var modal = document.getElementById('addRepairmanModal');
-        var inputs = modal.querySelectorAll('input');
-        var textareas = modal.querySelectorAll('textarea');
+        var name = (document.getElementById('addName') || {}).value || '';
+        var email = (document.getElementById('addEmail') || {}).value || '';
+        var mobile = (document.getElementById('addMobile') || {}).value || '';
+        var address = (document.getElementById('addAddress') || {}).value || '';
+        var skills = (document.getElementById('addSkills') || {}).value || '';
+        var education = (document.getElementById('addEducation') || {}).value || '';
+        if (!name || !email) { showAlert('Name and email are required', 'error'); return; }
+        if (mobile && !/^(09\d{9}|639\d{9})$/.test(mobile.replace(/[^0-9]/g, ''))) {
+          showAlert('Please enter a valid Philippine mobile number (e.g. 09171234567)', 'error'); return;
+        }
         var fd = new FormData();
         fd.append('action', 'add');
-        fd.append('name', inputs[0] ? inputs[0].value : '');
-        fd.append('email', inputs[1] ? inputs[1].value : '');
+        fd.append('name', name);
+        fd.append('email', email);
+        fd.append('mobile', mobile);
+        fd.append('address', address);
+        fd.append('skills', skills);
+        fd.append('education', education);
         fd.append('password', 'TempPass123!');
+        var rows = document.querySelectorAll('#addCertRows .cert-row');
+        rows.forEach(function(row) {
+          var certName = row.querySelector('.cert-name').value.trim();
+          var fileInput = row.querySelector('.cert-file');
+          if (!certName && (!fileInput.files || !fileInput.files.length)) return;
+          fd.append('cert_names[]', certName || (fileInput.files.length ? fileInput.files[0].name : ''));
+          if (fileInput.files && fileInput.files.length) fd.append('cert_files[]', fileInput.files[0]);
+        });
         fetch(baseUrl, { method: 'POST', body: fd })
           .then(function(r) { return r.json(); })
           .then(function(data) {
             if (data.success) {
               closeModal('addRepairmanModal');
               loadRepairmen(searchInput ? searchInput.value : '');
-              if (inputs[0]) inputs[0].value = '';
-              if (inputs[1]) inputs[1].value = '';
-              if (inputs[2]) inputs[2].value = '';
-              if (textareas[0]) textareas[0].value = '';
-              if (textareas[1]) textareas[1].value = '';
+              ['addName', 'addEmail', 'addMobile', 'addAddress', 'addSkills'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.value = '';
+              });
+              var edu = document.getElementById('addEducation');
+              if (edu) edu.value = '';
+              var rows2 = document.querySelectorAll('#addCertRows .cert-row');
+              for (var i = 1; i < rows2.length; i++) if (rows2[i].parentNode) rows2[i].parentNode.removeChild(rows2[i]);
+              var first = document.querySelector('#addCertRows .cert-row');
+              if (first) {
+                first.querySelector('.cert-name').value = '';
+                first.querySelector('.cert-file').value = '';
+              }
             } else {
-              alert(data.error || 'Failed to add repairman');
+              showAlert(data.error || 'Failed to add repairman', 'error');
             }
           })
           .catch(function(err) { console.error('Add repairman error:', err); });
@@ -590,27 +704,55 @@
     if (editSaveBtn) {
       editSaveBtn.addEventListener('click', function() {
         if (!selectedRepairmanId) return;
-        var modal = document.getElementById('editRepairmanModal');
-        var inputs = modal.querySelectorAll('input');
-        var textareas = modal.querySelectorAll('textarea');
-        var select = modal.querySelector('select');
+        var nameInput = document.getElementById('editName');
+        var emailInput = document.getElementById('editEmail');
+        var addressInput = document.getElementById('editAddress');
+        var mobileInput = document.getElementById('editMobile');
+        var telInput = document.getElementById('editTel');
+        var availSelect = document.getElementById('editAvailability');
         var fd = new FormData();
         fd.append('action', 'update');
         fd.append('id', selectedRepairmanId);
-        fd.append('name', inputs[0] ? inputs[0].value : '');
-        fd.append('email', inputs[1] ? inputs[1].value : '');
-        fd.append('availability', select ? select.value : '');
+        fd.append('name', nameInput ? nameInput.value : '');
+        fd.append('email', emailInput ? emailInput.value : '');
+        fd.append('address', addressInput ? addressInput.value : '');
+        fd.append('mobile', mobileInput ? mobileInput.value : '');
+        fd.append('tel', telInput ? telInput.value : '');
+        fd.append('availability', availSelect ? availSelect.value : '');
         fetch(baseUrl, { method: 'POST', body: fd })
           .then(function(r) { return r.json(); })
           .then(function(data) {
             closeModal('editRepairmanModal');
             if (data.success) {
+              showAlert('Repairman updated successfully.', 'success');
               loadRepairmen(searchInput ? searchInput.value : '');
             } else {
-              alert(data.error || 'Failed to update repairman');
+              showAlert(data.error || 'Failed to update repairman', 'error');
             }
           })
           .catch(function(err) { console.error('Update repairman error:', err); });
+      });
+    }
+
+    var activateBtn = document.getElementById('activateBtn');
+    if (activateBtn) {
+      activateBtn.addEventListener('click', function() {
+        if (!selectedRepairmanId) return;
+        var fd = new FormData();
+        fd.append('action', 'activate');
+        fd.append('id', selectedRepairmanId);
+        fetch(baseUrl, { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            closeModal('activateModal');
+            if (data.success) {
+              showAlert('Repairman activated successfully.', 'success');
+              loadRepairmen(searchInput ? searchInput.value : '');
+            } else {
+              showAlert(data.error || 'Failed to activate repairman', 'error');
+            }
+          })
+          .catch(function(err) { console.error('Activate error:', err); });
       });
     }
 
@@ -628,7 +770,7 @@
             if (data.success) {
               loadRepairmen(searchInput ? searchInput.value : '');
             } else {
-              alert(data.error || 'Failed to deactivate repairman');
+              showAlert(data.error || 'Failed to deactivate repairman', 'error');
             }
           })
           .catch(function(err) { console.error('Deactivate error:', err); });
@@ -649,7 +791,7 @@
             if (data.success) {
               loadRepairmen(searchInput ? searchInput.value : '');
             } else {
-              alert(data.error || 'Failed to delete repairman');
+              showAlert(data.error || 'Failed to delete repairman', 'error');
             }
           })
           .catch(function(err) { console.error('Delete error:', err); });

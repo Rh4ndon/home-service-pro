@@ -63,14 +63,14 @@
     <div class="page-header">
       <div>
         <h1>My Schedule</h1>
-        <p>Week of August 18 - 24, 2026</p>
+        <p id="weekLabel">Week of ...</p>
       </div>
       <div class="header-actions">
-        <button class="btn btn-secondary">
+        <button class="btn btn-secondary" id="prevWeekBtn">
           <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
           Previous Week
         </button>
-        <button class="btn btn-primary">
+        <button class="btn btn-primary" id="nextWeekBtn">
           Next Week
           <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
@@ -79,35 +79,7 @@
 
     <!-- Weekly View -->
     <div class="card" style="margin-bottom: 24px;">
-      <div class="card-body" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center;">
-        <div>
-          <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">Mon</div>
-          <div style="font-size: 1.1rem; font-weight: 700; color: var(--text); padding: 10px; border-radius: 10px; background: var(--panel);">18</div>
-        </div>
-        <div>
-          <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">Tue</div>
-          <div style="font-size: 1.1rem; font-weight: 700; color: var(--primary); padding: 10px; border-radius: 10px; background: rgba(27,141,232,0.12);">19</div>
-        </div>
-        <div>
-          <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">Wed</div>
-          <div style="font-size: 1.1rem; font-weight: 700; color: var(--text); padding: 10px; border-radius: 10px; background: var(--panel);">20</div>
-        </div>
-        <div>
-          <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">Thu</div>
-          <div style="font-size: 1.1rem; font-weight: 700; color: var(--text); padding: 10px; border-radius: 10px; background: var(--panel);">21</div>
-        </div>
-        <div>
-          <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">Fri</div>
-          <div style="font-size: 1.1rem; font-weight: 700; color: var(--text); padding: 10px; border-radius: 10px; background: var(--panel);">22</div>
-        </div>
-        <div>
-          <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">Sat</div>
-          <div style="font-size: 1.1rem; font-weight: 700; color: var(--text); padding: 10px; border-radius: 10px; background: var(--panel);">23</div>
-        </div>
-        <div>
-          <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">Sun</div>
-          <div style="font-size: 1.1rem; font-weight: 700; color: var(--text); padding: 10px; border-radius: 10px; background: var(--panel);">24</div>
-        </div>
+      <div class="card-body" id="weekCalendar" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center;">
       </div>
     </div>
 
@@ -131,80 +103,7 @@
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>Aug 19, 8:00 AM</td>
-                <td>Maria Clara</td>
-                <td>Air Conditioner</td>
-                <td>Split-type AC not cooling</td>
-                <td>123 Rizal St, Quezon City</td>
-                <td><span class="badge badge-info">In Progress</span></td>
-                <td class="action-btns">
-                  <a href="chat.html" class="btn btn-primary btn-sm">Chat</a>
-                  <a href="call.html" class="btn btn-success btn-sm">Call</a>
-                  <button class="btn btn-success btn-sm" onclick="openModal('modalComplete')">Complete</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Aug 19, 10:30 AM</td>
-                <td>Jose Rizal</td>
-                <td>Washing Machine</td>
-                <td>Washer not draining</td>
-                <td>456 Bonifacio Ave, Makati</td>
-                <td><span class="badge badge-neutral">Assigned</span></td>
-                <td class="action-btns">
-                  <button class="btn btn-success btn-sm" onclick="openModal('modalAccept')">Accept</button>
-                  <button class="btn btn-danger btn-sm" onclick="openModal('modalDecline')">Decline</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Aug 19, 2:00 PM</td>
-                <td>Andres Bonifacio</td>
-                <td>Refrigerator</td>
-                <td>Fridge not freezing</td>
-                <td>789 Magsaysay Blvd, Pasig</td>
-                <td><span class="badge badge-neutral">Assigned</span></td>
-                <td class="action-btns">
-                  <button class="btn btn-success btn-sm" onclick="openModal('modalAccept')">Accept</button>
-                  <button class="btn btn-danger btn-sm" onclick="openModal('modalDecline')">Decline</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Aug 20, 9:00 AM</td>
-                <td>Corazon Aquino</td>
-                <td>Microwave Oven</td>
-                <td>Microwave not heating</td>
-                <td>321 EDSA, Mandaluyong</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalDetail')">View</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Aug 20, 1:00 PM</td>
-                <td>Ramon Magsaysay</td>
-                <td>Electric Fan</td>
-                <td>Fan motor not spinning</td>
-                <td>555 Roxas Blvd, Manila</td>
-                <td><span class="badge badge-warning">Pending</span></td>
-                <td class="action-btns">
-                  <button class="btn btn-success btn-sm" onclick="openModal('modalAccept')">Accept</button>
-                  <button class="btn btn-danger btn-sm" onclick="openModal('modalDecline')">Decline</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Aug 21, 10:00 AM</td>
-                <td>Gabriela Silang</td>
-                <td>Television</td>
-                <td>TV has no display</td>
-                <td>888 Katipunan Ave, QC</td>
-                <td><span class="badge badge-neutral">Assigned</span></td>
-                <td class="action-btns">
-                  <button class="btn btn-success btn-sm" onclick="openModal('modalAccept')">Accept</button>
-                  <button class="btn btn-danger btn-sm" onclick="openModal('modalDecline')">Decline</button>
-                </td>
-              </tr>
-            </tbody>
+            <tbody></tbody>
           </table>
         </div>
       </div>
@@ -414,40 +313,102 @@
 
       if (!userId) return;
 
-      fetch('../../controllers/repairman/schedule.php?user_id=' + userId)
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (!data.schedules || !data.schedules.length) return;
-          var tbody = document.querySelector('#scheduleTable tbody');
-          if (!tbody) return;
-          tbody.innerHTML = '';
+      var weekOffset = 0;
+      var schedulesAll = [];
 
-          data.schedules.forEach(function(item) {
-            var st = getStatusMap(item.schedule_status);
-            var dateStr = item.schedule_date || '';
-            if (dateStr) {
-              var d = new Date(dateStr);
-              var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-              var m = d.getMonth();
-              dateStr = months[m] + ' ' + d.getDate() + ', ' + d.getFullYear();
-              var hour = d.getHours();
-              var min = String(d.getMinutes()).padStart(2, '0');
-              var ampm = hour >= 12 ? 'PM' : 'AM';
-              hour = hour % 12 || 12;
-              dateStr += ', ' + hour + ':' + min + ' ' + ampm;
-            }
-            var row = document.createElement('tr');
-            row.innerHTML = '<td>' + dateStr + '</td>' +
-              '<td>' + (item.client_name || '') + '</td>' +
-              '<td>' + (item.appliance_name || item.appliance || '') + '</td>' +
-              '<td>' + (item.issue || item.issue_details || '') + '</td>' +
-              '<td>' + (item.client_address || '') + '</td>' +
-              '<td><span class="badge ' + st.cls + '">' + st.label + '</span></td>' +
-              '<td class="action-btns">' + buildActionBtns(item) + '</td>';
-            tbody.appendChild(row);
+      function startOfWeek(d) {
+        var day = d.getDay();
+        var diff = day === 0 ? -6 : 1 - day;
+        var start = new Date(d);
+        start.setDate(d.getDate() + diff);
+        start.setHours(0, 0, 0, 0);
+        return start;
+      }
+
+      function renderWeekCalendar() {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var start = startOfWeek(today);
+        start.setDate(start.getDate() + weekOffset * 7);
+
+        var label = document.getElementById('weekLabel');
+        var fmt = function(d) { return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+        var end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        if (label) label.textContent = 'Week of ' + fmt(start) + ' - ' + fmt(end) + ', ' + end.getFullYear();
+
+        var calendar = document.getElementById('weekCalendar');
+        if (!calendar) return;
+        var days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        calendar.innerHTML = days.map(function(name, i) {
+          var d = new Date(start);
+          d.setDate(start.getDate() + i);
+          var isToday = d.getTime() === today.getTime();
+          var hasJob = schedulesAll.some(function(s) {
+            if (!s.schedule_date) return false;
+            var sd = new Date(String(s.schedule_date).replace(' ', 'T'));
+            return sd.getFullYear() === d.getFullYear() && sd.getMonth() === d.getMonth() && sd.getDate() === d.getDate();
           });
-        })
-        .catch(function() {});
+          var style = isToday
+            ? 'background: rgba(27,141,232,0.12); color: var(--primary); position: relative;'
+            : 'background: var(--panel); color: var(--text); position: relative;';
+          var dot = hasJob ? '<span style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:var(--primary);"></span>' : '';
+          return '<div><div style="font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">' + name + '</div>' +
+            '<div style="font-size: 1.1rem; font-weight: 700; padding: 10px; border-radius: 10px; ' + style + '">' + d.getDate() + dot + '</div></div>';
+        }).join('');
+      }
+
+      function loadSchedules() {
+        fetch('../../controllers/repairman/schedule.php?user_id=' + userId)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            schedulesAll = data.data || [];
+            renderWeekCalendar();
+
+            var tbody = document.querySelector('#scheduleTable tbody');
+            if (!tbody) return;
+            if (!schedulesAll.length) {
+              tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">No appointments scheduled.</td></tr>';
+              return;
+            }
+            tbody.innerHTML = schedulesAll.map(function(item) {
+              var st = getStatusMap(item.schedule_status);
+              var dateStr = item.schedule_date || '';
+              if (dateStr) {
+                var d = new Date(String(dateStr).replace(' ', 'T'));
+                if (!isNaN(d.getTime())) {
+                  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                  dateStr = months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+                  var hour = d.getHours();
+                  var min = String(d.getMinutes()).padStart(2, '0');
+                  var ampm = hour >= 12 ? 'PM' : 'AM';
+                  hour = hour % 12 || 12;
+                  dateStr += ', ' + hour + ':' + min + ' ' + ampm;
+                }
+              }
+              return '<tr>' +
+                '<td>' + dateStr + '</td>' +
+                '<td>' + escHtml(item.client_name || '') + '</td>' +
+                '<td>' + escHtml(item.appliance_name || '') + '</td>' +
+                '<td>' + escHtml(item.issue || '') + '</td>' +
+                '<td>' + escHtml(item.client_address || '') + '</td>' +
+                '<td><span class="badge ' + st.cls + '">' + st.label + '</span></td>' +
+                '<td class="action-btns">' + buildActionBtns(item) + '</td></tr>';
+            }).join('');
+          })
+          .catch(function(){});
+      }
+
+      document.getElementById('prevWeekBtn').onclick = function() { weekOffset--; renderWeekCalendar(); };
+      document.getElementById('nextWeekBtn').onclick = function() { weekOffset++; renderWeekCalendar(); };
+
+      function escHtml(str) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(str));
+        return d.innerHTML;
+      }
+
+      loadSchedules();
     })();
   </script>
 </body>

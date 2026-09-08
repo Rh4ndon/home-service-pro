@@ -28,7 +28,8 @@
             </div>
             <div class="form-group">
               <label for="mobile">Mobile Number</label>
-              <input type="tel" id="mobile" placeholder="+1 (555) 000-0000" />
+              <input type="tel" id="mobile" placeholder="0917 123 4567" />
+              <small style="color: var(--muted); font-size: 0.78rem;">Philippine mobile number, e.g. 09171234567 or +639171234567</small>
             </div>
             <div class="form-group">
               <label for="password">Password</label>
@@ -47,6 +48,17 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
               </div>
+            </div>
+            <div class="form-group">
+              <label>Certificates</label>
+              <div id="certRows">
+                <div class="cert-row" style="display:grid; grid-template-columns: 1fr 1.2fr auto; gap: 8px; margin-bottom: 8px; align-items: center;">
+                  <input type="text" class="cert-name" placeholder="e.g., TESDA NC II" />
+                  <input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif" />
+                  <button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeCertRow(this)" title="Remove" hidden>&times;</button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="addCertRow()">+ Add another certificate</button>
             </div>
             <button class="btn btn-primary" type="button" id="signupBtn">Create Account</button>
           </form>
@@ -78,14 +90,34 @@
 
     <script src="../shared.js"></script>
     <script>
+    function addCertRow() {
+      var rows = document.getElementById('certRows');
+      var row = document.createElement('div');
+      row.className = 'cert-row';
+      row.style.cssText = 'display:grid; grid-template-columns: 1fr 1.2fr auto; gap: 8px; margin-bottom: 8px; align-items: center;';
+      row.innerHTML = '<input type="text" class="cert-name" placeholder="e.g., TESDA NC II" />' +
+        '<input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif" />' +
+        '<button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeCertRow(this)" title="Remove">&times;</button>';
+      rows.appendChild(row);
+      document.querySelectorAll('.cert-row .cert-name')[0].closest('.cert-row').querySelector('button').hidden = false;
+    }
+    function removeCertRow(btn) {
+      var row = btn.closest('.cert-row');
+      row.parentNode.removeChild(row);
+    }
+    function isPhMobile(v) {
+      var d = v.replace(/[^0-9]/g, '');
+      return /^(09\d{9}|639\d{9})$/.test(d);
+    }
     document.getElementById('signupBtn').addEventListener('click', function() {
       var name = document.getElementById('fullName').value.trim();
       var email = document.getElementById('email').value.trim();
       var mobile = document.getElementById('mobile').value.trim();
       var password = document.getElementById('password').value;
       var confirmPassword = document.getElementById('confirmPassword').value;
-      if (!name || !email || !mobile || !password || !confirmPassword) { alert('Please fill in all fields'); return; }
-      if (password !== confirmPassword) { alert('Passwords do not match'); return; }
+      if (!name || !email || !mobile || !password || !confirmPassword) { showAlert('Please fill in all fields', 'warning'); return; }
+      if (!isPhMobile(mobile)) { showAlert('Please enter a valid Philippine mobile number (e.g. 09171234567 or +639171234567)', 'warning'); return; }
+      if (password !== confirmPassword) { showAlert('Passwords do not match', 'warning'); return; }
       openModal('confirmSignup');
     });
     document.getElementById('confirmSignupBtn').addEventListener('click', function() {
@@ -98,15 +130,27 @@
       var fd = new FormData();
       fd.append('name', name); fd.append('email', email); fd.append('mobile', mobile);
       fd.append('password', password); fd.append('role', 'repairman');
+      var rows = document.querySelectorAll('#certRows .cert-row');
+      rows.forEach(function(row) {
+        var certName = row.querySelector('.cert-name').value.trim();
+        var fileInput = row.querySelector('.cert-file');
+        if (!certName && (!fileInput.files || !fileInput.files.length)) return;
+        fd.append('cert_names[]', certName || (fileInput.files.length ? fileInput.files[0].name : ''));
+        if (fileInput.files && fileInput.files.length) fd.append('cert_files[]', fileInput.files[0]);
+      });
       fetch('../../controllers/register.php', { method: 'POST', body: fd })
         .then(function(r){ return r.json(); })
         .then(function(data){
           if(data.success){
-            alert('Account created successfully!');
-            window.location.href = 'login.html';
-          } else { alert(data.error || 'Registration failed'); btn.innerHTML = orig; btn.disabled = false; }
+            showAlert('Account created successfully!', 'success');
+            if (data.pending_activation) {
+              window.location.href = 'activation.html';
+            } else {
+              window.location.href = 'login.html';
+            }
+          } else { showAlert(data.error || 'Registration failed', 'error'); btn.innerHTML = orig; btn.disabled = false; }
         })
-        .catch(function(){ alert('Network error'); btn.innerHTML = orig; btn.disabled = false; });
+        .catch(function(){ showAlert('Network error', 'error'); btn.innerHTML = orig; btn.disabled = false; });
     });
     </script>
   </body>

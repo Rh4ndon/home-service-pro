@@ -186,13 +186,96 @@ function findAdminByEmail($email) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function createUser($name, $email, $password, $role) {
+function createUser($name, $email, $password, $role, $status = 'active') {
     global $conn;
     $hashed = password_hash($password, PASSWORD_BCRYPT);
-    $stmt = $conn->prepare("INSERT INTO users (Name, Email, Password, Role) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $name, $email, $hashed, $role);
+    $stmt = $conn->prepare("INSERT INTO users (Name, Email, Password, Role, Status) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssss", $name, $email, $hashed, $role, $status);
     $stmt->execute();
     return $conn->insert_id;
+}
+
+function setRepairmanActivation($profile_id, $active) {
+    global $conn;
+    $status = $active ? 'active' : 'inactive';
+    $stmt = $conn->prepare("
+        UPDATE user_repairmanprofile urp 
+        JOIN users u ON u.ID = urp.User_ID 
+        SET urp.Status = ?, u.Status = ? 
+        WHERE urp.ID = ?
+    ");
+    $stmt->bind_param("ssi", $status, $status, $profile_id);
+    return $stmt->execute();
+}
+
+function createRepairmanWithCerts($name, $email, $password, $mobile, $certs_json, $active = false) {
+    global $conn;
+    startTransaction();
+    try {
+        $user_status = $active ? 'active' : 'inactive';
+        $user_id = createUser($name, $email, $password, 'repairman', $user_status);
+        $bg_id = insertOrder('repairmanagerbackground', [
+            'Skills' => null, 'Education' => null,
+            'Certifications' => $certs_json ? $certs_json : null
+        ]);
+        $profile_id = insertOrder('user_repairmanprofile', [
+            'Name' => $name, 'Email' => $email, 'MobileNo' => $mobile,
+            'RepairmanBG_ID' => $bg_id, 'User_ID' => $user_id,
+            'Status' => $user_status
+        ]);
+        commitTransaction();
+        return $profile_id;
+    } catch (Exception $e) {
+        rollbackTransaction();
+        throw $e;
+    }
+}
+
+function certUploadDir() {
+    $dir = __DIR__ . '/../uploads/certificates';
+    if (!is_dir($dir)) mkdir($dir, 0755, true);
+    return $dir;
+}
+
+function saveUploadedCertFile($tmp_name, $orig_name) {
+    $ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
+    $allowed = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'gif'];
+    if (!in_array($ext, $allowed)) return null;
+    $safe = uniqid('cert_', true) . '.' . $ext;
+    $dest = certUploadDir() . '/' . $safe;
+    if (move_uploaded_file($tmp_name, $dest)) return 'uploads/certificates/' . $safe;
+    return null;
+}
+
+function collectCertEntriesFromUploads() {
+    $entries = [];
+    if (empty($_FILES['cert_files']) || !is_array($_FILES['cert_files']['name'])) return $entries;
+    foreach ($_FILES['cert_files']['name'] as $i => $orig_name) {
+        $cert_name = trim($_POST['cert_names'][$i] ?? '');
+        $err = $_FILES['cert_files']['error'][$i] ?? UPLOAD_ERR_NO_FILE;
+        if ($err === UPLOAD_ERR_NO_FILE) {
+            if (!$cert_name && !empty($orig_name)) $cert_name = preg_replace('/\.[^.]+$/', '', $orig_name);
+            if (!$cert_name) continue;
+            $entries[] = ['name' => $cert_name, 'file' => null];
+            continue;
+        }
+        if ($err !== UPLOAD_ERR_OK) continue;
+        if (!$cert_name && !empty($orig_name)) $cert_name = preg_replace('/\.[^.]+$/', '', $orig_name);
+        $path = saveUploadedCertFile($_FILES['cert_files']['tmp_name'][$i], $orig_name);
+        $entries[] = ['name' => $cert_name ?: 'Certificate', 'file' => $path];
+    }
+    return $entries;
+}
+
+function normalizePhilippineMobile($mobile) {
+    $digits = preg_replace('/[^0-9]/', '', $mobile);
+    if (preg_match('/^639\d{9}$/', $digits)) $digits = '0' . substr($digits, 2);
+    return $digits;
+}
+
+function isPhilippineMobile($mobile) {
+    $digits = preg_replace('/[^0-9]/', '', $mobile);
+    return (bool) preg_match('/^(09\d{9}|639\d{9})$/', $digits);
 }
 
 function createAdmin($name, $email, $password) {
@@ -280,7 +363,7 @@ function addCustomerAppliance($client_id, $type, $name, $make, $year, $details) 
 function updateCustomerAppliance($id, $client_id, $type, $name, $make, $year, $details) {
     global $conn;
     $stmt = $conn->prepare("UPDATE clientappliances SET Type=?, Name=?, Make=?, Year=?, Details=? WHERE ID=? AND Client_ID=?");
-    $stmt->bind_param("ssssisi", $type, $name, $make, $year, $details, $id, $client_id);
+    $stmt->bind_param("sssssii", $type, $name, $make, $year, $details, $id, $client_id);
     return $stmt->execute();
 }
 
@@ -295,10 +378,16 @@ function getCustomerTickets($client_id) {
     global $conn;
     $stmt = $conn->prepare("
         SELECT repairticket.*, repairschedule.Date_Time AS ScheduleDate, repairschedule.Status AS ScheduleStatus,
-               user_repairmanprofile.Name AS RepairmanName
+               user_repairmanprofile.Name AS RepairmanName,
+               clientappliances.Name AS ApplianceName,
+               clientappliances.Type AS ApplianceType,
+               clientappliances.Make AS ApplianceMake,
+               clientappliances.Year AS ApplianceYear
         FROM repairticket
         LEFT JOIN repairschedule ON repairticket.Schedule_ID = repairschedule.ID
         LEFT JOIN user_repairmanprofile ON repairticket.Repairman_ID = user_repairmanprofile.ID
+        LEFT JOIN applianceissue ON applianceissue.Ticket_ID = repairticket.ID
+        LEFT JOIN clientappliances ON clientappliances.ID = COALESCE(repairticket.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = applianceissue.ID LIMIT 1))
         WHERE repairticket.Client_ID = ?
         ORDER BY repairticket.ID DESC
     ");
@@ -307,7 +396,7 @@ function getCustomerTickets($client_id) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function createCustomerTicket($client_id, $appliance_type, $appliance_name, $make_brand, $year, $issue_desc, $date_time) {
+function createCustomerTicket($client_id, $appliance_type, $appliance_name, $make_brand, $year, $issue_desc, $date_time, $appliance_id = null) {
     global $conn;
     startTransaction();
     try {
@@ -321,11 +410,21 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
             'Issue' => $issue_desc, 'Details' => $issue_desc, 'Ticket_ID' => $ticket_id
         ]);
         
-        // 3. Insert appliance linked to issue
-        $appliance_id = insertOrder('clientappliances', [
-            'Client_ID' => $client_id, 'Type' => $appliance_type, 'Name' => $appliance_name,
-            'Make' => $make_brand, 'Year' => $year, 'Details' => $issue_desc, 'Issue_ID' => $issue_id
-        ]);
+        // 3. Link to an existing appliance, or create a new one
+        $linked_appliance_id = null;
+        if ($appliance_id) {
+            $linked = linkApplianceToIssue($appliance_id, $client_id, $issue_id, $issue_desc);
+            if (!$linked) throw new Exception('Selected appliance not found.');
+            $linked_appliance_id = $appliance_id;
+        } else {
+            $linked_appliance_id = insertOrder('clientappliances', [
+                'Client_ID' => $client_id, 'Type' => $appliance_type, 'Name' => $appliance_name,
+                'Make' => $make_brand, 'Year' => $year, 'Details' => $issue_desc, 'Issue_ID' => $issue_id
+            ]);
+        }
+
+        // Ensure the ticket records exactly which appliance it is about
+        editRecord('repairticket', ['Appliance_ID' => $linked_appliance_id], "ID = $ticket_id");
         
         // 4. Insert schedule
         $schedule_id = insertOrder('repairschedule', [
@@ -341,6 +440,14 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
         rollbackTransaction();
         throw $e;
     }
+}
+
+function linkApplianceToIssue($appliance_id, $client_id, $issue_id, $issue_desc) {
+    global $conn;
+    $stmt = $conn->prepare("UPDATE clientappliances SET Issue_ID = ?, Details = ? WHERE ID = ? AND Client_ID = ?");
+    $stmt->bind_param("isii", $issue_id, $issue_desc, $appliance_id, $client_id);
+    $ok = $stmt->execute();
+    return $ok && $stmt->affected_rows > 0;
 }
 
 function cancelCustomerTicket($ticket_id, $client_id) {
@@ -440,9 +547,10 @@ function getRepairmanIdFromUser($user_id) {
 function getRepairmanProfile($user_id) {
     global $conn;
     $stmt = $conn->prepare("
-        SELECT rp.*, rb.Skills, rb.Education, rb.Certifications, rb.Assessment, rb.Ratings 
+        SELECT rp.*, rb.Skills, rb.Education, rb.Certifications, rb.Assessment, rb.Ratings, u.Status AS UserStatus
         FROM user_repairmanprofile rp 
         LEFT JOIN repairmanagerbackground rb ON rp.RepairmanBG_ID = rb.ID 
+        LEFT JOIN users u ON u.ID = rp.User_ID
         WHERE rp.User_ID = ?
     ");
     $stmt->bind_param("i", $user_id);
@@ -488,7 +596,7 @@ function getRepairmanTickets($repairman_id) {
         FROM repairticket t 
         LEFT JOIN user_clientprofile cp ON t.Client_ID = cp.ID 
         LEFT JOIN applianceissue ai ON t.ID = ai.Ticket_ID 
-        LEFT JOIN clientappliances ca ON ai.ID = ca.Issue_ID
+        LEFT JOIN clientappliances ca ON ca.ID = COALESCE(t.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = ai.ID LIMIT 1))
         LEFT JOIN repairschedule rs ON t.Schedule_ID = rs.ID 
         WHERE t.Repairman_ID = ? 
         ORDER BY t.ID DESC
@@ -514,18 +622,21 @@ function completeRepairmanTicket($ticket_id, $repairman_id) {
         $stmt->execute();
         
         // Get ticket details for history
-        $stmt = $conn->prepare("SELECT Client_ID, Schedule_ID FROM repairticket WHERE ID = ?");
+        $stmt = $conn->prepare("SELECT Client_ID, Schedule_ID, Appliance_ID FROM repairticket WHERE ID = ?");
         $stmt->bind_param("i", $ticket_id);
         $stmt->execute();
         $ticket = $stmt->get_result()->fetch_assoc();
         
         if ($ticket) {
-            // Get the appliance ID from the ticket's issue
-            $stmt = $conn->prepare("SELECT ID FROM clientappliances WHERE Issue_ID = (SELECT ID FROM applianceissue WHERE Ticket_ID = ?)");
-            $stmt->bind_param("i", $ticket_id);
-            $stmt->execute();
-            $appliance = $stmt->get_result()->fetch_assoc();
-            $appliance_id = $appliance ? $appliance['ID'] : 0;
+            // Get the appliance ID for this ticket (recorded on the ticket itself)
+            $appliance_id = $ticket['Appliance_ID'] ? $ticket['Appliance_ID'] : 0;
+            if (!$appliance_id) {
+                $stmt = $conn->prepare("SELECT ID FROM clientappliances WHERE Issue_ID = (SELECT ID FROM applianceissue WHERE Ticket_ID = ?)");
+                $stmt->bind_param("i", $ticket_id);
+                $stmt->execute();
+                $appliance = $stmt->get_result()->fetch_assoc();
+                $appliance_id = $appliance ? $appliance['ID'] : 0;
+            }
             
             insertRecord('repairhistory', [
                 'Repairman_ID' => $repairman_id,
@@ -557,7 +668,7 @@ function getRepairmanSchedule($repairman_id) {
         LEFT JOIN clientaddress cladd ON cp.ClientAdd_ID = cladd.ID
         LEFT JOIN repairticket t ON rs.ID = t.Schedule_ID 
         LEFT JOIN applianceissue ai ON t.ID = ai.Ticket_ID 
-        LEFT JOIN clientappliances ca ON ai.ID = ca.Issue_ID
+        LEFT JOIN clientappliances ca ON ca.ID = COALESCE(t.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = ai.ID LIMIT 1))
         WHERE rs.Repairman_ID = ? 
         ORDER BY rs.Date_Time DESC
     ");
@@ -604,10 +715,10 @@ function getRepairmanDashboardStats($repairman_id) {
         SELECT rs.ID as schedule_id, rs.Date_Time as schedule_date, rs.Status as schedule_status, 
                cp.Name as client_name, ca.Name as appliance_name, ai.Issue as issue
         FROM repairschedule rs 
-        LEFT JOIN user_clientprofile cp ON rs.Client_ID = cp.User_ID 
+        LEFT JOIN user_clientprofile cp ON rs.Client_ID = cp.ID 
         LEFT JOIN repairticket t ON rs.ID = t.Schedule_ID 
-        LEFT JOIN clientappliances ca ON t.Client_ID = ca.Client_ID 
         LEFT JOIN applianceissue ai ON t.ID = ai.Ticket_ID 
+        LEFT JOIN clientappliances ca ON ca.ID = COALESCE(t.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = ai.ID LIMIT 1))
         WHERE rs.Repairman_ID = ? AND DATE(rs.Date_Time) = ? AND rs.Status != 'Declined' 
         ORDER BY rs.Date_Time ASC LIMIT 3
     ");
@@ -638,7 +749,7 @@ function getRepairmanHistory($repairman_id, $date_from = null, $date_to = null, 
             LEFT JOIN repairticket t ON rh.Ticket_ID = t.ID 
             LEFT JOIN clientappliances ca ON rh.ClientAppliances_ID = ca.ID 
             LEFT JOIN applianceissue ai ON t.ID = ai.Ticket_ID 
-            LEFT JOIN user_clientprofile cp ON rs.Client_ID = cp.User_ID 
+            LEFT JOIN user_clientprofile cp ON rs.Client_ID = cp.ID 
             WHERE $where ORDER BY rh.Date DESC";
     
     $stmt = $conn->prepare($sql);
@@ -791,13 +902,14 @@ function getAdminRepairmanById($id) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function addAdminRepairman($name, $email, $password, $address, $mobile, $tel) {
+function addAdminRepairman($name, $email, $password, $address, $mobile, $tel, $certs_json = null, $skills = null, $education = null) {
     global $conn;
     startTransaction();
     try {
         $user_id = createUser($name, $email, $password, 'repairman');
         $bg_id = insertOrder('repairmanagerbackground', [
-            'Skills' => null, 'Education' => null, 'Certifications' => null
+            'Skills' => $skills, 'Education' => $education,
+            'Certifications' => $certs_json ? $certs_json : null
         ]);
         $profile_id = insertOrder('user_repairmanprofile', [
             'Name' => $name, 'Email' => $email, 'Address' => $address,
@@ -811,6 +923,10 @@ function addAdminRepairman($name, $email, $password, $address, $mobile, $tel) {
     }
 }
 
+function activateAdminRepairman($id) {
+    return setRepairmanActivation($id, true);
+}
+
 function updateAdminRepairman($id, $name, $email, $address, $mobile, $tel, $availability) {
     global $conn;
     $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Name=?, Email=?, Address=?, MobileNo=?, TelNo=?, Availability=? WHERE ID=?");
@@ -819,10 +935,7 @@ function updateAdminRepairman($id, $name, $email, $address, $mobile, $tel, $avai
 }
 
 function deactivateAdminRepairman($id) {
-    global $conn;
-    $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Status='inactive' WHERE ID=?");
-    $stmt->bind_param("i", $id);
-    return $stmt->execute();
+    return setRepairmanActivation($id, false);
 }
 
 function deleteAdminRepairman($id) {
@@ -849,28 +962,20 @@ function deleteAdminRepairman($id) {
 
 function getAdminTickets($status = null) {
     global $conn;
-    if ($status) {
-        $stmt = $conn->prepare("
-            SELECT repairticket.*, user_clientprofile.Name AS ClientName, 
-                   user_repairmanprofile.Name AS RepairmanName, repairschedule.Date_Time
-            FROM repairticket 
+    $with = "repairticket.*, user_clientprofile.Name AS ClientName, 
+                   user_repairmanprofile.Name AS RepairmanName, repairschedule.Date_Time,
+                   clientappliances.Name AS ApplianceName, clientappliances.Type AS ApplianceType";
+    $from = " FROM repairticket 
             LEFT JOIN user_clientprofile ON repairticket.Client_ID = user_clientprofile.ID 
             LEFT JOIN user_repairmanprofile ON repairticket.Repairman_ID = user_repairmanprofile.ID 
             LEFT JOIN repairschedule ON repairticket.Schedule_ID = repairschedule.ID 
-            WHERE repairticket.Status = ? 
-            ORDER BY repairticket.ID DESC
-        ");
+            LEFT JOIN applianceissue ON applianceissue.Ticket_ID = repairticket.ID
+            LEFT JOIN clientappliances ON clientappliances.ID = COALESCE(repairticket.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = applianceissue.ID LIMIT 1))";
+    if ($status) {
+        $stmt = $conn->prepare("SELECT $with $from WHERE repairticket.Status = ? ORDER BY repairticket.ID DESC");
         $stmt->bind_param("s", $status);
     } else {
-        $stmt = $conn->prepare("
-            SELECT repairticket.*, user_clientprofile.Name AS ClientName, 
-                   user_repairmanprofile.Name AS RepairmanName, repairschedule.Date_Time
-            FROM repairticket 
-            LEFT JOIN user_clientprofile ON repairticket.Client_ID = user_clientprofile.ID 
-            LEFT JOIN user_repairmanprofile ON repairticket.Repairman_ID = user_repairmanprofile.ID 
-            LEFT JOIN repairschedule ON repairticket.Schedule_ID = repairschedule.ID 
-            ORDER BY repairticket.ID DESC
-        ");
+        $stmt = $conn->prepare("SELECT $with $from ORDER BY repairticket.ID DESC");
     }
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);

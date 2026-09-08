@@ -494,7 +494,7 @@
             if (data.success) {
               loadCustomers(searchInput ? searchInput.value : '');
             } else {
-              alert(data.error || 'Failed to deactivate customer');
+              showAlert(data.error || 'Failed to deactivate customer', 'error');
             }
           })
           .catch(function(err) { console.error('Deactivate error:', err); });
@@ -519,7 +519,7 @@
             if (data.success) {
               loadCustomers(searchInput ? searchInput.value : '');
             } else {
-              alert(data.error || 'Failed to update customer');
+              showAlert(data.error || 'Failed to update customer', 'error');
             }
           })
           .catch(function(err) { console.error('Update error:', err); });

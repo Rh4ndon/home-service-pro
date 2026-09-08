@@ -47,7 +47,7 @@
     document.getElementById('loginBtn').addEventListener('click', function() {
       var email = document.getElementById('email').value.trim();
       var password = document.getElementById('password').value;
-      if (!email || !password) { alert('Please fill in all fields'); return; }
+      if (!email || !password) { showAlert('Please fill in all fields', 'warning'); return; }
       var btn = this; var orig = btn.innerHTML;
       btn.innerHTML = 'Logging in...'; btn.disabled = true;
       var fd = new FormData();
@@ -62,9 +62,9 @@
             localStorage.setItem('role', data.role);
             localStorage.setItem('is_logged_in', 'true');
             window.location.href = 'dashboard.html';
-          } else { alert(data.error || 'Login failed'); btn.innerHTML = orig; btn.disabled = false; }
+          } else { showAlert(data.error || 'Login failed', 'error'); btn.innerHTML = orig; btn.disabled = false; }
         })
-        .catch(function(){ alert('Network error'); btn.innerHTML = orig; btn.disabled = false; });
+        .catch(function(){ showAlert('Network error', 'error'); btn.innerHTML = orig; btn.disabled = false; });
     });
     </script>
   </body>

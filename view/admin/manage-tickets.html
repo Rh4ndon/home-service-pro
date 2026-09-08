@@ -587,7 +587,7 @@
         if (!selectedTicketId) return;
         var select = document.querySelector('#reassignModal select');
         var newId = select ? select.value : '';
-        if (!newId) { alert('Please select a repairman'); return; }
+        if (!newId) { showAlert('Please select a repairman', 'warning'); return; }
         var fd = new FormData();
         fd.append('action', 'reassign');
         fd.append('ticket_id', selectedTicketId);
@@ -599,7 +599,7 @@
             if (data.success) {
               loadTickets(currentStatus);
             } else {
-              alert(data.error || 'Failed to reassign ticket');
+              showAlert(data.error || 'Failed to reassign ticket', 'error');
             }
           })
           .catch(function(err) { console.error('Reassign error:', err); });
@@ -620,7 +620,7 @@
             if (data.success) {
               loadTickets(currentStatus);
             } else {
-              alert(data.error || 'Failed to close ticket');
+              showAlert(data.error || 'Failed to close ticket', 'error');
             }
           })
           .catch(function(err) { console.error('Close ticket error:', err); });

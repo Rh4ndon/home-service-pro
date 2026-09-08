@@ -79,8 +79,8 @@
       var email = document.getElementById('email').value.trim();
       var password = document.getElementById('password').value;
       var confirmPassword = document.getElementById('confirmPassword').value;
-      if (!name || !email || !password || !confirmPassword) { alert('Please fill in all fields'); return; }
-      if (password !== confirmPassword) { alert('Passwords do not match'); return; }
+      if (!name || !email || !password || !confirmPassword) { showAlert('Please fill in all fields', 'warning'); return; }
+      if (password !== confirmPassword) { showAlert('Passwords do not match', 'warning'); return; }
       openModal('confirmSignup');
     });
     document.getElementById('confirmSignupBtn').addEventListener('click', function() {
@@ -95,11 +95,11 @@
         .then(function(r){ return r.json(); })
         .then(function(data){
           if(data.success){
-            alert('Account created successfully!');
+            showAlert('Account created successfully!', 'success');
             window.location.href = 'login.html';
-          } else { alert(data.error || 'Registration failed'); btn.innerHTML = orig; btn.disabled = false; }
+          } else { showAlert(data.error || 'Registration failed', 'error'); btn.innerHTML = orig; btn.disabled = false; }
         })
-        .catch(function(){ alert('Network error'); btn.innerHTML = orig; btn.disabled = false; });
+        .catch(function(){ showAlert('Network error', 'error'); btn.innerHTML = orig; btn.disabled = false; });
     });
     </script>
   </body>

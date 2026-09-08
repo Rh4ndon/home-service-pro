@@ -45,14 +45,7 @@
           Profile
         </a>
       </div>
-      <div class="sidebar-section">
-        <div class="sidebar-section-label">Other</div>
-        <a href="../customer/landing-page.html" class="sidebar-link">
-          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Back to Home
-        </a>
-      </div>
-    </nav>
+      </nav>
     <div class="sidebar-user">
       <div class="sidebar-avatar">JD</div>
       <div class="sidebar-user-info">
@@ -266,6 +259,24 @@
       var map = { 'Open': 'badge-info', 'In Progress': 'badge-warning', 'Completed': 'badge-success', 'Cancelled': 'badge-danger' };
       return '<span class="badge ' + (map[status] || 'badge-info') + '">' + status + '</span>';
     }
+    var TYPE_LABELS = {
+      'refrigerator': 'Refrigerator',
+      'washing-machine': 'Washing Machine',
+      'air-conditioner': 'Air Conditioner',
+      'microwave': 'Microwave',
+      'oven': 'Oven / Stove',
+      'dishwasher': 'Dishwasher',
+      'electric-fan': 'Electric Fan',
+      'water-heater': 'Water Heater',
+      'other': 'Other'
+    };
+    function applianceLabel(t) {
+      var name = t.ApplianceName || t.appliance_name || t.Appliance || '';
+      var type = t.ApplianceType || t.appliance_type || t.type || '';
+      var label = TYPE_LABELS[type] || type || '';
+      if (name && label) return name + ' ' + label;
+      return name || label || '—';
+    }
     function formatDate(d) {
       if (!d) return '';
       var dt = new Date(d);
@@ -280,7 +291,7 @@
         var id = t.ID || t.id;
         var status = t.Status || t.status;
         var statusLower = status ? status.toLowerCase().replace(/ /g, '-') : 'open';
-        var appliance = t.ApplianceName || t.appliance_name || t.Appliance || t.appliance_type || '';
+        var appliance = applianceLabel(t);
         var issue = t.Details || t.details || t.issue_description || t.issue || '';
         var date = t.ScheduleDate || t.Created_At || t.created_at || t.date || '';
         var actions = '<div class="action-btns">';
@@ -322,9 +333,9 @@
         .then(function(r){ return r.json(); })
         .then(function(data){
           closeModal('cancelTicketModal');
-          if (data.success) { loadTickets(); } else { alert(data.message || 'Error cancelling ticket.'); }
+          if (isSuccess(data)) { showAlert(data.message || 'Ticket cancelled successfully.', 'success'); loadTickets(); } else { showAlert(data.message || 'Error cancelling ticket.', 'error'); }
         })
-        .catch(function(){ closeModal('cancelTicketModal'); alert('Network error.'); });
+        .catch(function(){ closeModal('cancelTicketModal'); showAlert('Network error.', 'error'); });
     });
 
     function loadTickets() {
