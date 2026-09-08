@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 08, 2026 at 06:38 PM
+-- Generation Time: Sep 08, 2026 at 10:31 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -63,7 +63,8 @@ CREATE TABLE `applianceissue` (
 
 INSERT INTO `applianceissue` (`ID`, `Issue`, `Details`, `Detailed_Report`, `Ticket_ID`) VALUES
 (1, 'Not cooling', 'Not cooling', NULL, 1),
-(2, 'Not cooling', 'Not cooling', NULL, 2);
+(2, 'Not cooling', 'Not cooling', NULL, 2),
+(5, 'Its now rotating', 'Its now rotating', NULL, 5);
 
 -- --------------------------------------------------------
 
@@ -87,7 +88,8 @@ CREATE TABLE `chat_messages` (
 --
 
 INSERT INTO `chat_messages` (`ID`, `Sender_ID`, `Sender_Role`, `Receiver_ID`, `Receiver_Role`, `Message`, `Is_Read`, `Created_At`) VALUES
-(1, 3, 'customer', 1, 'repairman', 'Hello repairman!', 0, '2026-09-08 01:05:22');
+(1, 3, 'customer', 1, 'repairman', 'Hello repairman!', 1, '2026-09-08 01:05:22'),
+(2, 3, 'customer', 1, 'repairman', 'Hey there', 1, '2026-09-09 03:27:38');
 
 -- --------------------------------------------------------
 
@@ -135,9 +137,9 @@ CREATE TABLE `clientappliances` (
 --
 
 INSERT INTO `clientappliances` (`ID`, `Client_ID`, `Name`, `Type`, `Make`, `Year`, `Details`, `Issue_ID`) VALUES
-(2, 1, 'Samsung RT38', 'refrigerator', 'Samsung', 2022, 'Not cooling', 1),
-(3, 1, 'Samsung RT38', 'refrigerator', 'Samsung', 2022, 'Not cooling', 2),
-(4, 1, 'Samsung RT38', 'refrigerator', 'Samsung', 2022, 'Test appliance', NULL);
+(2, 1, 'Samsung Washing', 'washing-machine', 'Samsung', 2023, 'Its now rotating', 5),
+(3, 1, 'Samsung RT45', 'refrigerator', 'Samsung', 2024, 'Frost-free-inverter', 2),
+(6, 1, 'Everest Aircon', 'air-conditioner', 'Everest', 2024, 'Everest Aircon', NULL);
 
 -- --------------------------------------------------------
 
@@ -227,7 +229,8 @@ CREATE TABLE `repairschedule` (
 
 INSERT INTO `repairschedule` (`ID`, `Client_ID`, `Date_Time`, `Status`, `Repairman_ID`) VALUES
 (1, 1, '2026-09-10 10:00:00', 'In Progress', 1),
-(2, 1, '2026-09-10 10:00:00', 'Scheduled', NULL);
+(2, 1, '2026-09-10 10:00:00', 'Scheduled', NULL),
+(5, 1, '2026-09-11 13:00:00', 'Scheduled', NULL);
 
 -- --------------------------------------------------------
 
@@ -238,6 +241,7 @@ INSERT INTO `repairschedule` (`ID`, `Client_ID`, `Date_Time`, `Status`, `Repairm
 CREATE TABLE `repairticket` (
   `ID` int(11) NOT NULL,
   `Client_ID` int(11) NOT NULL,
+  `Appliance_ID` int(11) DEFAULT NULL,
   `Repairman_ID` int(11) DEFAULT NULL,
   `Status` varchar(50) NOT NULL DEFAULT 'Open',
   `Details` text DEFAULT NULL,
@@ -248,9 +252,10 @@ CREATE TABLE `repairticket` (
 -- Dumping data for table `repairticket`
 --
 
-INSERT INTO `repairticket` (`ID`, `Client_ID`, `Repairman_ID`, `Status`, `Details`, `Schedule_ID`) VALUES
-(1, 1, 1, 'Completed', 'Not cooling', 1),
-(2, 1, 1, 'Completed', 'Not cooling', 2);
+INSERT INTO `repairticket` (`ID`, `Client_ID`, `Appliance_ID`, `Repairman_ID`, `Status`, `Details`, `Schedule_ID`) VALUES
+(1, 1, 2, 1, 'Completed', 'Not cooling', 1),
+(2, 1, 3, 1, 'Completed', 'Not cooling', 2),
+(5, 1, 2, NULL, 'Open', 'Its now rotating', 5);
 
 -- --------------------------------------------------------
 
@@ -454,13 +459,13 @@ ALTER TABLE `admin`
 -- AUTO_INCREMENT for table `applianceissue`
 --
 ALTER TABLE `applianceissue`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `chat_messages`
 --
 ALTER TABLE `chat_messages`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `clientaddress`
@@ -472,7 +477,7 @@ ALTER TABLE `clientaddress`
 -- AUTO_INCREMENT for table `clientappliances`
 --
 ALTER TABLE `clientappliances`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `clientcontact`
@@ -490,25 +495,25 @@ ALTER TABLE `repairhistory`
 -- AUTO_INCREMENT for table `repairmanagerbackground`
 --
 ALTER TABLE `repairmanagerbackground`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `repairschedule`
 --
 ALTER TABLE `repairschedule`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `repairticket`
 --
 ALTER TABLE `repairticket`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `user_clientprofile`
@@ -520,7 +525,7 @@ ALTER TABLE `user_clientprofile`
 -- AUTO_INCREMENT for table `user_repairmanprofile`
 --
 ALTER TABLE `user_repairmanprofile`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables
