@@ -331,11 +331,209 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
+  <script>
+  (function() {
+    if (!localStorage.getItem('is_logged_in') || localStorage.getItem('role') !== 'admin') {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    var nameEl = document.querySelector('.sidebar-user-name');
+    var storedName = localStorage.getItem('name') || 'Admin User';
+    if (nameEl) nameEl.textContent = storedName;
+
+    var initials = storedName.split(' ').map(function(w){ return w.charAt(0); }).join('').substring(0,2).toUpperCase();
+    var avatarEl = document.querySelector('.sidebar-avatar');
+    if (avatarEl) avatarEl.textContent = initials;
+
+    var baseUrl = '../../controllers/admin/customers.php';
+    var tbody = document.querySelector('#customersTable tbody');
+    var selectedCustomerId = null;
+
+    function renderBadge(status) {
+      var s = (status || 'active').toLowerCase();
+      if (s === 'inactive') return '<span class="badge badge-danger">Inactive</span>';
+      return '<span class="badge badge-success">Active</span>';
+    }
+
+    function formatDate(d) {
+      if (!d) return '';
+      var dt = new Date(d);
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return months[dt.getMonth()] + ' ' + dt.getDate() + ', ' + dt.getFullYear();
+    }
+
+    function renderRows(customers) {
+      if (!tbody) return;
+      if (!customers || customers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);">No customers found</td></tr>';
+        return;
+      }
+      var html = '';
+      customers.forEach(function(c) {
+        var name = c.ProfileName || c.Name || '';
+        var email = c.ProfileEmail || c.Email || '';
+        var city = c.City_Min || '';
+        var status = c.ProfileStatus || 'active';
+        var profileId = c.ProfileID || c.ID;
+        var since = formatDate(c.Created_At);
+        html += '<tr data-id="' + profileId + '">' +
+          '<td>' + profileId + '</td>' +
+          '<td>' + name + '</td>' +
+          '<td>' + email + '</td>' +
+          '<td>' + city + '</td>' +
+          '<td>-</td>' +
+          '<td>' + since + '</td>' +
+          '<td>' + renderBadge(status) + '</td>' +
+          '<td><div class="action-btns">' +
+          '<button class="btn btn-sm btn-secondary" data-action="view" data-id="' + profileId + '">' +
+            '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+          '<button class="btn btn-sm btn-secondary" data-action="edit" data-id="' + profileId + '">' +
+            '<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+          '<button class="btn btn-sm btn-warning" data-action="deactivate" data-id="' + profileId + '">Deactivate</button>' +
+          '</div></td></tr>';
+      });
+      tbody.innerHTML = html;
+    }
+
+    function loadCustomers(search) {
+      var url = baseUrl;
+      if (search) url += '?search=' + encodeURIComponent(search);
+      fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) renderRows(data.customers);
+        })
+        .catch(function(err) { console.error('Fetch customers error:', err); });
+    }
+
+    var searchInput = document.getElementById('searchCustomers');
+    var searchTimer = null;
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        var val = this.value;
+        searchTimer = setTimeout(function() { loadCustomers(val); }, 300);
+      });
+    }
+
+    tbody.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      var action = btn.getAttribute('data-action');
+      var id = btn.getAttribute('data-id');
+      selectedCustomerId = id;
+
+      if (action === 'deactivate') {
+        openModal('deactivateCustomerModal');
+      } else if (action === 'view') {
+        fetch(baseUrl + '?id=' + encodeURIComponent(id))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success && data.customer) {
+              var c = data.customer;
+              var profileBody = document.querySelector('#viewCustomerModal .modal-body');
+              if (profileBody) {
+                var name = c.ProfileName || c.Name || '';
+                var email = c.ProfileEmail || c.Email || '';
+                var addr = [c.Address_Line1, c.Brgy, c.City_Min, c.Province, c.Zip_Code].filter(Boolean).join(', ');
+                profileBody.innerHTML = '<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">' +
+                  '<div class="list-avatar" style="width:56px;height:56px;font-size:1.1rem;background:linear-gradient(135deg,#3b82f6,#2563eb);">' + name.split(' ').map(function(w){return w.charAt(0);}).join('').substring(0,2).toUpperCase() + '</div>' +
+                  '<div><h3 style="font-size:1.15rem;font-weight:700;">' + name + '</h3>' +
+                  '<p style="font-size:0.88rem;color:var(--muted);">' + (c.ProfileID || c.ID) + ' &middot; ' + email + '</p></div></div>' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Full Address</div><div style="font-size:0.92rem;font-weight:500;">' + (addr || 'N/A') + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Status</div><div style="font-size:0.92rem;font-weight:500;">' + (c.ProfileStatus || 'active') + '</div></div>' +
+                  '</div>';
+              }
+              openModal('viewCustomerModal');
+            }
+          })
+          .catch(function(err) { console.error('Fetch customer error:', err); });
+      } else if (action === 'edit') {
+        fetch(baseUrl + '?id=' + encodeURIComponent(id))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success && data.customer) {
+              var c = data.customer;
+              var modal = document.getElementById('editCustomerModal');
+              var inputs = modal.querySelectorAll('input');
+              if (inputs[0]) inputs[0].value = c.ProfileName || c.Name || '';
+              if (inputs[1]) inputs[1].value = c.ProfileEmail || c.Email || '';
+              if (inputs[2]) inputs[2].value = c.Address_Line1 || '';
+              if (inputs[3]) inputs[3].value = c.Brgy || '';
+              if (inputs[4]) inputs[4].value = c.City_Min || '';
+              if (inputs[5]) inputs[5].value = c.Province || '';
+              if (inputs[6]) inputs[6].value = c.Zip_Code || '';
+              if (inputs[7]) inputs[7].value = c.MobileNo || '';
+              if (inputs[8]) inputs[8].value = '';
+              openModal('editCustomerModal');
+            }
+          })
+          .catch(function(err) { console.error('Fetch customer error:', err); });
+      }
+    });
+
+    var deactivateBtn = document.querySelector('#deactivateCustomerModal .btn-warning');
+    if (deactivateBtn) {
+      deactivateBtn.addEventListener('click', function() {
+        if (!selectedCustomerId) return;
+        var fd = new FormData();
+        fd.append('action', 'deactivate');
+        fd.append('id', selectedCustomerId);
+        fetch(baseUrl, { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            closeModal('deactivateCustomerModal');
+            if (data.success) {
+              loadCustomers(searchInput ? searchInput.value : '');
+            } else {
+              alert(data.error || 'Failed to deactivate customer');
+            }
+          })
+          .catch(function(err) { console.error('Deactivate error:', err); });
+      });
+    }
+
+    var editSaveBtn = document.querySelector('#editCustomerModal .btn-primary');
+    if (editSaveBtn) {
+      editSaveBtn.addEventListener('click', function() {
+        if (!selectedCustomerId) return;
+        var modal = document.getElementById('editCustomerModal');
+        var inputs = modal.querySelectorAll('input');
+        var fd = new FormData();
+        fd.append('action', 'update');
+        fd.append('id', selectedCustomerId);
+        fd.append('name', inputs[0] ? inputs[0].value : '');
+        fd.append('email', inputs[1] ? inputs[1].value : '');
+        fetch(baseUrl, { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            closeModal('editCustomerModal');
+            if (data.success) {
+              loadCustomers(searchInput ? searchInput.value : '');
+            } else {
+              alert(data.error || 'Failed to update customer');
+            }
+          })
+          .catch(function(err) { console.error('Update error:', err); });
+      });
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      fetch('../../controllers/logout.php', { method: 'POST' })
+        .then(function(){ localStorage.clear(); window.location.href = 'login.html'; })
+        .catch(function(){ localStorage.clear(); window.location.href = 'login.html'; });
+    });
+
+    loadCustomers();
+  })();
+  </script>
 </body>
 </html>

@@ -241,11 +241,109 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
+  <script>
+    (function() {
+      if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+
+      var userId = localStorage.getItem('id');
+      var userName = localStorage.getItem('name') || 'Repairman';
+      var userRole = localStorage.getItem('role') || 'repairman';
+
+      document.querySelectorAll('.sidebar-user-name').forEach(function(el) { el.textContent = userName; });
+      var initials = userName.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+      document.querySelectorAll('.sidebar-avatar').forEach(function(el) { el.textContent = initials; });
+
+      var welcomeP = document.querySelector('.page-header p');
+      if (welcomeP) {
+        var firstName = userName.split(' ')[0];
+        welcomeP.textContent = 'Welcome back, ' + firstName + "! Here's your overview for today.";
+      }
+
+      function logout() {
+        fetch('../../controllers/logout.php', { method: 'POST' })
+          .then(function(){ localStorage.clear(); window.location.href = 'login.html'; })
+          .catch(function(){ localStorage.clear(); window.location.href = 'login.html'; });
+      }
+      document.querySelectorAll('.sidebar-logout').forEach(function(btn) { btn.onclick = function() { openModal('logoutModal'); }; });
+      var logoutBtns = document.querySelectorAll('#logoutModal .btn-danger');
+      logoutBtns.forEach(function(btn) { btn.onclick = logout; });
+
+      if (!userId) return;
+
+      fetch('../../controllers/repairman/dashboard.php?user_id=' + userId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.error) return;
+          var stats = data.stats || {};
+          var statCards = document.querySelectorAll('.stat-card .stat-info h3');
+          if (statCards.length >= 4) {
+            statCards[0].textContent = stats.todays_jobs ?? 0;
+            statCards[1].textContent = stats.pending_tickets ?? 0;
+            statCards[2].textContent = stats.completed_week ?? 0;
+            statCards[3].textContent = stats.avg_rating ?? '0.0';
+          }
+
+          if (data.schedules && data.schedules.length > 0) {
+            var listContainer = document.querySelector('.card-body-flush');
+            if (!listContainer) return;
+            var scheduleCard = listContainer.closest('.card');
+            if (!scheduleCard) return;
+            var scheduleDiv = scheduleCard.querySelector('.card-body-flush');
+            if (!scheduleDiv) return;
+            scheduleDiv.innerHTML = '';
+            data.schedules.forEach(function(s) {
+              var hour = s.time ? s.time.substring(0,5) : '';
+              var timeHour = hour ? parseInt(hour.split(':')[0], 10) : 8;
+              var ampm = timeHour >= 12 ? 'PM' : 'AM';
+              var h12 = timeHour > 12 ? timeHour - 12 : (timeHour === 0 ? 12 : timeHour);
+              var timeStr = h12 + ':00 ' + ampm;
+              var bgColors = {
+                'in_progress': 'linear-gradient(135deg, #1b8de8, #0d71c7)',
+                'progress': 'linear-gradient(135deg, #1b8de8, #0d71c7)',
+                'upcoming': 'linear-gradient(135deg, #f59e0b, #d97706)',
+                'pending': 'linear-gradient(135deg, #f59e0b, #d97706)',
+                'assigned': 'linear-gradient(135deg, #22c55e, #16a34a)',
+                'completed': 'linear-gradient(135deg, #22c55e, #16a34a)'
+              };
+              var badgeMap = {
+                'in_progress': 'badge-info',
+                'progress': 'badge-info',
+                'upcoming': 'badge-warning',
+                'pending': 'badge-warning',
+                'assigned': 'badge-neutral',
+                'completed': 'badge-success'
+              };
+              var labelMap = {
+                'in_progress': 'In Progress',
+                'progress': 'In Progress',
+                'upcoming': 'Upcoming',
+                'pending': 'Pending',
+                'assigned': 'Assigned',
+                'completed': 'Completed'
+              };
+              var status = (s.status || 'assigned').toLowerCase();
+              var bg = bgColors[status] || 'linear-gradient(135deg, #22c55e, #16a34a)';
+              var badgeClass = badgeMap[status] || 'badge-neutral';
+              var badgeLabel = labelMap[status] || status;
+              var dayNum = s.date ? new Date(s.date).getDate() : '00';
+              var item = document.createElement('div');
+              item.className = 'list-item';
+              item.innerHTML = '<div class="list-avatar" style="background: ' + bg + ';">' + String(dayNum).padStart(2,'0') + '</div>' +
+                '<div class="list-info"><h4>' + timeStr + ' - ' + (s.appliance || s.title || 'Repair') + '</h4>' +
+                '<p>' + (s.client_name || '') + ' - ' + (s.issue || s.description || '') + '</p></div>' +
+                '<span class="badge ' + badgeClass + '">' + badgeLabel + '</span>';
+              scheduleDiv.appendChild(item);
+            });
+          }
+        })
+        .catch(function() {});
+    })();
+  </script>
 </body>
 </html>

@@ -371,27 +371,270 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
   <script>
-    function filterTickets(btn, status) {
-      var tabs = btn.parentElement.querySelectorAll('.tab');
-      tabs.forEach(function(t) { t.classList.remove('active'); });
-      btn.classList.add('active');
+  (function() {
+    if (!localStorage.getItem('is_logged_in') || localStorage.getItem('role') !== 'admin') {
+      window.location.href = 'login.html';
+      return;
+    }
 
-      var rows = document.getElementById('ticketsTable').querySelectorAll('tbody tr');
+    var nameEl = document.querySelector('.sidebar-user-name');
+    var storedName = localStorage.getItem('name') || 'Admin User';
+    if (nameEl) nameEl.textContent = storedName;
+
+    var initials = storedName.split(' ').map(function(w){ return w.charAt(0); }).join('').substring(0,2).toUpperCase();
+    var avatarEl = document.querySelector('.sidebar-avatar');
+    if (avatarEl) avatarEl.textContent = initials;
+
+    var baseUrl = '../../controllers/admin/tickets.php';
+    var repairmenUrl = '../../controllers/admin/repairmen.php';
+    var tbody = document.querySelector('#ticketsTable tbody');
+    var selectedTicketId = null;
+    var currentStatus = 'all';
+
+    function renderStatusBadge(status) {
+      var s = (status || '').toLowerCase();
+      if (s === 'open') return '<span class="badge badge-warning">Open</span>';
+      if (s === 'in progress') return '<span class="badge badge-info">In Progress</span>';
+      if (s === 'completed') return '<span class="badge badge-success">Completed</span>';
+      if (s === 'cancelled') return '<span class="badge badge-neutral">Cancelled</span>';
+      return '<span class="badge">' + (status || 'Unknown') + '</span>';
+    }
+
+    function statusToDataAttr(status) {
+      var s = (status || '').toLowerCase();
+      if (s === 'in progress') return 'in-progress';
+      return s;
+    }
+
+    function formatDate(d) {
+      if (!d) return '';
+      var dt = new Date(d);
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return months[dt.getMonth()] + ' ' + dt.getDate() + ', ' + dt.getFullYear();
+    }
+
+    function renderRows(tickets) {
+      if (!tbody) return;
+      if (!tickets || tickets.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);">No tickets found</td></tr>';
+        return;
+      }
+      var html = '';
+      tickets.forEach(function(t) {
+        var id = t.ID;
+        var client = t.ClientName || 'Client';
+        var repairman = t.RepairmanName || 'Unassigned';
+        var appliance = t.Appliance_Type || '-';
+        var issue = t.Issue_Description || '-';
+        var date = formatDate(t.Date_Time || t.Created_At);
+        var status = t.Status || 'Open';
+        var ds = statusToDataAttr(status);
+        var canManage = ds === 'open' || ds === 'in-progress';
+        html += '<tr data-status="' + ds + '" data-id="' + id + '">' +
+          '<td>#' + id + '</td>' +
+          '<td>' + client + '</td>' +
+          '<td>' + repairman + '</td>' +
+          '<td>' + appliance + '</td>' +
+          '<td>' + issue + '</td>' +
+          '<td>' + date + '</td>' +
+          '<td>' + renderStatusBadge(status) + '</td>' +
+          '<td><div class="action-btns">' +
+          '<button class="btn btn-sm btn-secondary" data-action="view" data-id="' + id + '">' +
+            '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+          (canManage ?
+            '<button class="btn btn-sm btn-info" style="background:var(--info);color:#fff;" data-action="reassign" data-id="' + id + '">Reassign</button>' +
+            '<button class="btn btn-sm btn-danger" data-action="close" data-id="' + id + '">Close</button>'
+            : '') +
+          '</div></td></tr>';
+      });
+      tbody.innerHTML = html;
+      applyTabFilter();
+    }
+
+    function applyTabFilter() {
+      var rows = tbody.querySelectorAll('tr');
       rows.forEach(function(row) {
-        if (status === 'all') {
+        if (currentStatus === 'all') {
           row.style.display = '';
         } else {
-          row.style.display = row.getAttribute('data-status') === status ? '' : 'none';
+          row.style.display = row.getAttribute('data-status') === currentStatus ? '' : 'none';
         }
       });
     }
+
+    function loadTickets(status) {
+      var url = baseUrl;
+      var params = [];
+      if (status && status !== 'all') params.push('status=' + encodeURIComponent(status));
+      if (params.length) url += '?' + params.join('&');
+      fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) renderRows(data.tickets);
+        })
+        .catch(function(err) { console.error('Fetch tickets error:', err); });
+    }
+
+    window.filterTickets = function(btn, status) {
+      var tabs = btn.parentElement.querySelectorAll('.tab');
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      btn.classList.add('active');
+      currentStatus = status;
+      loadTickets(status);
+    };
+
+    var searchInput = document.getElementById('searchTickets');
+    var searchTimer = null;
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        var val = this.value.toLowerCase();
+        searchTimer = setTimeout(function() {
+          var rows = tbody.querySelectorAll('tr');
+          rows.forEach(function(row) {
+            var text = row.textContent.toLowerCase();
+            row.style.display = text.indexOf(val) !== -1 ? '' : 'none';
+          });
+        }, 200);
+      });
+    }
+
+    tbody.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      var action = btn.getAttribute('data-action');
+      var id = btn.getAttribute('data-id');
+      selectedTicketId = id;
+
+      if (action === 'view') {
+        fetch(baseUrl + '?id=' + encodeURIComponent(id))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success && data.ticket) {
+              var t = data.ticket;
+              var body = document.querySelector('#viewTicketModal .modal-body');
+              if (body) {
+                var issues = t.appliance_issues || [];
+                var issueList = issues.map(function(i){ return i.Issue_Description || i.Description || ''; }).filter(Boolean).join(', ') || t.Issue_Description || 'N/A';
+                var schedule = t.ScheduleDate ? formatDate(t.ScheduleDate) : 'Not scheduled';
+                var timeline = '<div style="padding:14px 16px;background:var(--panel);border-radius:10px;">' +
+                  '<div style="display:flex;gap:14px;margin-bottom:12px;"><div style="width:10px;height:10px;border-radius:50%;background:var(--primary);margin-top:5px;flex-shrink:0;"></div><div><div style="font-size:0.88rem;font-weight:600;">Ticket Created</div><div style="font-size:0.82rem;color:var(--muted);">' + formatDate(t.Created_At) + '</div></div></div>';
+                if (t.RepairmanName) {
+                  timeline += '<div style="display:flex;gap:14px;"><div style="width:10px;height:10px;border-radius:50%;background:var(--warning);margin-top:5px;flex-shrink:0;"></div><div><div style="font-size:0.88rem;font-weight:600;">Assigned to ' + t.RepairmanName + '</div></div></div>';
+                }
+                timeline += '</div>';
+                body.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Ticket ID</div><div style="font-size:1.1rem;font-weight:700;">#' + t.ID + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Status</div><div>' + renderStatusBadge(t.Status) + '</div></div>' +
+                  '</div>' +
+                  '<h4 style="font-size:0.92rem;font-weight:700;margin-bottom:12px;color:var(--text);">Client Information</h4>' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Client Name</div><div style="font-size:0.92rem;font-weight:500;">' + (t.ClientName || 'N/A') + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Client Email</div><div style="font-size:0.92rem;font-weight:500;">' + (t.ClientEmail || 'N/A') + '</div></div>' +
+                  '</div>' +
+                  '<h4 style="font-size:0.92rem;font-weight:700;margin-bottom:12px;color:var(--text);">Appliance &amp; Issue</h4>' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Appliance</div><div style="font-size:0.92rem;font-weight:500;">' + (t.Appliance_Type || 'N/A') + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Issue</div><div style="font-size:0.92rem;font-weight:500;">' + issueList + '</div></div>' +
+                  '</div>' +
+                  '<h4 style="font-size:0.92rem;font-weight:700;margin-bottom:12px;color:var(--text);">Schedule &amp; Assignment</h4>' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Scheduled Date</div><div style="font-size:0.92rem;font-weight:500;">' + schedule + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Assigned Repairman</div><div style="font-size:0.92rem;font-weight:500;">' + (t.RepairmanName || 'Unassigned') + '</div></div>' +
+                  '</div>' +
+                  '<h4 style="font-size:0.92rem;font-weight:700;margin-bottom:12px;color:var(--text);">Status Timeline</h4>' + timeline;
+              }
+              openModal('viewTicketModal');
+            }
+          })
+          .catch(function(err) { console.error('Fetch ticket detail error:', err); });
+      } else if (action === 'reassign') {
+        fetch(repairmenUrl)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success && data.repairmen) {
+              var select = document.querySelector('#reassignModal select');
+              if (select) {
+                select.innerHTML = '<option value="" disabled selected>Choose a repairman...</option>';
+                data.repairmen.forEach(function(r) {
+                  if ((r.Status || 'active').toLowerCase() === 'active') {
+                    var opt = document.createElement('option');
+                    opt.value = r.User_ID || r.ID;
+                    opt.textContent = r.Name;
+                    select.appendChild(opt);
+                  }
+                });
+              }
+            }
+          })
+          .catch(function() {});
+        openModal('reassignModal');
+      } else if (action === 'close') {
+        openModal('closeTicketModal');
+      }
+    });
+
+    var reassignBtn = document.querySelector('#reassignModal .btn-primary');
+    if (reassignBtn) {
+      reassignBtn.addEventListener('click', function() {
+        if (!selectedTicketId) return;
+        var select = document.querySelector('#reassignModal select');
+        var newId = select ? select.value : '';
+        if (!newId) { alert('Please select a repairman'); return; }
+        var fd = new FormData();
+        fd.append('action', 'reassign');
+        fd.append('ticket_id', selectedTicketId);
+        fd.append('new_repairman_id', newId);
+        fetch(baseUrl, { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            closeModal('reassignModal');
+            if (data.success) {
+              loadTickets(currentStatus);
+            } else {
+              alert(data.error || 'Failed to reassign ticket');
+            }
+          })
+          .catch(function(err) { console.error('Reassign error:', err); });
+      });
+    }
+
+    var closeBtn = document.querySelector('#closeTicketModal .btn-danger');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        if (!selectedTicketId) return;
+        var fd = new FormData();
+        fd.append('action', 'close');
+        fd.append('ticket_id', selectedTicketId);
+        fetch(baseUrl, { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            closeModal('closeTicketModal');
+            if (data.success) {
+              loadTickets(currentStatus);
+            } else {
+              alert(data.error || 'Failed to close ticket');
+            }
+          })
+          .catch(function(err) { console.error('Close ticket error:', err); });
+      });
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      fetch('../../controllers/logout.php', { method: 'POST' })
+        .then(function(){ localStorage.clear(); window.location.href = 'login.html'; })
+        .catch(function(){ localStorage.clear(); window.location.href = 'login.html'; });
+    });
+
+    loadTickets('all');
+  })();
   </script>
 </body>
 </html>

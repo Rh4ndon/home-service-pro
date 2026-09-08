@@ -227,7 +227,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('cancelTicketModal')">No, Keep It</button>
-        <button class="btn btn-danger" onclick="doAction('cancelTicketModal','Ticket has been cancelled.')">Yes, Cancel Ticket</button>
+        <button class="btn btn-danger" id="confirmCancelBtn">Yes, Cancel Ticket</button>
       </div>
     </div>
   </div>
@@ -244,25 +244,108 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='../customer/landing-page.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
   <script>
-    function filterTickets(status, btn) {
+  (function() {
+    if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+    var userId = localStorage.getItem('id');
+    var userName = localStorage.getItem('name');
+    var allTickets = [];
+    var currentFilter = 'all';
+    var sidebarUserName = document.querySelector('.sidebar-user-name');
+    var sidebarAvatar = document.querySelector('.sidebar-avatar');
+    if (sidebarUserName) sidebarUserName.textContent = userName || 'Customer';
+    if (sidebarAvatar) sidebarAvatar.textContent = (userName || 'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+
+    function statusBadge(status) {
+      var map = { 'Open': 'badge-info', 'In Progress': 'badge-warning', 'Completed': 'badge-success', 'Cancelled': 'badge-danger' };
+      return '<span class="badge ' + (map[status] || 'badge-info') + '">' + status + '</span>';
+    }
+    function formatDate(d) {
+      if (!d) return '';
+      var dt = new Date(d);
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return months[dt.getMonth()] + ' ' + dt.getDate() + ', ' + dt.getFullYear();
+    }
+    function renderTickets(tickets) {
+      var tbody = document.querySelector('#ticketsTable tbody');
+      if (!tickets.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted);">No tickets found.</td></tr>'; return; }
+      tbody.innerHTML = tickets.map(function(t) {
+        // Controller returns uppercase column names: ID, Status, Details, ScheduleDate, ApplianceName, etc.
+        var id = t.ID || t.id;
+        var status = t.Status || t.status;
+        var statusLower = status ? status.toLowerCase().replace(/ /g, '-') : 'open';
+        var appliance = t.ApplianceName || t.appliance_name || t.Appliance || t.appliance_type || '';
+        var issue = t.Details || t.details || t.issue_description || t.issue || '';
+        var date = t.ScheduleDate || t.Created_At || t.created_at || t.date || '';
+        var actions = '<div class="action-btns">';
+        if (status !== 'Completed' && status !== 'Cancelled') {
+          actions += '<a href="chat.html" class="btn btn-primary btn-sm">Chat</a>';
+          actions += '<a href="call.html" class="btn btn-success btn-sm">Call</a>';
+        }
+        actions += '<button class="btn btn-secondary btn-sm" onclick="openModal(\'viewTicketModal\')">View</button>';
+        if (status === 'Open') {
+          actions += '<button class="btn btn-secondary btn-sm" onclick="window._cancelTicketId=' + id + ';openModal(\'cancelTicketModal\')">Cancel</button>';
+        }
+        actions += '</div>';
+        return '<tr data-status="' + statusLower + '">' +
+          '<td><strong>#' + id + '</strong></td>' +
+          '<td>' + appliance + '</td>' +
+          '<td>' + issue + '</td>' +
+          '<td>' + formatDate(date) + '</td>' +
+          '<td>' + statusBadge(status) + '</td>' +
+          '<td>' + actions + '</td></tr>';
+      }).join('');
+    }
+
+    window.filterTickets = function(status, btn) {
+      currentFilter = status;
       document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
       btn.classList.add('active');
-      var rows = document.querySelectorAll('#ticketsTable tbody tr');
-      rows.forEach(function(row) {
-        if (status === 'all') {
-          row.style.display = '';
-        } else {
-          row.style.display = row.getAttribute('data-status') === status ? '' : 'none';
-        }
-      });
+      if (status === 'all') { renderTickets(allTickets); return; }
+      renderTickets(allTickets.filter(function(t) { return t.status.toLowerCase().replace(/ /g, '-') === status; }));
+    };
+
+    document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+      var ticketId = window._cancelTicketId;
+      if (!ticketId) return;
+      var fd = new FormData();
+      fd.append('action', 'cancel');
+      fd.append('ticket_id', ticketId);
+      fd.append('user_id', userId);
+      fetch('../../controllers/customer/tickets.php', { method: 'POST', body: fd })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          closeModal('cancelTicketModal');
+          if (data.success) { loadTickets(); } else { alert(data.message || 'Error cancelling ticket.'); }
+        })
+        .catch(function(){ closeModal('cancelTicketModal'); alert('Network error.'); });
+    });
+
+    function loadTickets() {
+      fetch('../../controllers/customer/tickets.php?user_id=' + userId)
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          allTickets = data.tickets || data || [];
+          if (!Array.isArray(allTickets)) allTickets = [];
+          if (currentFilter === 'all') { renderTickets(allTickets); } else { window.filterTickets(currentFilter, document.querySelector('.tab.active')); }
+        })
+        .catch(function(){});
     }
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      fetch('../../controllers/logout.php', { method: 'POST' })
+        .then(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; })
+        .catch(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; });
+    });
+
+    loadTickets();
+  })();
   </script>
 </body>
 </html>

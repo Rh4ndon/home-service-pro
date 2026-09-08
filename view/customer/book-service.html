@@ -150,7 +150,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('confirmBookingModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="doAction('confirmBookingModal','Booking submitted successfully! You will receive a confirmation shortly.'); setTimeout(function(){ openModal('successBookingModal'); }, 400);">Confirm</button>
+        <button class="btn btn-primary" id="confirmBtn">Confirm</button>
       </div>
     </div>
   </div>
@@ -183,11 +183,61 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='../customer/landing-page.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
+  <script>
+  (function() {
+    if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+    var userId = localStorage.getItem('id');
+    var userName = localStorage.getItem('name');
+    var sidebarUserName = document.querySelector('.sidebar-user-name');
+    var sidebarAvatar = document.querySelector('.sidebar-avatar');
+    if (sidebarUserName) sidebarUserName.textContent = userName || 'Customer';
+    if (sidebarAvatar) sidebarAvatar.textContent = (userName || 'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+    document.getElementById('confirmBtn').addEventListener('click', function() {
+      var applianceType = document.getElementById('applianceType').value;
+      var applianceName = document.getElementById('applianceName').value;
+      var makeBrand = document.getElementById('makeBrand').value;
+      var yearModel = document.getElementById('yearModel').value;
+      var issueDesc = document.getElementById('issueDesc').value;
+      var preferredDate = document.getElementById('preferredDate').value;
+      var preferredTime = document.getElementById('preferredTime').value;
+      if (!applianceType || !applianceName || !makeBrand || !yearModel || !issueDesc || !preferredDate || !preferredTime) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+      var fd = new FormData();
+      fd.append('action', 'book');
+      fd.append('user_id', userId);
+      fd.append('appliance_type', applianceType);
+      fd.append('appliance_name', applianceName);
+      fd.append('make_brand', makeBrand);
+      fd.append('year_model', yearModel);
+      fd.append('issue_desc', issueDesc);
+      fd.append('preferred_date', preferredDate);
+      fd.append('preferred_time', preferredTime);
+      fetch('../../controllers/customer/tickets.php', { method: 'POST', body: fd })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if (data.success) {
+            closeModal('confirmBookingModal');
+            openModal('successBookingModal');
+          } else {
+            alert(data.message || 'Error submitting booking.');
+          }
+        })
+        .catch(function(){ alert('Network error. Please try again.'); });
+    });
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      fetch('../../controllers/logout.php', { method: 'POST' })
+        .then(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; })
+        .catch(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; });
+    });
+  })();
+  </script>
 </body>
 </html>

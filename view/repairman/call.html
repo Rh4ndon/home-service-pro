@@ -238,11 +238,18 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
+  <script>
+  document.getElementById('logoutBtn').addEventListener('click', function() {
+    fetch('../../controllers/logout.php', { method: 'POST' })
+      .then(function(){ localStorage.clear(); window.location.href = 'login.html'; })
+      .catch(function(){ localStorage.clear(); window.location.href = 'login.html'; });
+  });
+  </script>
 </body>
 </html>

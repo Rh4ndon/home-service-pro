@@ -32,13 +32,23 @@
             </div>
             <div class="form-group">
               <label for="password">Password</label>
-              <input type="password" id="password" placeholder="Create a password" />
+              <div class="password-wrapper">
+                <input type="password" id="password" placeholder="Create a password" />
+                <button type="button" class="password-toggle" aria-label="Toggle password visibility" onclick="togglePassword(this)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
             </div>
             <div class="form-group">
               <label for="confirmPassword">Confirm Password</label>
-              <input type="password" id="confirmPassword" placeholder="Confirm your password" />
+              <div class="password-wrapper">
+                <input type="password" id="confirmPassword" placeholder="Confirm your password" />
+                <button type="button" class="password-toggle" aria-label="Toggle password visibility" onclick="togglePassword(this)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
             </div>
-            <button class="btn btn-primary" type="button" onclick="openModal('confirmSignup')">Create Account</button>
+            <button class="btn btn-primary" type="button" id="signupBtn">Create Account</button>
           </form>
         </div>
         <div class="auth-footer">
@@ -61,11 +71,43 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary btn-cancel" onclick="closeModal('confirmSignup')">Cancel</button>
-          <button class="btn btn-primary" onclick="window.location.href='dashboard.html'">Confirm &amp; Sign Up</button>
+          <button class="btn btn-primary" id="confirmSignupBtn">Confirm &amp; Sign Up</button>
         </div>
       </div>
     </div>
 
     <script src="../shared.js"></script>
+    <script>
+    document.getElementById('signupBtn').addEventListener('click', function() {
+      var name = document.getElementById('fullName').value.trim();
+      var email = document.getElementById('email').value.trim();
+      var mobile = document.getElementById('mobile').value.trim();
+      var password = document.getElementById('password').value;
+      var confirmPassword = document.getElementById('confirmPassword').value;
+      if (!name || !email || !mobile || !password || !confirmPassword) { alert('Please fill in all fields'); return; }
+      if (password !== confirmPassword) { alert('Passwords do not match'); return; }
+      openModal('confirmSignup');
+    });
+    document.getElementById('confirmSignupBtn').addEventListener('click', function() {
+      var name = document.getElementById('fullName').value.trim();
+      var email = document.getElementById('email').value.trim();
+      var mobile = document.getElementById('mobile').value.trim();
+      var password = document.getElementById('password').value;
+      var btn = this; var orig = btn.innerHTML;
+      btn.innerHTML = 'Creating Account...'; btn.disabled = true;
+      var fd = new FormData();
+      fd.append('name', name); fd.append('email', email); fd.append('mobile', mobile);
+      fd.append('password', password); fd.append('role', 'repairman');
+      fetch('../../controllers/register.php', { method: 'POST', body: fd })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if(data.success){
+            alert('Account created successfully!');
+            window.location.href = 'login.html';
+          } else { alert(data.error || 'Registration failed'); btn.innerHTML = orig; btn.disabled = false; }
+        })
+        .catch(function(){ alert('Network error'); btn.innerHTML = orig; btn.disabled = false; });
+    });
+    </script>
   </body>
 </html>

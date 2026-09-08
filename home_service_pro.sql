@@ -24,6 +24,41 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `admin`
+--
+
+CREATE TABLE `admin` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `Email` varchar(255) NOT NULL,
+  `Password` varchar(255) NOT NULL,
+  `Status` enum('active','inactive') NOT NULL DEFAULT 'active',
+  `Created_At` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `Email_UNIQUE` (`Email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `Email` varchar(255) NOT NULL,
+  `Password` varchar(255) NOT NULL,
+  `Role` enum('customer','repairman') NOT NULL,
+  `Status` enum('active','inactive','banned') NOT NULL DEFAULT 'active',
+  `Created_At` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `Email_UNIQUE` (`Email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `applianceissue`
 --
 
@@ -60,6 +95,7 @@ CREATE TABLE `clientaddress` (
 
 CREATE TABLE `clientappliances` (
   `ID` int(11) NOT NULL,
+  `Client_ID` int(11) NOT NULL,
   `Name` varchar(255) NOT NULL,
   `Type` varchar(100) NOT NULL,
   `Make` varchar(100) DEFAULT NULL,
@@ -137,9 +173,10 @@ CREATE TABLE `repairschedule` (
 CREATE TABLE `repairticket` (
   `ID` int(11) NOT NULL,
   `Client_ID` int(11) NOT NULL,
+  `Repairman_ID` int(11) DEFAULT NULL,
   `Status` varchar(50) NOT NULL DEFAULT 'Open',
   `Details` text DEFAULT NULL,
-  `Schedule_ID` int(11) NOT NULL
+  `Schedule_ID` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -150,11 +187,12 @@ CREATE TABLE `repairticket` (
 
 CREATE TABLE `user_clientprofile` (
   `ID` int(11) NOT NULL,
+  `User_ID` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
   `Email` varchar(255) NOT NULL,
-  `ClientAppliances_ID` int(11) DEFAULT NULL,
   `ClientAdd_ID` int(11) NOT NULL,
-  `ClientContact_ID` int(11) NOT NULL
+  `ClientContact_ID` int(11) NOT NULL,
+  `Status` enum('active','inactive') NOT NULL DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -165,6 +203,7 @@ CREATE TABLE `user_clientprofile` (
 
 CREATE TABLE `user_repairmanprofile` (
   `ID` int(11) NOT NULL,
+  `User_ID` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
   `Email` varchar(255) NOT NULL,
   `Address` text DEFAULT NULL,
@@ -173,7 +212,29 @@ CREATE TABLE `user_repairmanprofile` (
   `Availability` varchar(50) DEFAULT NULL,
   `Details` text DEFAULT NULL,
   `Reviews` text DEFAULT NULL,
-  `RepairmanBG_ID` int(11) NOT NULL
+  `RepairmanBG_ID` int(11) NOT NULL,
+  `Status` enum('active','inactive') NOT NULL DEFAULT 'active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `chat_messages`
+--
+
+CREATE TABLE `chat_messages` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Sender_ID` int(11) NOT NULL,
+  `Sender_Role` enum('customer','repairman','admin') NOT NULL,
+  `Receiver_ID` int(11) NOT NULL,
+  `Receiver_Role` enum('customer','repairman','admin') NOT NULL,
+  `Message` text NOT NULL,
+  `Is_Read` tinyint(1) NOT NULL DEFAULT 0,
+  `Created_At` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`ID`),
+  KEY `idx_chat_sender` (`Sender_ID`, `Sender_Role`),
+  KEY `idx_chat_receiver` (`Receiver_ID`, `Receiver_Role`),
+  KEY `idx_chat_created` (`Created_At`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -198,7 +259,8 @@ ALTER TABLE `clientaddress`
 --
 ALTER TABLE `clientappliances`
   ADD PRIMARY KEY (`ID`),
-  ADD KEY `fk_appliance_issue` (`Issue_ID`);
+  ADD KEY `fk_appliance_issue` (`Issue_ID`),
+  ADD KEY `fk_appliance_client` (`Client_ID`);
 
 --
 -- Indexes for table `clientcontact`
@@ -239,6 +301,7 @@ ALTER TABLE `repairschedule`
 ALTER TABLE `repairticket`
   ADD PRIMARY KEY (`ID`),
   ADD KEY `fk_ticket_client` (`Client_ID`),
+  ADD KEY `fk_ticket_repairman` (`Repairman_ID`),
   ADD KEY `fk_ticket_schedule` (`Schedule_ID`),
   ADD KEY `idx_repair_ticket_status` (`Status`);
 
@@ -248,9 +311,9 @@ ALTER TABLE `repairticket`
 ALTER TABLE `user_clientprofile`
   ADD PRIMARY KEY (`ID`),
   ADD UNIQUE KEY `Email_UNIQUE` (`Email`),
+  ADD KEY `fk_client_profile_user` (`User_ID`),
   ADD KEY `fk_client_profile_address` (`ClientAdd_ID`),
   ADD KEY `fk_client_profile_contact` (`ClientContact_ID`),
-  ADD KEY `fk_client_profile_appliances` (`ClientAppliances_ID`),
   ADD KEY `idx_client_profile_email` (`Email`);
 
 --
@@ -259,11 +322,24 @@ ALTER TABLE `user_clientprofile`
 ALTER TABLE `user_repairmanprofile`
   ADD PRIMARY KEY (`ID`),
   ADD UNIQUE KEY `Email_UNIQUE` (`Email`),
+  ADD KEY `fk_repairman_profile_user` (`User_ID`),
   ADD KEY `fk_repairman_profile_background` (`RepairmanBG_ID`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `admin`
+--
+ALTER TABLE `admin`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `applianceissue`
@@ -339,6 +415,7 @@ ALTER TABLE `applianceissue`
 -- Constraints for table `clientappliances`
 --
 ALTER TABLE `clientappliances`
+  ADD CONSTRAINT `fk_appliance_client` FOREIGN KEY (`Client_ID`) REFERENCES `user_clientprofile` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   ADD CONSTRAINT `fk_appliance_issue` FOREIGN KEY (`Issue_ID`) REFERENCES `applianceissue` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
@@ -362,6 +439,7 @@ ALTER TABLE `repairschedule`
 --
 ALTER TABLE `repairticket`
   ADD CONSTRAINT `fk_ticket_client` FOREIGN KEY (`Client_ID`) REFERENCES `user_clientprofile` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `fk_ticket_repairman` FOREIGN KEY (`Repairman_ID`) REFERENCES `user_repairmanprofile` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   ADD CONSTRAINT `fk_ticket_schedule` FOREIGN KEY (`Schedule_ID`) REFERENCES `repairschedule` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
@@ -369,14 +447,15 @@ ALTER TABLE `repairticket`
 --
 ALTER TABLE `user_clientprofile`
   ADD CONSTRAINT `fk_client_profile_address` FOREIGN KEY (`ClientAdd_ID`) REFERENCES `clientaddress` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  ADD CONSTRAINT `fk_client_profile_appliances` FOREIGN KEY (`ClientAppliances_ID`) REFERENCES `clientappliances` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  ADD CONSTRAINT `fk_client_profile_contact` FOREIGN KEY (`ClientContact_ID`) REFERENCES `clientcontact` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  ADD CONSTRAINT `fk_client_profile_contact` FOREIGN KEY (`ClientContact_ID`) REFERENCES `clientcontact` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `fk_client_profile_user` FOREIGN KEY (`User_ID`) REFERENCES `users` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
 -- Constraints for table `user_repairmanprofile`
 --
 ALTER TABLE `user_repairmanprofile`
-  ADD CONSTRAINT `fk_repairman_profile_background` FOREIGN KEY (`RepairmanBG_ID`) REFERENCES `repairmanagerbackground` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  ADD CONSTRAINT `fk_repairman_profile_background` FOREIGN KEY (`RepairmanBG_ID`) REFERENCES `repairmanagerbackground` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `fk_repairman_profile_user` FOREIGN KEY (`User_ID`) REFERENCES `users` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

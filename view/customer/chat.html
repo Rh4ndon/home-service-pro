@@ -449,59 +449,7 @@
             <input type="text" placeholder="Search conversations..." />
           </div>
         </div>
-        <div class="chat-contacts">
-          <div class="chat-contact active">
-            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #1b8de8, #0d71c7);">PS</div>
-            <div class="chat-contact-info">
-              <div class="chat-contact-name">Pedro Santos</div>
-              <div class="chat-contact-preview">Almost there!</div>
-            </div>
-            <div class="chat-contact-meta">
-              <div class="chat-contact-time">2:34 PM</div>
-              <div class="chat-contact-unread">2</div>
-            </div>
-          </div>
-          <div class="chat-contact">
-            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">MC</div>
-            <div class="chat-contact-info">
-              <div class="chat-contact-name">Maria Clara</div>
-              <div class="chat-contact-preview">Thank you for the repair!</div>
-            </div>
-            <div class="chat-contact-meta">
-              <div class="chat-contact-time">Yesterday</div>
-            </div>
-          </div>
-          <div class="chat-contact">
-            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">CR</div>
-            <div class="chat-contact-info">
-              <div class="chat-contact-name">Carlo Reyes</div>
-              <div class="chat-contact-preview">Support - How can I help?</div>
-            </div>
-            <div class="chat-contact-meta">
-              <div class="chat-contact-time">Aug 16</div>
-            </div>
-          </div>
-          <div class="chat-contact">
-            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #22c55e, #16a34a);">AB</div>
-            <div class="chat-contact-info">
-              <div class="chat-contact-name">Andres Bonifacio</div>
-              <div class="chat-contact-preview">Your repair is scheduled.</div>
-            </div>
-            <div class="chat-contact-meta">
-              <div class="chat-contact-time">Aug 14</div>
-            </div>
-          </div>
-          <div class="chat-contact">
-            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #ef4444, #dc2626);">CA</div>
-            <div class="chat-contact-info">
-              <div class="chat-contact-name">Corazon Aquino</div>
-              <div class="chat-contact-preview">See you tomorrow!</div>
-            </div>
-            <div class="chat-contact-meta">
-              <div class="chat-contact-time">Aug 12</div>
-            </div>
-          </div>
-        </div>
+        <div class="chat-contacts" id="chatContacts"></div>
       </div>
 
       <!-- Chat Main -->
@@ -529,32 +477,7 @@
           </div>
         </div>
 
-        <div class="chat-messages">
-          <div class="chat-bubble received">
-            Hi! I'm Pedro Santos. I'll be handling your Washing Machine repair.
-            <div class="chat-bubble-time">2:20 PM</div>
-          </div>
-          <div class="chat-bubble sent">
-            Great, thank you! When can you come?
-            <div class="chat-bubble-time">2:22 PM</div>
-          </div>
-          <div class="chat-bubble received">
-            I'm on my way now. ETA is about 15 minutes.
-            <div class="chat-bubble-time">2:25 PM</div>
-          </div>
-          <div class="chat-bubble sent">
-            Okay, I'll be waiting. My address is 123 Rizal St, Makati City.
-            <div class="chat-bubble-time">2:27 PM</div>
-          </div>
-          <div class="chat-bubble received">
-            Got it. I can see your location on the map. Almost there!
-            <div class="chat-bubble-time">2:32 PM</div>
-          </div>
-          <div class="chat-bubble sent">
-            Perfect, thank you!
-            <div class="chat-bubble-time">2:34 PM</div>
-          </div>
-        </div>
+        <div class="chat-messages" id="chatMessages"></div>
 
         <div class="chat-input-bar">
           <input type="text" placeholder="Type a message..." />
@@ -599,11 +522,168 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
+  <script>
+  (function() {
+    if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+
+    var userId = localStorage.getItem('id');
+    var userName = localStorage.getItem('name') || 'Customer';
+
+    document.querySelectorAll('.sidebar-user-name').forEach(function(el) { el.textContent = userName; });
+    var initials = userName.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+    document.querySelectorAll('.sidebar-avatar').forEach(function(el) { el.textContent = initials; });
+
+    function logout() {
+      fetch('../../controllers/logout.php', { method: 'POST' })
+        .then(function(){ localStorage.clear(); window.location.href = 'login.html'; })
+        .catch(function(){ localStorage.clear(); window.location.href = 'login.html'; });
+    }
+    document.querySelectorAll('#logoutModal .btn-danger').forEach(function(btn) { btn.onclick = logout; });
+
+    var contactsContainer = document.getElementById('chatContacts');
+    var messagesContainer = document.getElementById('chatMessages');
+    var chatInput = document.querySelector('.chat-input-bar input');
+    var sendBtn = document.querySelector('.chat-send-btn');
+    var chatHeaderName = document.querySelector('.chat-header-name');
+    var chatHeaderAvatar = document.querySelector('.chat-header-avatar');
+
+    var currentContactId = null;
+    var currentContactRole = 'repairman';
+    var eventSource = null;
+
+    var gradients = [
+      'linear-gradient(135deg, #1b8de8, #0d71c7)',
+      'linear-gradient(135deg, #22c55e, #16a34a)',
+      'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+      'linear-gradient(135deg, #f59e0b, #d97706)',
+      'linear-gradient(135deg, #ef4444, #dc2626)'
+    ];
+
+    function loadContacts() {
+      if (!userId || !contactsContainer) return;
+      fetch('../../controllers/chat/contacts.php?user_id=' + userId + '&user_role=customer')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.contacts) return;
+          contactsContainer.innerHTML = '';
+          data.contacts.forEach(function(c, i) {
+            var contactInitials = (c.name || 'U').split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+            var div = document.createElement('div');
+            div.className = 'chat-contact';
+            div.setAttribute('data-contact-id', c.id);
+            div.setAttribute('data-contact-role', c.role || 'repairman');
+            div.innerHTML = '<div class="chat-contact-avatar" style="background: ' + (gradients[i % gradients.length]) + ';">' + contactInitials + '</div>' +
+              '<div class="chat-contact-info"><div class="chat-contact-name">' + (c.name || '') + '</div>' +
+              '<div class="chat-contact-preview">' + (c.last_message || '') + '</div></div>' +
+              '<div class="chat-contact-meta"><div class="chat-contact-time">' + (c.last_time || '') + '</div>' +
+              (c.unread ? '<div class="chat-contact-unread">' + c.unread + '</div>' : '') + '</div>';
+            div.onclick = function() {
+              document.querySelectorAll('.chat-contact').forEach(function(el) { el.classList.remove('active'); });
+              div.classList.add('active');
+              currentContactId = c.id;
+              currentContactRole = c.role || 'repairman';
+              if (chatHeaderName) chatHeaderName.textContent = c.name || '';
+              if (chatHeaderAvatar) chatHeaderAvatar.textContent = contactInitials;
+              loadMessages(c.id, currentContactRole);
+            };
+            contactsContainer.appendChild(div);
+          });
+
+          if (data.contacts && data.contacts.length > 0) {
+            var first = data.contacts[0];
+            currentContactId = first.id;
+            currentContactRole = first.role || 'repairman';
+            var firstInit = (first.name || 'U').split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+            if (chatHeaderName) chatHeaderName.textContent = first.name || '';
+            if (chatHeaderAvatar) chatHeaderAvatar.textContent = firstInit;
+            loadMessages(first.id, currentContactRole);
+          }
+        })
+        .catch(function() {});
+    }
+
+    function loadMessages(contactId, contactRole) {
+      if (!userId || !messagesContainer) return;
+      fetch('../../controllers/chat/messages.php?user_id=' + userId + '&user_role=customer&contact_id=' + contactId + '&contact_role=' + (contactRole || 'repairman'))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          messagesContainer.innerHTML = '';
+          if (!data.messages) return;
+          data.messages.forEach(function(m) {
+            var isSent = String(m.sender_id) === String(userId);
+            var time = m.time || m.created_at || '';
+            if (time && time.length > 5) {
+              var d = new Date(time);
+              var h = d.getHours();
+              var min = String(d.getMinutes()).padStart(2, '0');
+              var ampm = h >= 12 ? 'PM' : 'AM';
+              h = h % 12 || 12;
+              time = h + ':' + min + ' ' + ampm;
+            }
+            var div = document.createElement('div');
+            div.className = 'chat-bubble ' + (isSent ? 'sent' : 'received');
+            div.innerHTML = (m.message || m.content || '') + '<div class="chat-bubble-time">' + time + '</div>';
+            messagesContainer.appendChild(div);
+          });
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        })
+        .catch(function() {});
+    }
+
+    function sendMessage() {
+      if (!chatInput || !currentContactId || !userId) return;
+      var msg = chatInput.value.trim();
+      if (!msg) return;
+      chatInput.value = '';
+
+      var formData = new FormData();
+      formData.append('sender_id', userId);
+      formData.append('sender_role', 'customer');
+      formData.append('receiver_id', currentContactId);
+      formData.append('receiver_role', currentContactRole);
+      formData.append('message', msg);
+
+      fetch('../../controllers/chat/messages.php', {
+        method: 'POST',
+        body: formData
+      }).then(function() {
+        loadMessages(currentContactId, currentContactRole);
+      }).catch(function() {});
+    }
+
+    if (sendBtn) sendBtn.onclick = sendMessage;
+    if (chatInput) {
+      chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+      });
+    }
+
+    function startSSE() {
+      if (!userId) return;
+      if (eventSource) eventSource.close();
+      eventSource = new EventSource('../../controllers/chat/stream.php?user_id=' + userId + '&user_role=customer&contact_id=' + (currentContactId || '') + '&contact_role=' + currentContactRole);
+      eventSource.onmessage = function(e) {
+        try {
+          var d = JSON.parse(e.data);
+          if (d.type === 'new_message' && String(d.sender_id) === String(currentContactId)) {
+            loadMessages(currentContactId, currentContactRole);
+          } else if (d.type === 'new_message') {
+            loadContacts();
+          }
+        } catch(err) {}
+      };
+      eventSource.onerror = function() {};
+    }
+
+    loadContacts();
+    startSSE();
+  })();
+  </script>
 </body>
 </html>

@@ -138,7 +138,7 @@
     </div>
 
     <!-- APPLIANCE GRID -->
-    <div class="appliance-grid">
+    <div class="appliance-grid" id="applianceGrid">
 
       <!-- Appliance 1 -->
       <div class="appliance-card">
@@ -292,7 +292,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('addApplianceModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="doAction('addApplianceModal','Appliance added successfully!')">Add Appliance</button>
+        <button class="btn btn-primary" id="addApplianceBtn">Add Appliance</button>
       </div>
     </div>
   </div>
@@ -340,7 +340,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('editApplianceModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="doAction('editApplianceModal','Appliance updated successfully!')">Save Changes</button>
+        <button class="btn btn-primary" id="editApplianceBtn">Save Changes</button>
       </div>
     </div>
   </div>
@@ -357,7 +357,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('deleteApplianceModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="doAction('deleteApplianceModal','Appliance deleted successfully.')">Delete</button>
+        <button class="btn btn-danger" id="deleteApplianceBtn">Delete</button>
       </div>
     </div>
   </div>
@@ -374,11 +374,145 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='../customer/landing-page.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
+  <script>
+  (function() {
+    if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+    var userId = localStorage.getItem('id');
+    var userName = localStorage.getItem('name');
+    var allAppliances = [];
+    var editingId = null;
+    var deletingId = null;
+    var sidebarUserName = document.querySelector('.sidebar-user-name');
+    var sidebarAvatar = document.querySelector('.sidebar-avatar');
+    if (sidebarUserName) sidebarUserName.textContent = userName || 'Customer';
+    if (sidebarAvatar) sidebarAvatar.textContent = (userName || 'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+    var grid = document.getElementById('applianceGrid');
+
+    function renderAppliances(appliances) {
+      if (!appliances.length) { grid.innerHTML = '<p style="text-align:center;padding:40px;color:var(--muted);grid-column:1/-1;">No appliances registered yet.</p>'; return; }
+      grid.innerHTML = appliances.map(function(a) {
+        return '<div class="appliance-card">' +
+          '<div class="appliance-card-top">' +
+            '<div class="appliance-card-info">' +
+              '<h3>' + (a.appliance_name || a.name || '') + '</h3>' +
+              '<p>' + (a.appliance_type || a.type || '') + '</p>' +
+            '</div>' +
+            '<span class="badge badge-success">Active</span>' +
+          '</div>' +
+          '<div class="appliance-card-details">' +
+            '<div><div class="appliance-detail-label">Make / Brand</div><div class="appliance-detail-value">' + (a.make_brand || a.brand || '') + '</div></div>' +
+            '<div><div class="appliance-detail-label">Year</div><div class="appliance-detail-value">' + (a.year_model || a.year || '') + '</div></div>' +
+            '<div style="grid-column: span 2;"><div class="appliance-detail-label">Details</div><div class="appliance-detail-value">' + (a.details || a.description || '') + '</div></div>' +
+          '</div>' +
+          '<div class="appliance-card-actions">' +
+            '<button class="btn btn-secondary btn-sm edit-appliance-btn" data-id="' + a.id + '">' +
+              '<svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit' +
+            '</button>' +
+            '<button class="btn btn-secondary btn-sm delete-appliance-btn" data-id="' + a.id + '" style="color:var(--danger);">' +
+              '<svg viewBox="0 0 24 24" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    grid.addEventListener('click', function(e) {
+      var editBtn = e.target.closest('.edit-appliance-btn');
+      if (editBtn) {
+        var id = editBtn.getAttribute('data-id');
+        var appliance = allAppliances.find(function(a){ return a.id == id; });
+        if (appliance) {
+          editingId = id;
+          document.getElementById('editApplianceType').value = appliance.appliance_type || appliance.type || '';
+          document.getElementById('editApplianceName').value = appliance.appliance_name || appliance.name || '';
+          document.getElementById('editApplianceMake').value = appliance.make_brand || appliance.brand || '';
+          document.getElementById('editApplianceYear').value = appliance.year_model || appliance.year || '';
+          document.getElementById('editApplianceDetails').value = appliance.details || appliance.description || '';
+          openModal('editApplianceModal');
+        }
+      }
+      var delBtn = e.target.closest('.delete-appliance-btn');
+      if (delBtn) {
+        deletingId = delBtn.getAttribute('data-id');
+        openModal('deleteApplianceModal');
+      }
+    });
+
+    document.getElementById('addApplianceBtn').addEventListener('click', function() {
+      var fd = new FormData();
+      fd.append('action', 'add');
+      fd.append('user_id', userId);
+      fd.append('appliance_type', document.getElementById('addApplianceType').value);
+      fd.append('appliance_name', document.getElementById('addApplianceName').value);
+      fd.append('make_brand', document.getElementById('addApplianceMake').value);
+      fd.append('year_model', document.getElementById('addApplianceYear').value);
+      fd.append('details', document.getElementById('addApplianceDetails').value);
+      fetch('../../controllers/customer/appliances.php', { method: 'POST', body: fd })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if (data.success) { closeModal('addApplianceModal'); document.getElementById('addApplianceType').value=''; document.getElementById('addApplianceName').value=''; document.getElementById('addApplianceMake').value=''; document.getElementById('addApplianceYear').value=''; document.getElementById('addApplianceDetails').value=''; loadAppliances(); } else { alert(data.message || 'Error adding appliance.'); }
+        })
+        .catch(function(){ alert('Network error.'); });
+    });
+
+    document.getElementById('editApplianceBtn').addEventListener('click', function() {
+      if (!editingId) return;
+      var fd = new FormData();
+      fd.append('action', 'update');
+      fd.append('id', editingId);
+      fd.append('user_id', userId);
+      fd.append('appliance_type', document.getElementById('editApplianceType').value);
+      fd.append('appliance_name', document.getElementById('editApplianceName').value);
+      fd.append('make_brand', document.getElementById('editApplianceMake').value);
+      fd.append('year_model', document.getElementById('editApplianceYear').value);
+      fd.append('details', document.getElementById('editApplianceDetails').value);
+      fetch('../../controllers/customer/appliances.php', { method: 'POST', body: fd })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if (data.success) { closeModal('editApplianceModal'); loadAppliances(); } else { alert(data.message || 'Error updating appliance.'); }
+        })
+        .catch(function(){ alert('Network error.'); });
+    });
+
+    document.getElementById('deleteApplianceBtn').addEventListener('click', function() {
+      if (!deletingId) return;
+      var fd = new FormData();
+      fd.append('action', 'delete');
+      fd.append('id', deletingId);
+      fd.append('user_id', userId);
+      fetch('../../controllers/customer/appliances.php', { method: 'POST', body: fd })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if (data.success) { closeModal('deleteApplianceModal'); loadAppliances(); } else { alert(data.message || 'Error deleting appliance.'); }
+        })
+        .catch(function(){ alert('Network error.'); });
+    });
+
+    function loadAppliances() {
+      fetch('../../controllers/customer/appliances.php?user_id=' + userId)
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          allAppliances = data.appliances || data || [];
+          if (!Array.isArray(allAppliances)) allAppliances = [];
+          renderAppliances(allAppliances);
+        })
+        .catch(function(){});
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      fetch('../../controllers/logout.php', { method: 'POST' })
+        .then(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; })
+        .catch(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; });
+    });
+
+    loadAppliances();
+  })();
+  </script>
 </body>
 </html>

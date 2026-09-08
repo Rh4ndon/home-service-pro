@@ -249,11 +249,103 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
+  <script>
+  (function() {
+    if (!localStorage.getItem('is_logged_in') || localStorage.getItem('role') !== 'admin') {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    var nameEl = document.querySelector('.sidebar-user-name');
+    var storedName = localStorage.getItem('name') || 'Admin User';
+    if (nameEl) nameEl.textContent = storedName;
+
+    var initials = storedName.split(' ').map(function(w){ return w.charAt(0); }).join('').substring(0,2).toUpperCase();
+    var avatarEl = document.querySelector('.sidebar-avatar');
+    if (avatarEl) avatarEl.textContent = initials;
+
+    var userId = localStorage.getItem('id');
+    var baseUrl = '../../controllers/admin/dashboard.php';
+
+    fetch(baseUrl + '?user_id=' + encodeURIComponent(userId))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.success) return;
+
+        var stats = data.stats;
+        var h3s = document.querySelectorAll('.stat-card .stat-info h3');
+        if (h3s.length >= 4) {
+          h3s[0].textContent = stats.total_customers || 0;
+          h3s[1].textContent = stats.total_repairmen || 0;
+          h3s[2].textContent = stats.active_tickets || 0;
+          h3s[3].textContent = stats.completed_repairs || 0;
+        }
+
+        var activityContainer = document.querySelector('.grid-2 > .card .card-body-flush');
+        if (activityContainer) {
+          var activityHtml = '';
+          var recentTickets = data.recent_tickets || [];
+          var recentCompletions = data.recent_completions || [];
+          var colors = ['#3b82f6,#2563eb', '#f59e0b,#d97706', '#22c55e,#16a34a'];
+
+          recentTickets.forEach(function(t) {
+            var name = t.ClientName || 'Client';
+            var initials = name.split(' ').map(function(w){ return w.charAt(0); }).join('').substring(0,2).toUpperCase();
+            activityHtml += '<div class="list-item">' +
+              '<div class="list-avatar" style="background:linear-gradient(135deg,' + colors[1] + ');">' + initials + '</div>' +
+              '<div class="list-info"><h4>Ticket #' + t.ID + ' opened - ' + (t.Appliance_Type || 'Repair') + '</h4><p>' + (t.Created_At || '') + '</p></div>' +
+              '<span class="badge badge-warning">New Ticket</span></div>';
+          });
+
+          recentCompletions.forEach(function(c) {
+            var name = c.RepairmanName || 'Repairman';
+            var initials = name.split(' ').map(function(w){ return w.charAt(0); }).join('').substring(0,2).toUpperCase();
+            activityHtml += '<div class="list-item">' +
+              '<div class="list-avatar" style="background:linear-gradient(135deg,' + colors[2] + ');">' + initials + '</div>' +
+              '<div class="list-info"><h4>' + name + ' completed repair</h4><p>' + (c.Date || '') + '</p></div>' +
+              '<span class="badge badge-success">Completed</span></div>';
+          });
+
+          if (activityHtml) activityContainer.innerHTML = activityHtml;
+        }
+
+        var topContainer = document.querySelectorAll('.grid-2 > div:last-child .card')[1];
+        if (topContainer) {
+          var topBody = topContainer.querySelector('.card-body-flush');
+          var topRepairmen = data.top_repairmen || [];
+          var topColors = ['#22c55e,#16a34a', '#3b82f6,#2563eb', '#f59e0b,#d97706'];
+          var topHtml = '';
+          topRepairmen.forEach(function(r, i) {
+            var name = r.Name || 'Repairman';
+            var initials = name.split(' ').map(function(w){ return w.charAt(0); }).join('').substring(0,2).toUpperCase();
+            var rating = parseFloat(r.Ratings) || 0;
+            var stars = '';
+            for (var s = 0; s < 5; s++) {
+              stars += s < Math.round(rating) ? '&#9733;' : '&#9734;';
+            }
+            var completed = r.CompletedRepairs || 0;
+            topHtml += '<div class="list-item">' +
+              '<div class="list-avatar" style="background:linear-gradient(135deg,' + topColors[i % topColors.length] + ');">' + initials + '</div>' +
+              '<div class="list-info"><h4>' + name + '</h4><p>' + completed + ' repairs completed</p></div>' +
+              '<span class="stars">' + stars + '</span></div>';
+          });
+          if (topHtml && topBody) topBody.innerHTML = topHtml;
+        }
+      })
+      .catch(function(err) { console.error('Dashboard fetch error:', err); });
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      fetch('../../controllers/logout.php', { method: 'POST' })
+        .then(function(){ localStorage.clear(); window.location.href = 'login.html'; })
+        .catch(function(){ localStorage.clear(); window.location.href = 'login.html'; });
+    });
+  })();
+  </script>
 </body>
 </html>

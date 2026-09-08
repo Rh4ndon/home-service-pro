@@ -305,11 +305,90 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
+  <script>
+    (function() {
+      if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+
+      var userId = localStorage.getItem('id');
+      var userName = localStorage.getItem('name') || 'Repairman';
+
+      document.querySelectorAll('.sidebar-user-name').forEach(function(el) { el.textContent = userName; });
+      var initials = userName.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+      document.querySelectorAll('.sidebar-avatar').forEach(function(el) { el.textContent = initials; });
+
+      function logout() {
+        fetch('../../controllers/logout.php', { method: 'POST' })
+          .then(function(){ localStorage.clear(); window.location.href = 'login.html'; })
+          .catch(function(){ localStorage.clear(); window.location.href = 'login.html'; });
+      }
+      document.querySelectorAll('#logoutModal .btn-danger').forEach(function(btn) { btn.onclick = logout; });
+
+      function loadHistory() {
+        if (!userId) return;
+        var url = '../../controllers/repairman/repair-history.php?user_id=' + userId;
+        var dateFrom = document.querySelector('input[type="date"][value]');
+        var dateTo = document.querySelectorAll('input[type="date"][value]');
+        var statusSel = document.querySelector('select');
+        if (dateFrom) {
+          var fromEl = dateTo[0] || dateFrom;
+          var toEl = dateTo[1] || dateFrom;
+          if (fromEl && fromEl.value) url += '&date_from=' + fromEl.value;
+          if (toEl && toEl.value) url += '&date_to=' + toEl.value;
+        }
+        if (statusSel && statusSel.value && statusSel.value !== 'all') {
+          url += '&status=' + statusSel.value;
+        }
+
+        fetch(url)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (!data.history || !data.history.length) return;
+            var tbody = document.querySelector('#historyTable tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            var countEl = document.querySelector('.card-header span[style]');
+            if (countEl) countEl.textContent = 'Showing ' + data.history.length + ' records';
+
+            data.history.forEach(function(item) {
+              var status = (item.repair_status || item.status || '').toLowerCase();
+              var badgeCls = status === 'completed' ? 'badge-success' : (status === 'cancelled' ? 'badge-danger' : 'badge-neutral');
+              var badgeLabel = status.charAt(0).toUpperCase() + status.slice(1);
+              var row = document.createElement('tr');
+              var date = item.repair_date || item.repair_date || item.completed_date || '';
+              if (date && date.length > 5) {
+                var d = new Date(date);
+                var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                var m = d.getMonth();
+                date = months[m] + ' ' + d.getDate() + ', ' + d.getFullYear();
+              }
+              var row = document.createElement('tr');
+              row.innerHTML = '<td>' + date + '</td>' +
+                '<td>' + (item.client_name || '') + '</td>' +
+                '<td>' + (item.appliance_name || item.appliance || '') + '</td>' +
+                '<td>' + (item.issue || item.issue_details || '') + '</td>' +
+                '<td><span class="badge ' + badgeCls + '">' + badgeLabel + '</span></td>' +
+                '<td>--</td>' +
+                '<td class="action-btns"><button class="btn btn-secondary btn-sm" onclick="openModal(\'modalHistoryDetail\')">View Details</button></td>';
+              tbody.appendChild(row);
+            });
+          })
+          .catch(function() {});
+      }
+
+      var filterInputs = document.querySelectorAll('input[type="date"], select');
+      filterInputs.forEach(function(el) {
+        el.addEventListener('change', loadHistory);
+      });
+
+      loadHistory();
+    })();
+  </script>
 </body>
 </html>

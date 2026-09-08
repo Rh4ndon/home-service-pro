@@ -383,11 +383,287 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
+  <script>
+  (function() {
+    if (!localStorage.getItem('is_logged_in') || localStorage.getItem('role') !== 'admin') {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    var nameEl = document.querySelector('.sidebar-user-name');
+    var storedName = localStorage.getItem('name') || 'Admin User';
+    if (nameEl) nameEl.textContent = storedName;
+
+    var initials = storedName.split(' ').map(function(w){ return w.charAt(0); }).join('').substring(0,2).toUpperCase();
+    var avatarEl = document.querySelector('.sidebar-avatar');
+    if (avatarEl) avatarEl.textContent = initials;
+
+    var baseUrl = '../../controllers/admin/repairmen.php';
+    var tbody = document.querySelector('#repairmenTable tbody');
+    var selectedRepairmanId = null;
+
+    function renderStars(rating) {
+      var r = Math.round(parseFloat(rating) || 0);
+      var s = '';
+      for (var i = 0; i < 5; i++) s += i < r ? '&#9733;' : '&#9734;';
+      return s;
+    }
+
+    function renderAvailability(avail) {
+      var a = (avail || 'available').toLowerCase();
+      if (a === 'unavailable') return '<span class="badge badge-danger">Unavailable</span>';
+      if (a === 'busy') return '<span class="badge badge-warning">Busy</span>';
+      return '<span class="badge badge-success">Available</span>';
+    }
+
+    function renderStatus(status) {
+      var s = (status || 'active').toLowerCase();
+      if (s === 'inactive') return '<span class="badge badge-danger">Inactive</span>';
+      return '<span class="badge badge-success">Active</span>';
+    }
+
+    function renderRows(repairmen) {
+      if (!tbody) return;
+      if (!repairmen || repairmen.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);">No repairmen found</td></tr>';
+        return;
+      }
+      var html = '';
+      repairmen.forEach(function(r) {
+        var name = r.Name || '';
+        var email = r.Email || '';
+        var skills = r.Skills || '';
+        var rating = r.Ratings || 0;
+        var avail = r.Availability || 'available';
+        var status = r.Status || 'active';
+        var profileId = r.ID;
+        html += '<tr data-id="' + profileId + '">' +
+          '<td>' + profileId + '</td>' +
+          '<td>' + name + '</td>' +
+          '<td>' + email + '</td>' +
+          '<td>' + skills + '</td>' +
+          '<td><span class="stars">' + renderStars(rating) + '</span></td>' +
+          '<td>' + renderAvailability(avail) + '</td>' +
+          '<td>' + renderStatus(status) + '</td>' +
+          '<td><div class="action-btns">' +
+          '<button class="btn btn-sm btn-secondary" data-action="view" data-id="' + profileId + '">' +
+            '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+          '<button class="btn btn-sm btn-secondary" data-action="edit" data-id="' + profileId + '">' +
+            '<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+          '<button class="btn btn-sm btn-warning" data-action="deactivate" data-id="' + profileId + '">Deactivate</button>' +
+          '<button class="btn btn-sm btn-danger" data-action="delete" data-id="' + profileId + '">' +
+            '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
+          '</div></td></tr>';
+      });
+      tbody.innerHTML = html;
+    }
+
+    function loadRepairmen(search) {
+      var url = baseUrl;
+      if (search) url += '?search=' + encodeURIComponent(search);
+      fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) renderRows(data.repairmen);
+        })
+        .catch(function(err) { console.error('Fetch repairmen error:', err); });
+    }
+
+    var searchInput = document.getElementById('searchRepairmen');
+    var searchTimer = null;
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        var val = this.value;
+        searchTimer = setTimeout(function() { loadRepairmen(val); }, 300);
+      });
+    }
+
+    tbody.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      var action = btn.getAttribute('data-action');
+      var id = btn.getAttribute('data-id');
+      selectedRepairmanId = id;
+
+      if (action === 'view') {
+        fetch(baseUrl + '?id=' + encodeURIComponent(id))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success && data.repairman) {
+              var r = data.repairman;
+              var name = r.Name || '';
+              var email = r.Email || '';
+              var mobile = r.MobileNo || '';
+              var tel = r.TelNo || '';
+              var addr = r.Address || 'N/A';
+              var skills = r.Skills || 'N/A';
+              var rating = parseFloat(r.Ratings) || 0;
+              var education = r.Education || 'N/A';
+              var certs = r.Certifications || 'N/A';
+              var ini = name.split(' ').map(function(w){return w.charAt(0);}).join('').substring(0,2).toUpperCase();
+              var stars = renderStars(rating);
+              var body = document.querySelector('#viewProfileModal .modal-body');
+              if (body) {
+                body.innerHTML = '<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">' +
+                  '<div class="list-avatar" style="width:56px;height:56px;font-size:1.1rem;background:linear-gradient(135deg,#22c55e,#16a34a);">' + ini + '</div>' +
+                  '<div><h3 style="font-size:1.15rem;font-weight:700;">' + name + '</h3>' +
+                  '<p style="font-size:0.88rem;color:var(--muted);">' + r.ID + ' &middot; ' + email + '</p></div></div>' +
+                  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Mobile</div><div style="font-size:0.92rem;font-weight:500;">' + mobile + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Tel No.</div><div style="font-size:0.92rem;font-weight:500;">' + tel + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Address</div><div style="font-size:0.92rem;font-weight:500;">' + addr + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Skills</div><div style="font-size:0.92rem;font-weight:500;">' + skills + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Rating</div><div style="font-size:0.92rem;"><span class="stars">' + stars + '</span> ' + rating.toFixed(1) + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Education</div><div style="font-size:0.92rem;font-weight:500;">' + education + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Certifications</div><div style="font-size:0.92rem;font-weight:500;">' + certs + '</div></div>' +
+                  '</div>';
+              }
+              openModal('viewProfileModal');
+            }
+          })
+          .catch(function(err) { console.error('Fetch repairman error:', err); });
+      } else if (action === 'edit') {
+        fetch(baseUrl + '?id=' + encodeURIComponent(id))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success && data.repairman) {
+              var r = data.repairman;
+              var modal = document.getElementById('editRepairmanModal');
+              var inputs = modal.querySelectorAll('input');
+              var textareas = modal.querySelectorAll('textarea');
+              var select = modal.querySelector('select');
+              if (inputs[0]) inputs[0].value = r.Name || '';
+              if (inputs[1]) inputs[1].value = r.Email || '';
+              if (inputs[2]) inputs[2].value = r.Skills || '';
+              if (textareas[0]) textareas[0].value = r.Education || '';
+              if (textareas[1]) textareas[1].value = r.Certifications || '';
+              if (select) select.value = r.Availability || 'Available';
+              openModal('editRepairmanModal');
+            }
+          })
+          .catch(function(err) { console.error('Fetch repairman error:', err); });
+      } else if (action === 'deactivate') {
+        openModal('deactivateModal');
+      } else if (action === 'delete') {
+        openModal('deleteRepairmanModal');
+      }
+    });
+
+    var addBtn = document.querySelector('#addRepairmanModal .btn-primary');
+    if (addBtn) {
+      addBtn.addEventListener('click', function() {
+        var modal = document.getElementById('addRepairmanModal');
+        var inputs = modal.querySelectorAll('input');
+        var textareas = modal.querySelectorAll('textarea');
+        var fd = new FormData();
+        fd.append('action', 'add');
+        fd.append('name', inputs[0] ? inputs[0].value : '');
+        fd.append('email', inputs[1] ? inputs[1].value : '');
+        fd.append('password', 'TempPass123!');
+        fetch(baseUrl, { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success) {
+              closeModal('addRepairmanModal');
+              loadRepairmen(searchInput ? searchInput.value : '');
+              if (inputs[0]) inputs[0].value = '';
+              if (inputs[1]) inputs[1].value = '';
+              if (inputs[2]) inputs[2].value = '';
+              if (textareas[0]) textareas[0].value = '';
+              if (textareas[1]) textareas[1].value = '';
+            } else {
+              alert(data.error || 'Failed to add repairman');
+            }
+          })
+          .catch(function(err) { console.error('Add repairman error:', err); });
+      });
+    }
+
+    var editSaveBtn = document.querySelector('#editRepairmanModal .btn-primary');
+    if (editSaveBtn) {
+      editSaveBtn.addEventListener('click', function() {
+        if (!selectedRepairmanId) return;
+        var modal = document.getElementById('editRepairmanModal');
+        var inputs = modal.querySelectorAll('input');
+        var textareas = modal.querySelectorAll('textarea');
+        var select = modal.querySelector('select');
+        var fd = new FormData();
+        fd.append('action', 'update');
+        fd.append('id', selectedRepairmanId);
+        fd.append('name', inputs[0] ? inputs[0].value : '');
+        fd.append('email', inputs[1] ? inputs[1].value : '');
+        fd.append('availability', select ? select.value : '');
+        fetch(baseUrl, { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            closeModal('editRepairmanModal');
+            if (data.success) {
+              loadRepairmen(searchInput ? searchInput.value : '');
+            } else {
+              alert(data.error || 'Failed to update repairman');
+            }
+          })
+          .catch(function(err) { console.error('Update repairman error:', err); });
+      });
+    }
+
+    var deactivateBtn = document.querySelector('#deactivateModal .btn-warning');
+    if (deactivateBtn) {
+      deactivateBtn.addEventListener('click', function() {
+        if (!selectedRepairmanId) return;
+        var fd = new FormData();
+        fd.append('action', 'deactivate');
+        fd.append('id', selectedRepairmanId);
+        fetch(baseUrl, { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            closeModal('deactivateModal');
+            if (data.success) {
+              loadRepairmen(searchInput ? searchInput.value : '');
+            } else {
+              alert(data.error || 'Failed to deactivate repairman');
+            }
+          })
+          .catch(function(err) { console.error('Deactivate error:', err); });
+      });
+    }
+
+    var deleteBtn = document.querySelector('#deleteRepairmanModal .btn-danger');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function() {
+        if (!selectedRepairmanId) return;
+        var fd = new FormData();
+        fd.append('action', 'delete');
+        fd.append('id', selectedRepairmanId);
+        fetch(baseUrl, { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            closeModal('deleteRepairmanModal');
+            if (data.success) {
+              loadRepairmen(searchInput ? searchInput.value : '');
+            } else {
+              alert(data.error || 'Failed to delete repairman');
+            }
+          })
+          .catch(function(err) { console.error('Delete error:', err); });
+      });
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      fetch('../../controllers/logout.php', { method: 'POST' })
+        .then(function(){ localStorage.clear(); window.location.href = 'login.html'; })
+        .catch(function(){ localStorage.clear(); window.location.href = 'login.html'; });
+    });
+
+    loadRepairmen();
+  })();
+  </script>
 </body>
 </html>

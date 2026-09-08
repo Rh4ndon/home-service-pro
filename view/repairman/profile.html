@@ -345,11 +345,189 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
+  <script>
+    (function() {
+      if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+
+      var userId = localStorage.getItem('id');
+      var userName = localStorage.getItem('name') || 'Repairman';
+      var userEmail = localStorage.getItem('email') || '';
+
+      document.querySelectorAll('.sidebar-user-name').forEach(function(el) { el.textContent = userName; });
+      var initials = userName.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+      document.querySelectorAll('.sidebar-avatar').forEach(function(el) { el.textContent = initials; });
+
+      var profileAvatar = document.querySelector('[style*="border-radius: 50%"]');
+      if (profileAvatar && profileAvatar.textContent.trim().length <= 3) profileAvatar.textContent = initials;
+
+      var profileNameEl = document.querySelector('h2[style*="1.4rem"]');
+      if (profileNameEl) profileNameEl.textContent = userName;
+
+      function logout() {
+        fetch('../../controllers/logout.php', { method: 'POST' })
+          .then(function(){ localStorage.clear(); window.location.href = 'login.html'; })
+          .catch(function(){ localStorage.clear(); window.location.href = 'login.html'; });
+      }
+      document.querySelectorAll('#logoutModal .btn-danger').forEach(function(btn) { btn.onclick = logout; });
+
+      function postAction(body) {
+        return fetch('../../controllers/repairman/profile.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body
+        }).then(function(r) { return r.json(); });
+      }
+
+      document.querySelector('#modalSaveProfile .btn-primary').onclick = function() {
+        var inputs = document.querySelectorAll('.card-body input');
+        var data = 'user_id=' + userId + '&action=save_profile';
+        data += '&name=' + encodeURIComponent(inputs[0] ? inputs[0].value : '');
+        data += '&email=' + encodeURIComponent(inputs[1] ? inputs[1].value : '');
+        data += '&address=' + encodeURIComponent(inputs[2] ? inputs[2].value : '');
+        data += '&mobile=' + encodeURIComponent(inputs[3] ? inputs[3].value : '');
+        data += '&tel=' + encodeURIComponent(inputs[4] ? inputs[4].value : '');
+        closeModal('modalSaveProfile');
+        postAction(data).then(function() { alert('Profile saved successfully!'); }).catch(function() {});
+      };
+
+      var availToggle = document.querySelector('.avail-row input[type="checkbox"]');
+      if (availToggle) {
+        availToggle.addEventListener('change', function() {
+          var available = this.checked ? 1 : 0;
+          postAction('user_id=' + userId + '&action=update_availability&available=' + available);
+        });
+      }
+
+      document.querySelector('#modalAddSkill .btn-primary').onclick = function() {
+        var input = document.querySelector('#modalAddSkill input[type="text"]');
+        var skill = input ? input.value.trim() : '';
+        if (!skill) return;
+        postAction('user_id=' + userId + '&action=add_skill&skill=' + encodeURIComponent(skill))
+          .then(function() { location.reload(); }).catch(function() {});
+      };
+
+      document.querySelector('#modalRemoveSkill .btn-danger').onclick = function() {
+        var skillEl = document.querySelector('.card-body span[style*="inline-flex"] button[style*="danger"]');
+        if (!skillEl) return;
+        var skillName = skillEl.parentElement.textContent.trim().replace(/\u00d7$/, '').trim();
+        postAction('user_id=' + userId + '&action=remove_skill&skill=' + encodeURIComponent(skillName))
+          .then(function() { location.reload(); }).catch(function() {});
+      };
+
+      document.querySelector('#modalAddCert .btn-primary').onclick = function() {
+        var inputs = document.querySelectorAll('#modalAddCert input');
+        var certName = inputs[0] ? inputs[0].value.trim() : '';
+        var issued = inputs[1] ? inputs[1].value : '';
+        var valid = inputs[2] ? inputs[2].value : '';
+        if (!certName) return;
+        postAction('user_id=' + userId + '&action=add_cert&cert_name=' + encodeURIComponent(certName) +
+          '&issued=' + encodeURIComponent(issued) + '&valid_until=' + encodeURIComponent(valid))
+          .then(function() { location.reload(); }).catch(function() {});
+      };
+
+      if (!userId) return;
+
+      fetch('../../controllers/repairman/profile.php?user_id=' + userId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.error) return;
+          var p = data.profile || data;
+
+          var inputs = document.querySelectorAll('.card-body input');
+          if (inputs.length >= 5) {
+            if (p.name) inputs[0].value = p.name;
+            if (p.email) inputs[1].value = p.email;
+            if (p.address) inputs[2].value = p.address;
+            if (p.mobile) inputs[3].value = p.mobile;
+            if (p.tel) inputs[4].value = p.tel;
+          }
+
+          if (p.name) {
+            if (profileNameEl) profileNameEl.textContent = p.name;
+            var emailEl = profileNameEl ? profileNameEl.nextElementSibling : null;
+            if (emailEl && p.email) emailEl.textContent = p.email;
+          }
+
+          var availToggle = document.querySelector('.avail-row input[type="checkbox"]');
+          if (availToggle && p.available !== undefined) {
+            availToggle.checked = !!p.available;
+            var label = document.querySelector('.avail-label');
+            if (label) {
+              label.textContent = p.available ? 'Available' : 'Unavailable';
+              label.style.color = p.available ? '#22c55e' : '#ef4444';
+            }
+          }
+
+          if (p.skills) {
+            var skillsArr = typeof p.skills === 'string' ? p.skills.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : p.skills;
+            var skillsContainer = document.querySelector('.card-body[style*="flex"]');
+            if (skillsContainer && skillsContainer.closest('.card').querySelector('h2').textContent === 'Skills') {
+              skillsContainer.innerHTML = '';
+              skillsArr.forEach(function(skill) {
+                var span = document.createElement('span');
+                span.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:var(--panel);border-radius:10px;font-size:0.9rem;font-weight:500;';
+                span.innerHTML = skill + ' <button style="background:none;border:0;color:var(--danger);cursor:pointer;font-size:1.1rem;line-height:1;" onclick="openModal(\'modalRemoveSkill\')">&times;</button>';
+                skillsContainer.appendChild(span);
+              });
+            }
+          }
+
+          if (p.education) {
+            var eduArr = Array.isArray(p.education) ? p.education : [];
+            var eduCards = document.querySelectorAll('.card');
+            eduCards.forEach(function(card) {
+              var h2 = card.querySelector('h2');
+              if (h2 && h2.textContent === 'Education') {
+                var cardBody = card.querySelector('.card-body');
+                if (cardBody && eduArr.length) {
+                  cardBody.innerHTML = '';
+                  eduArr.forEach(function(edu) {
+                    var div = document.createElement('div');
+                    div.style.cssText = 'margin-bottom:14px;';
+                    div.innerHTML = '<div style="font-weight:600;color:var(--text);font-size:0.95rem;">' + (edu.title || edu.name || '') + '</div>' +
+                      '<p style="font-size:0.85rem;color:var(--muted);margin-top:2px;">' + (edu.detail || edu.description || '') + '</p>';
+                    cardBody.appendChild(div);
+                  });
+                }
+              }
+            });
+          }
+
+          if (p.certifications) {
+            var certArr = Array.isArray(p.certifications) ? p.certifications : [];
+            var certCards = document.querySelectorAll('.card');
+            certCards.forEach(function(card) {
+              var h2 = card.querySelector('h2');
+              if (h2 && h2.textContent === 'Certifications') {
+                var listContainer = card.querySelector('.card-body-flush');
+                if (listContainer && certArr.length) {
+                  listContainer.innerHTML = '';
+                  certArr.forEach(function(cert) {
+                    var isExpired = cert.expired || (cert.valid_until && new Date(cert.valid_until) < new Date());
+                    var isExpiring = !isExpired && cert.valid_until && (new Date(cert.valid_until) - new Date()) < 30 * 24 * 60 * 60 * 1000;
+                    var badgeCls = isExpired ? 'badge-danger' : (isExpiring ? 'badge-warning' : 'badge-success');
+                    var badgeLabel = isExpired ? 'Expired' : (isExpiring ? 'Expiring Soon' : 'Active');
+                    var item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.innerHTML = '<div class="list-avatar" style="background:var(--success);"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M12 15l-2 5l9-9l-9 9l2-5z"/><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87l6.91-1.01L12 2z"/></svg></div>' +
+                      '<div class="list-info"><h4>' + (cert.name || cert.cert_name || '') + '</h4>' +
+                      '<p>Issued: ' + (cert.issued || '') + ' | Valid until: ' + (cert.valid_until || '') + '</p></div>' +
+                      '<span class="badge ' + badgeCls + '">' + badgeLabel + '</span>';
+                    listContainer.appendChild(item);
+                  });
+                }
+              }
+            });
+          }
+        })
+        .catch(function() {});
+    })();
+  </script>
 </body>
 </html>

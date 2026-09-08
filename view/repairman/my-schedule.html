@@ -301,11 +301,154 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
+  <script>
+    (function() {
+      if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+
+      var userId = localStorage.getItem('id');
+      var userName = localStorage.getItem('name') || 'Repairman';
+
+      document.querySelectorAll('.sidebar-user-name').forEach(function(el) { el.textContent = userName; });
+      var initials = userName.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+      document.querySelectorAll('.sidebar-avatar').forEach(function(el) { el.textContent = initials; });
+
+      function logout() {
+        fetch('../../controllers/logout.php', { method: 'POST' })
+          .then(function(){ localStorage.clear(); window.location.href = 'login.html'; })
+          .catch(function(){ localStorage.clear(); window.location.href = 'login.html'; });
+      }
+      document.querySelectorAll('#logoutModal .btn-danger').forEach(function(btn) { btn.onclick = logout; });
+
+      var currentScheduleId = null;
+
+      function getStatusMap(status) {
+        var s = (status || '').toLowerCase();
+        if (s === 'assigned') return { cls: 'badge-neutral', label: 'Assigned' };
+        if (s === 'in_progress' || s === 'progress') return { cls: 'badge-info', label: 'In Progress' };
+        if (s === 'completed') return { cls: 'badge-success', label: 'Completed' };
+        if (s === 'pending') return { cls: 'badge-warning', label: 'Pending' };
+        if (s === 'declined') return { cls: 'badge-danger', label: 'Declined' };
+        return { cls: 'badge-neutral', label: status || 'Unknown' };
+      }
+
+      function buildActionBtns(item) {
+        var s = (item.schedule_status || '').toLowerCase();
+        if (s === 'completed') {
+          return '<button class="btn btn-secondary btn-sm" onclick="viewScheduleDetail(this)">View</button>';
+        }
+        if (s === 'in_progress' || s === 'progress') {
+          return '<a href="chat.html" class="btn btn-primary btn-sm">Chat</a>' +
+            '<button class="btn btn-success btn-sm" onclick="completeSchedule(' + item.schedule_id + ')">Complete</button>';
+        }
+        if (s === 'assigned' || s === 'pending' || s === 'scheduled') {
+          return '<button class="btn btn-success btn-sm" onclick="acceptSchedule(' + item.schedule_id + ')">Accept</button>' +
+            '<button class="btn btn-danger btn-sm" onclick="declineSchedule(' + item.schedule_id + ')">Decline</button>';
+        }
+        return '<button class="btn btn-secondary btn-sm">View</button>';
+      }
+
+      window.acceptSchedule = function(id) {
+        currentScheduleId = id;
+        openModal('modalAccept');
+      };
+
+      window.declineSchedule = function(id) {
+        currentScheduleId = id;
+        openModal('modalDecline');
+      };
+
+      window.completeSchedule = function(id) {
+        currentScheduleId = id;
+        openModal('modalComplete');
+      };
+
+      window.viewScheduleDetail = function(btn) {
+        var row = btn.closest('tr');
+        if (!row) return;
+        var cells = row.querySelectorAll('td');
+        var modal = document.getElementById('modalDetail');
+        var grid = modal.querySelector('[style*="grid-template-columns"]');
+        if (grid) {
+          grid.children[0].innerHTML = '<strong>Client:</strong> ' + (cells[1].textContent || '');
+          grid.children[1].innerHTML = '<strong>Date:</strong> ' + (cells[0].textContent || '');
+          grid.children[2].innerHTML = '<strong>Appliance:</strong> ' + (cells[2].textContent || '');
+          grid.children[3].innerHTML = '<strong>Issue:</strong> ' + (cells[3].textContent || '');
+          grid.children[4].innerHTML = '<strong>Address:</strong> ' + (cells[4].textContent || '');
+          grid.children[5].innerHTML = '<strong>Status:</strong> ' + (cells[5].innerHTML || '');
+        }
+        openModal('modalDetail');
+      };
+
+      document.querySelector('#modalAccept .btn-success').onclick = function() {
+        if (!currentScheduleId || !userId) return;
+        fetch('../../controllers/repairman/schedule.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'user_id=' + userId + '&action=accept&schedule_id=' + currentScheduleId
+        }).then(function() { location.reload(); });
+      };
+
+      document.querySelector('#modalDecline .btn-danger').onclick = function() {
+        if (!currentScheduleId || !userId) return;
+        fetch('../../controllers/repairman/schedule.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'user_id=' + userId + '&action=decline&schedule_id=' + currentScheduleId
+        }).then(function() { location.reload(); });
+      };
+
+      document.querySelector('#modalComplete .btn-success').onclick = function() {
+        if (!currentScheduleId || !userId) return;
+        fetch('../../controllers/repairman/schedule.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'user_id=' + userId + '&action=complete&schedule_id=' + currentScheduleId
+        }).then(function() { location.reload(); });
+      };
+
+      if (!userId) return;
+
+      fetch('../../controllers/repairman/schedule.php?user_id=' + userId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.schedules || !data.schedules.length) return;
+          var tbody = document.querySelector('#scheduleTable tbody');
+          if (!tbody) return;
+          tbody.innerHTML = '';
+
+          data.schedules.forEach(function(item) {
+            var st = getStatusMap(item.schedule_status);
+            var dateStr = item.schedule_date || '';
+            if (dateStr) {
+              var d = new Date(dateStr);
+              var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+              var m = d.getMonth();
+              dateStr = months[m] + ' ' + d.getDate() + ', ' + d.getFullYear();
+              var hour = d.getHours();
+              var min = String(d.getMinutes()).padStart(2, '0');
+              var ampm = hour >= 12 ? 'PM' : 'AM';
+              hour = hour % 12 || 12;
+              dateStr += ', ' + hour + ':' + min + ' ' + ampm;
+            }
+            var row = document.createElement('tr');
+            row.innerHTML = '<td>' + dateStr + '</td>' +
+              '<td>' + (item.client_name || '') + '</td>' +
+              '<td>' + (item.appliance_name || item.appliance || '') + '</td>' +
+              '<td>' + (item.issue || item.issue_details || '') + '</td>' +
+              '<td>' + (item.client_address || '') + '</td>' +
+              '<td><span class="badge ' + st.cls + '">' + st.label + '</span></td>' +
+              '<td class="action-btns">' + buildActionBtns(item) + '</td>';
+            tbody.appendChild(row);
+          });
+        })
+        .catch(function() {});
+    })();
+  </script>
 </body>
 </html>

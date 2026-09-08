@@ -304,7 +304,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='login.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
@@ -323,6 +323,144 @@
         }
       });
     }
+
+    (function() {
+      if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+
+      var userId = localStorage.getItem('id');
+      var userName = localStorage.getItem('name') || 'Repairman';
+
+      document.querySelectorAll('.sidebar-user-name').forEach(function(el) { el.textContent = userName; });
+      var initials = userName.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+      document.querySelectorAll('.sidebar-avatar').forEach(function(el) { el.textContent = initials; });
+
+      function logout() {
+        fetch('../../controllers/logout.php', { method: 'POST' })
+          .then(function(){ localStorage.clear(); window.location.href = 'login.html'; })
+          .catch(function(){ localStorage.clear(); window.location.href = 'login.html'; });
+      }
+      document.querySelectorAll('#logoutModal .btn-danger').forEach(function(btn) { btn.onclick = logout; });
+
+      var currentTicketId = null;
+
+      function getStatusMap(status) {
+        var s = (status || '').toLowerCase();
+        if (s === 'assigned') return { cls: 'badge-neutral', label: 'Assigned', ds: 'assigned' };
+        if (s === 'in_progress' || s === 'progress') return { cls: 'badge-info', label: 'In Progress', ds: 'progress' };
+        if (s === 'completed') return { cls: 'badge-success', label: 'Completed', ds: 'completed' };
+        if (s === 'pending') return { cls: 'badge-warning', label: 'Pending', ds: 'assigned' };
+        return { cls: 'badge-neutral', label: status || 'Unknown', ds: 'assigned' };
+      }
+
+      function buildActionBtns(ticket) {
+        var s = (ticket.status || '').toLowerCase();
+        var html = '';
+        if (s === 'assigned' || s === 'pending') {
+          html += '<button class="btn btn-primary btn-sm" onclick="acceptTicket(' + ticket.id + ')">Accept</button>';
+        }
+        if (s === 'in_progress' || s === 'progress') {
+          html += '<a href="chat.html" class="btn btn-primary btn-sm">Chat</a>';
+          html += '<button class="btn btn-success btn-sm" onclick="completeTicket(' + ticket.id + ')">Mark Complete</button>';
+        }
+        html += '<button class="btn btn-secondary btn-sm" onclick="viewTicket(this)">View</button>';
+        return html;
+      }
+
+      window.acceptTicket = function(ticketId) {
+        currentTicketId = ticketId;
+        openModal('modalAcceptTicket');
+      };
+
+      window.completeTicket = function(ticketId) {
+        currentTicketId = ticketId;
+        openModal('modalUpdateStatus');
+      };
+
+      window.viewTicket = function(btn) {
+        var row = btn.closest('tr');
+        if (!row) return;
+        var cells = row.querySelectorAll('td');
+        var modal = document.getElementById('modalViewTicket');
+        modal.querySelector('h3').textContent = 'Ticket Detail - ' + (cells[0].textContent || '');
+        var grid = modal.querySelector('[style*="grid-template-columns"]');
+        if (grid) {
+          grid.children[0].innerHTML = '<strong>Client:</strong> ' + (cells[1].textContent || '');
+          grid.children[1].innerHTML = '<strong>Date Opened:</strong> ' + (cells[4].textContent || '');
+          grid.children[2].innerHTML = '<strong>Appliance:</strong> ' + (cells[2].textContent || '');
+          grid.children[3].innerHTML = '<strong>Status:</strong> ' + (cells[5].innerHTML || '');
+        }
+        var issueEl = modal.querySelectorAll('[style*="margin-bottom"]');
+        if (issueEl.length > 0) {
+          var pEl = issueEl[0].querySelector('p');
+          if (pEl) pEl.textContent = cells[3].textContent || '';
+        }
+        openModal('modalViewTicket');
+      };
+
+      var acceptBtn = document.querySelector('#modalAcceptTicket .btn-primary');
+      if (acceptBtn) {
+        acceptBtn.onclick = function() {
+          if (!currentTicketId) return;
+          fetch('../../controllers/repairman/tickets.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'user_id=' + userId + '&action=accept&ticket_id=' + currentTicketId
+          }).then(function() { location.reload(); });
+        };
+      }
+
+      var completeBtn = document.querySelector('#modalUpdateStatus .btn-success');
+      if (completeBtn) {
+        completeBtn.onclick = function() {
+          if (!currentTicketId) return;
+          fetch('../../controllers/repairman/tickets.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'user_id=' + userId + '&action=complete&ticket_id=' + currentTicketId
+          }).then(function() { location.reload(); });
+        };
+      }
+
+      if (!userId) return;
+
+      fetch('../../controllers/repairman/tickets.php?user_id=' + userId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var tickets = data.data || data.tickets || data;
+          if (!tickets || !tickets.length) return;
+          var tbody = document.querySelector('#ticketTable tbody');
+          if (!tbody) return;
+          tbody.innerHTML = '';
+          var counts = { all: 0, assigned: 0, progress: 0, completed: 0 };
+
+          tickets.forEach(function(t) {
+            counts.all++;
+            // Map controller fields (ticket_id, client_name, appliance_name, issue, schedule_date, ticket_status)
+            var status = t.ticket_status || t.status || '';
+            var st = getStatusMap(status);
+            counts[st.ds]++;
+            var row = document.createElement('tr');
+            row.setAttribute('data-status', st.ds);
+            row.innerHTML = '<td>#' + (t.ticket_id || t.id || '') + '</td>' +
+              '<td>' + (t.client_name || '') + '</td>' +
+              '<td>' + (t.appliance_name || t.appliance || '') + '</td>' +
+              '<td>' + (t.issue || t.description || '') + '</td>' +
+              '<td>' + (t.schedule_date || t.date_opened || t.created_at || '') + '</td>' +
+              '<td><span class="badge ' + st.cls + '">' + st.label + '</span></td>' +
+              '<td class="action-btns">' + buildActionBtns(t) + '</td>';
+            tbody.appendChild(row);
+          });
+
+          var tabs = document.querySelectorAll('.tab');
+          if (tabs.length >= 4) {
+            tabs[0].textContent = 'All (' + counts.all + ')';
+            tabs[1].textContent = 'Assigned to Me (' + counts.assigned + ')';
+            tabs[2].textContent = 'In Progress (' + counts.progress + ')';
+            tabs[3].textContent = 'Completed (' + counts.completed + ')';
+          }
+        })
+        .catch(function() {});
+    })();
   </script>
 </body>
 </html>

@@ -228,11 +228,77 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='../customer/landing-page.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
-  <script src="../shared.js"></script>
+<script src="../shared.js"></script>
+  <script>
+  (function() {
+    if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+    var userId = localStorage.getItem('id');
+    var userName = localStorage.getItem('name');
+    var sidebarUserName = document.querySelector('.sidebar-user-name');
+    var sidebarAvatar = document.querySelector('.sidebar-avatar');
+    if (sidebarUserName) sidebarUserName.textContent = userName || 'Customer';
+    if (sidebarAvatar) sidebarAvatar.textContent = (userName || 'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+    var welcomeEl = document.querySelector('.page-header p');
+    if (welcomeEl) welcomeEl.textContent = 'Welcome back, ' + (userName || 'there') + '! Here\'s your repair overview.';
+    fetch('../../controllers/customer/dashboard.php?user_id=' + userId)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var stats = document.querySelectorAll('.stat-card .stat-info h3');
+        if (stats.length >= 4) {
+          stats[0].textContent = data.active_tickets || 0;
+          stats[1].textContent = data.scheduled_repairs || 0;
+          stats[2].textContent = data.total_appliances || 0;
+          stats[3].textContent = data.completed_repairs || 0;
+        }
+        // Populate recent tickets
+        var ticketsContainer = document.querySelector('.card-body-flush');
+        if (ticketsContainer && data.recent_tickets && data.recent_tickets.length) {
+          ticketsContainer.innerHTML = '';
+          data.recent_tickets.forEach(function(t) {
+            var statusBadge = 'badge-info';
+            if (t.Status === 'In Progress') statusBadge = 'badge-warning';
+            else if (t.Status === 'Completed') statusBadge = 'badge-success';
+            else if (t.Status === 'Cancelled') statusBadge = 'badge-danger';
+            var applianceName = t.ApplianceName || 'Appliance';
+            var date = new Date(t.ScheduleDate || t.Date || Date.now()).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+            var div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = '<div class="list-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">TK</div>' +
+              '<div class="list-info"><h4>Ticket #' + t.ID + ' \u2014 ' + applianceName + '</h4><p>' + date + '</p></div>' +
+              '<span class="badge ' + statusBadge + '">' + (t.Status || 'Open') + '</span>';
+            ticketsContainer.appendChild(div);
+          });
+        }
+        // Populate upcoming schedule
+        var scheduleDiv = document.querySelector('.card-body > div:first-child');
+        if (scheduleDiv && data.upcoming_schedule) {
+          var s = data.upcoming_schedule;
+          var date = new Date(s.Date_Time);
+          var day = date.getDate();
+          var month = date.toLocaleDateString('en-US', {month:'short'});
+          var time = date.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+          scheduleDiv.innerHTML = '<div style="min-width:60px; text-align:center; background:rgba(27,141,232,0.08); border-radius:12px; padding:12px 10px;">' +
+            '<div style="font-size:1.6rem; font-weight:800; color:var(--primary); line-height:1;">' + day + '</div>' +
+            '<div style="font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; margin-top:4px;">' + month + '</div>' +
+            '</div><div style="flex:1;">' +
+            '<h4 style="font-size:0.98rem; font-weight:700; margin-bottom:4px;">' + (s.ApplianceName || 'Repair') + '</h4>' +
+            '<p style="font-size:0.85rem; color:var(--muted); margin:0;">' + time + '</p>' +
+            '<p style="font-size:0.85rem; color:var(--muted); margin:4px 0 0;">Technician: ' + (s.RepairmanName || 'TBA') + '</p>' +
+            '</div>';
+        }
+      })
+      .catch(function(){});
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      fetch('../../controllers/logout.php', { method: 'POST' })
+        .then(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; })
+        .catch(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; });
+    });
+  })();
+  </script>
 </body>
 </html>

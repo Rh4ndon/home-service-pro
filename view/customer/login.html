@@ -24,9 +24,14 @@
             </div>
             <div class="form-group">
               <label for="password">Password</label>
-              <input type="password" id="password" placeholder="Enter your password" />
+              <div class="password-wrapper">
+                <input type="password" id="password" placeholder="Enter your password" />
+                <button type="button" class="password-toggle" aria-label="Toggle password visibility" onclick="togglePassword(this)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
             </div>
-            <button class="btn btn-primary" type="button" onclick="window.location.href='dashboard.html'">Log In</button>
+            <button class="btn btn-primary" type="button" id="loginBtn">Log In</button>
           </form>
         </div>
         <div class="auth-footer">
@@ -38,5 +43,29 @@
       </div>
     </div>
     <script src="../shared.js"></script>
+    <script>
+    document.getElementById('loginBtn').addEventListener('click', function() {
+      var email = document.getElementById('email').value.trim();
+      var password = document.getElementById('password').value;
+      if (!email || !password) { alert('Please fill in all fields'); return; }
+      var btn = this; var orig = btn.innerHTML;
+      btn.innerHTML = 'Logging in...'; btn.disabled = true;
+      var fd = new FormData();
+      fd.append('email', email); fd.append('password', password); fd.append('role', 'customer');
+      fetch('../../controllers/login.php', { method: 'POST', body: fd })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if(data.success){
+            localStorage.setItem('id', data.id);
+            localStorage.setItem('name', data.name);
+            localStorage.setItem('email', data.email);
+            localStorage.setItem('role', data.role);
+            localStorage.setItem('is_logged_in', 'true');
+            window.location.href = 'dashboard.html';
+          } else { alert(data.error || 'Login failed'); btn.innerHTML = orig; btn.disabled = false; }
+        })
+        .catch(function(){ alert('Network error'); btn.innerHTML = orig; btn.disabled = false; });
+    });
+    </script>
   </body>
 </html>

@@ -242,7 +242,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('saveProfileModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="doAction('saveProfileModal','Profile updated successfully!')">Save Changes</button>
+        <button class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
       </div>
     </div>
   </div>
@@ -259,11 +259,91 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
-        <button class="btn btn-danger" onclick="window.location.href='../customer/landing-page.html'">Log Out</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
       </div>
     </div>
   </div>
 
   <script src="../shared.js"></script>
+  <script>
+  (function() {
+    if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+    var userId = localStorage.getItem('id');
+    var userName = localStorage.getItem('name');
+    var sidebarUserName = document.querySelector('.sidebar-user-name');
+    var sidebarAvatar = document.querySelector('.sidebar-avatar');
+    if (sidebarUserName) sidebarUserName.textContent = userName || 'Customer';
+    if (sidebarAvatar) sidebarAvatar.textContent = (userName || 'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+    var profileAvatar = document.querySelector('.profile-avatar');
+    var profileNameDisplay = document.querySelector('.profile-name');
+    var profileEmailDisplay = document.querySelector('.profile-email');
+    function getInitials(n) { return (n || 'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase(); }
+
+    fetch('../../controllers/customer/profile.php?user_id=' + userId)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var d = data.profile || data || {};
+        document.getElementById('profileName').value = d.name || d.full_name || userName || '';
+        document.getElementById('profileEmail').value = d.email || '';
+        document.getElementById('addressLine1').value = d.address_line1 || d.address1 || '';
+        document.getElementById('addressLine2').value = d.address_line2 || d.address2 || '';
+        document.getElementById('brgy').value = d.barangay || d.brgy || '';
+        document.getElementById('city').value = d.city || '';
+        document.getElementById('province').value = d.province || '';
+        document.getElementById('region').value = d.region || '';
+        document.getElementById('zipCode').value = d.zip_code || d.zip || '';
+        document.getElementById('prlMobile').value = d.primary_mobile || d.prl_mobile || '';
+        document.getElementById('prlTel').value = d.primary_telephone || d.prl_tel || '';
+        document.getElementById('secMobile').value = d.secondary_mobile || d.sec_mobile || '';
+        document.getElementById('secTel').value = d.secondary_telephone || d.sec_tel || '';
+        if (profileAvatar) profileAvatar.textContent = getInitials(d.name || d.full_name || userName);
+        if (profileNameDisplay) profileNameDisplay.textContent = d.name || d.full_name || userName || '';
+        if (profileEmailDisplay) profileEmailDisplay.textContent = d.email || '';
+      })
+      .catch(function(){});
+
+    document.getElementById('saveProfileBtn').addEventListener('click', function() {
+      var fd = new FormData();
+      fd.append('user_id', userId);
+      fd.append('name', document.getElementById('profileName').value);
+      fd.append('email', document.getElementById('profileEmail').value);
+      fd.append('address_line1', document.getElementById('addressLine1').value);
+      fd.append('address_line2', document.getElementById('addressLine2').value);
+      fd.append('barangay', document.getElementById('brgy').value);
+      fd.append('city', document.getElementById('city').value);
+      fd.append('province', document.getElementById('province').value);
+      fd.append('region', document.getElementById('region').value);
+      fd.append('zip_code', document.getElementById('zipCode').value);
+      fd.append('primary_mobile', document.getElementById('prlMobile').value);
+      fd.append('primary_telephone', document.getElementById('prlTel').value);
+      fd.append('secondary_mobile', document.getElementById('secMobile').value);
+      fd.append('secondary_telephone', document.getElementById('secTel').value);
+      fetch('../../controllers/customer/profile.php', { method: 'POST', body: fd })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          closeModal('saveProfileModal');
+          if (data.success) {
+            var newName = document.getElementById('profileName').value;
+            localStorage.setItem('name', newName);
+            if (sidebarUserName) sidebarUserName.textContent = newName;
+            if (sidebarAvatar) sidebarAvatar.textContent = getInitials(newName);
+            if (profileAvatar) profileAvatar.textContent = getInitials(newName);
+            if (profileNameDisplay) profileNameDisplay.textContent = newName;
+            if (profileEmailDisplay) profileEmailDisplay.textContent = document.getElementById('profileEmail').value;
+            alert('Profile updated successfully!');
+          } else {
+            alert(data.message || 'Error updating profile.');
+          }
+        })
+        .catch(function(){ closeModal('saveProfileModal'); alert('Network error.'); });
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      fetch('../../controllers/logout.php', { method: 'POST' })
+        .then(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; })
+        .catch(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; });
+    });
+  })();
+  </script>
 </body>
 </html>
