@@ -94,78 +94,6 @@ INSERT INTO `chat_messages` (`ID`, `Sender_ID`, `Sender_Role`, `Receiver_ID`, `R
 -- --------------------------------------------------------
 
 --
--- Table structure for table `clientaddress`
---
-
-CREATE TABLE `clientaddress` (
-  `ID` int(11) NOT NULL,
-  `Address_Line1` varchar(255) NOT NULL,
-  `Address_Line2` varchar(255) DEFAULT NULL,
-  `Brgy` varchar(100) DEFAULT NULL,
-  `City_Min` varchar(100) NOT NULL,
-  `Province` varchar(100) NOT NULL,
-  `Region` varchar(100) DEFAULT NULL,
-  `Zip_Code` varchar(10) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `clientaddress`
---
-
-INSERT INTO `clientaddress` (`ID`, `Address_Line1`, `Address_Line2`, `Brgy`, `City_Min`, `Province`, `Region`, `Zip_Code`) VALUES
-(1, '', NULL, NULL, '', '', NULL, '');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `clientappliances`
---
-
-CREATE TABLE `clientappliances` (
-  `ID` int(11) NOT NULL,
-  `Client_ID` int(11) NOT NULL,
-  `Name` varchar(255) NOT NULL,
-  `Type` varchar(100) NOT NULL,
-  `Make` varchar(100) DEFAULT NULL,
-  `Year` int(11) DEFAULT NULL,
-  `Details` text DEFAULT NULL,
-  `Issue_ID` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `clientappliances`
---
-
-INSERT INTO `clientappliances` (`ID`, `Client_ID`, `Name`, `Type`, `Make`, `Year`, `Details`, `Issue_ID`) VALUES
-(2, 1, 'Samsung Washing', 'washing-machine', 'Samsung', 2023, 'Its now rotating', 5),
-(3, 1, 'Samsung RT45', 'refrigerator', 'Samsung', 2024, 'Frost-free-inverter', 2),
-(6, 1, 'Everest Aircon', 'air-conditioner', 'Everest', 2024, 'Everest Aircon', NULL);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `clientcontact`
---
-
-CREATE TABLE `clientcontact` (
-  `ID` int(11) NOT NULL,
-  `Prl_MobileNo` varchar(20) DEFAULT NULL,
-  `Prl_TelNo` varchar(20) DEFAULT NULL,
-  `Sec_MobileNo` varchar(20) DEFAULT NULL,
-  `Sec_TelNo` varchar(20) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `clientcontact`
---
-
-INSERT INTO `clientcontact` (`ID`, `Prl_MobileNo`, `Prl_TelNo`, `Sec_MobileNo`, `Sec_TelNo`) VALUES
-(1, NULL, NULL, NULL, NULL);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `repairhistory`
 --
 
 CREATE TABLE `repairhistory` (
@@ -185,29 +113,6 @@ CREATE TABLE `repairhistory` (
 
 INSERT INTO `repairhistory` (`ID`, `Repairman_ID`, `Repairer_ID`, `Schedule_ID`, `Ticket_ID`, `ClientAppliances_ID`, `Date`, `Status`) VALUES
 (2, 1, NULL, 1, 1, 2, '2026-09-08 00:59:11', 'Completed');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `repairmanagerbackground`
---
-
-CREATE TABLE `repairmanagerbackground` (
-  `ID` int(11) NOT NULL,
-  `Skills` text DEFAULT NULL,
-  `Education` text DEFAULT NULL,
-  `Certifications` text DEFAULT NULL,
-  `Assessment` text DEFAULT NULL,
-  `Ratings` decimal(3,2) DEFAULT 0.00
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `repairmanagerbackground`
---
-
-INSERT INTO `repairmanagerbackground` (`ID`, `Skills`, `Education`, `Certifications`, `Assessment`, `Ratings`) VALUES
-(1, 'Dishwasher Repair', NULL, '[{\"name\":\"Test Certification\",\"issued\":\"2024-01-15\",\"valid_until\":\"2025-01-15\"}]', NULL, 0.00),
-(2, NULL, NULL, NULL, NULL, 0.00);
 
 -- --------------------------------------------------------
 
@@ -293,8 +198,15 @@ CREATE TABLE `user_clientprofile` (
   `User_ID` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
   `Email` varchar(255) NOT NULL,
-  `ClientAdd_ID` int(11) NOT NULL,
-  `ClientContact_ID` int(11) NOT NULL,
+  `Address_Line1` varchar(255) DEFAULT NULL,
+  `Address_Line2` varchar(255) DEFAULT NULL,
+  `Brgy` varchar(100) DEFAULT NULL,
+  `City_Min` varchar(100) DEFAULT NULL,
+  `Province` varchar(100) DEFAULT NULL,
+  `Region` varchar(100) DEFAULT NULL,
+  `Zip_Code` varchar(10) DEFAULT NULL,
+  `Prl_MobileNo` varchar(20) DEFAULT NULL,
+  `Sec_MobileNo` varchar(20) DEFAULT NULL,
   `Status` enum('active','inactive') NOT NULL DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -302,8 +214,8 @@ CREATE TABLE `user_clientprofile` (
 -- Dumping data for table `user_clientprofile`
 --
 
-INSERT INTO `user_clientprofile` (`ID`, `User_ID`, `Name`, `Email`, `ClientAdd_ID`, `ClientContact_ID`, `Status`) VALUES
-(1, 3, 'Ben Dover', 'ben@gmail.com', 1, 1, 'active');
+INSERT INTO `user_clientprofile` (`ID`, `User_ID`, `Name`, `Email`, `Address_Line1`, `Address_Line2`, `Brgy`, `City_Min`, `Province`, `Region`, `Zip_Code`, `Prl_MobileNo`, `Prl_TelNo`, `Sec_MobileNo`, `Sec_TelNo`, `Status`) VALUES
+(1, 3, 'Ben Dover', 'ben@gmail.com', '', NULL, NULL, '', '', NULL, '', NULL, NULL, NULL, NULL, 'active');
 
 -- --------------------------------------------------------
 
@@ -318,11 +230,15 @@ CREATE TABLE `user_repairmanprofile` (
   `Email` varchar(255) NOT NULL,
   `Address` text DEFAULT NULL,
   `MobileNo` varchar(20) DEFAULT NULL,
-  `TelNo` varchar(20) DEFAULT NULL,
+  `FacebookPage` varchar(255) DEFAULT NULL,
   `Availability` varchar(50) DEFAULT NULL,
   `Details` text DEFAULT NULL,
+  `Skills` text DEFAULT NULL,
+  `Education` text DEFAULT NULL,
+  `Certifications` text DEFAULT NULL,
+  `Assessment` text DEFAULT NULL,
+  `Ratings` decimal(3,2) DEFAULT 0.00,
   `Reviews` text DEFAULT NULL,
-  `RepairmanBG_ID` int(11) NOT NULL,
   `Status` enum('active','inactive') NOT NULL DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -330,9 +246,9 @@ CREATE TABLE `user_repairmanprofile` (
 -- Dumping data for table `user_repairmanprofile`
 --
 
-INSERT INTO `user_repairmanprofile` (`ID`, `User_ID`, `Name`, `Email`, `Address`, `MobileNo`, `TelNo`, `Availability`, `Details`, `Reviews`, `RepairmanBG_ID`, `Status`) VALUES
-(1, 1, 'John Doe', 'john@gmail.com', '123 Test St', '09171234567', '02-1234567', NULL, NULL, NULL, 1, 'active'),
-(2, NULL, 'Jane Smith', 'jane@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, 2, 'active');
+INSERT INTO `user_repairmanprofile` (`ID`, `User_ID`, `Name`, `Email`, `Address`, `MobileNo`, `FacebookPage`, `Availability`, `Details`, `Skills`, `Education`, `Certifications`, `Assessment`, `Ratings`, `Reviews`, `Status`) VALUES
+(1, 1, 'John Doe', 'john@gmail.com', '123 Test St', '09171234567', NULL, NULL, NULL, 'Dishwasher Repair', NULL, '[{\"name\":\"Test Certification\",\"issued\":\"2024-01-15\",\"valid_until\":\"2025-01-15\"}]', NULL, 0.00, NULL, 'active'),
+(2, NULL, 'Jane Smith', 'jane@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, 'active');
 
 --
 -- Indexes for dumped tables
@@ -393,12 +309,6 @@ ALTER TABLE `repairhistory`
   ADD KEY `idx_repair_history_date` (`Date`);
 
 --
--- Indexes for table `repairmanagerbackground`
---
-ALTER TABLE `repairmanagerbackground`
-  ADD PRIMARY KEY (`ID`);
-
---
 -- Indexes for table `repairschedule`
 --
 ALTER TABLE `repairschedule`
@@ -432,8 +342,6 @@ ALTER TABLE `user_clientprofile`
   ADD PRIMARY KEY (`ID`),
   ADD UNIQUE KEY `Email_UNIQUE` (`Email`),
   ADD KEY `fk_client_profile_user` (`User_ID`),
-  ADD KEY `fk_client_profile_address` (`ClientAdd_ID`),
-  ADD KEY `fk_client_profile_contact` (`ClientContact_ID`),
   ADD KEY `idx_client_profile_email` (`Email`);
 
 --
@@ -442,8 +350,7 @@ ALTER TABLE `user_clientprofile`
 ALTER TABLE `user_repairmanprofile`
   ADD PRIMARY KEY (`ID`),
   ADD UNIQUE KEY `Email_UNIQUE` (`Email`),
-  ADD KEY `fk_repairman_profile_user` (`User_ID`),
-  ADD KEY `fk_repairman_profile_background` (`RepairmanBG_ID`);
+  ADD KEY `fk_repairman_profile_user` (`User_ID`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -468,34 +375,10 @@ ALTER TABLE `chat_messages`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `clientaddress`
---
-ALTER TABLE `clientaddress`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `clientappliances`
---
-ALTER TABLE `clientappliances`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
-
---
--- AUTO_INCREMENT for table `clientcontact`
---
-ALTER TABLE `clientcontact`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
 -- AUTO_INCREMENT for table `repairhistory`
 --
 ALTER TABLE `repairhistory`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `repairmanagerbackground`
---
-ALTER TABLE `repairmanagerbackground`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `repairschedule`
@@ -572,15 +455,12 @@ ALTER TABLE `repairticket`
 -- Constraints for table `user_clientprofile`
 --
 ALTER TABLE `user_clientprofile`
-  ADD CONSTRAINT `fk_client_profile_address` FOREIGN KEY (`ClientAdd_ID`) REFERENCES `clientaddress` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  ADD CONSTRAINT `fk_client_profile_contact` FOREIGN KEY (`ClientContact_ID`) REFERENCES `clientcontact` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   ADD CONSTRAINT `fk_client_profile_user` FOREIGN KEY (`User_ID`) REFERENCES `users` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
 -- Constraints for table `user_repairmanprofile`
 --
 ALTER TABLE `user_repairmanprofile`
-  ADD CONSTRAINT `fk_repairman_profile_background` FOREIGN KEY (`RepairmanBG_ID`) REFERENCES `repairmanagerbackground` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   ADD CONSTRAINT `fk_repairman_profile_user` FOREIGN KEY (`User_ID`) REFERENCES `users` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 COMMIT;
 

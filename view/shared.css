@@ -899,6 +899,8 @@ table tr:hover td {
   border-radius: 18px;
   width: 100%;
   max-width: 440px;
+  padding-left: 10px;
+  padding-right: 10px;
   box-shadow: 0 12px 32px rgba(11,26,38,0.08);
 }
 

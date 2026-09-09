@@ -214,14 +214,10 @@ function createRepairmanWithCerts($name, $email, $password, $mobile, $certs_json
     try {
         $user_status = $active ? 'active' : 'inactive';
         $user_id = createUser($name, $email, $password, 'repairman', $user_status);
-        $bg_id = insertOrder('repairmanagerbackground', [
-            'Skills' => null, 'Education' => null,
-            'Certifications' => $certs_json ? $certs_json : null
-        ]);
         $profile_id = insertOrder('user_repairmanprofile', [
             'Name' => $name, 'Email' => $email, 'MobileNo' => $mobile,
-            'RepairmanBG_ID' => $bg_id, 'User_ID' => $user_id,
-            'Status' => $user_status
+            'User_ID' => $user_id, 'Status' => $user_status,
+            'Certifications' => $certs_json ? $certs_json : null
         ]);
         commitTransaction();
         return $profile_id;
@@ -239,7 +235,7 @@ function certUploadDir() {
 
 function saveUploadedCertFile($tmp_name, $orig_name) {
     $ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
-    $allowed = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'gif'];
+    $allowed = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
     if (!in_array($ext, $allowed)) return null;
     $safe = uniqid('cert_', true) . '.' . $ext;
     $dest = certUploadDir() . '/' . $safe;
@@ -307,40 +303,11 @@ function getCustomerProfileByUserId($user_id) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function getClientAddressById($id) {
-    global $conn;
-    $stmt = $conn->prepare("SELECT * FROM clientaddress WHERE ID = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_assoc();
-}
-
-function getClientContactById($id) {
-    global $conn;
-    $stmt = $conn->prepare("SELECT * FROM clientcontact WHERE ID = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_assoc();
-}
 
 function updateCustomerProfile($profile_id, $name, $email) {
     global $conn;
     $stmt = $conn->prepare("UPDATE user_clientprofile SET Name = ?, Email = ? WHERE ID = ?");
     $stmt->bind_param("ssi", $name, $email, $profile_id);
-    return $stmt->execute();
-}
-
-function updateClientAddress($id, $line1, $line2, $brgy, $city, $province, $region, $zip) {
-    global $conn;
-    $stmt = $conn->prepare("UPDATE clientaddress SET Address_Line1=?, Address_Line2=?, Brgy=?, City_Min=?, Province=?, Region=?, Zip_Code=? WHERE ID=?");
-    $stmt->bind_param("sssssssi", $line1, $line2, $brgy, $city, $province, $region, $zip, $id);
-    return $stmt->execute();
-}
-
-function updateClientContact($id, $prl_mobile, $prl_tel, $sec_mobile, $sec_tel) {
-    global $conn;
-    $stmt = $conn->prepare("UPDATE clientcontact SET Prl_MobileNo=?, Prl_TelNo=?, Sec_MobileNo=?, Sec_TelNo=? WHERE ID=?");
-    $stmt->bind_param("ssssi", $prl_mobile, $prl_tel, $sec_mobile, $sec_tel, $id);
     return $stmt->execute();
 }
 
@@ -547,9 +514,8 @@ function getRepairmanIdFromUser($user_id) {
 function getRepairmanProfile($user_id) {
     global $conn;
     $stmt = $conn->prepare("
-        SELECT rp.*, rb.Skills, rb.Education, rb.Certifications, rb.Assessment, rb.Ratings, u.Status AS UserStatus
+        SELECT rp.*, u.Status AS UserStatus
         FROM user_repairmanprofile rp 
-        LEFT JOIN repairmanagerbackground rb ON rp.RepairmanBG_ID = rb.ID 
         LEFT JOIN users u ON u.ID = rp.User_ID
         WHERE rp.User_ID = ?
     ");
@@ -558,10 +524,10 @@ function getRepairmanProfile($user_id) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function updateRepairmanProfile($user_id, $name, $email, $address, $mobile, $tel) {
+function updateRepairmanProfile($user_id, $name, $email, $address, $mobile, $facebook_page) {
     global $conn;
-    $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Name=?, Email=?, Address=?, MobileNo=?, TelNo=? WHERE User_ID=?");
-    $stmt->bind_param("sssssi", $name, $email, $address, $mobile, $tel, $user_id);
+    $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Name=?, Email=?, Address=?, MobileNo=?, FacebookPage=? WHERE User_ID=?");
+    $stmt->bind_param("sssssi", $name, $email, $address, $mobile, $facebook_page, $user_id);
     return $stmt->execute();
 }
 
@@ -572,17 +538,24 @@ function updateRepairmanAvailability($user_id, $availability) {
     return $stmt->execute();
 }
 
-function updateRepairmanSkills($bg_id, $skills) {
+function updateRepairmanSkills($profile_id, $skills) {
     global $conn;
-    $stmt = $conn->prepare("UPDATE repairmanagerbackground SET Skills=? WHERE ID=?");
-    $stmt->bind_param("si", $skills, $bg_id);
+    $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Skills=? WHERE ID=?");
+    $stmt->bind_param("si", $skills, $profile_id);
     return $stmt->execute();
 }
 
-function updateRepairmanCerts($bg_id, $certs) {
+function updateRepairmanEducation($profile_id, $education) {
     global $conn;
-    $stmt = $conn->prepare("UPDATE repairmanagerbackground SET Certifications=? WHERE ID=?");
-    $stmt->bind_param("si", $certs, $bg_id);
+    $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Education=? WHERE ID=?");
+    $stmt->bind_param("si", $education, $profile_id);
+    return $stmt->execute();
+}
+
+function updateRepairmanCerts($profile_id, $certs) {
+    global $conn;
+    $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Certifications=? WHERE ID=?");
+    $stmt->bind_param("si", $certs, $profile_id);
     return $stmt->execute();
 }
 
@@ -659,14 +632,13 @@ function getRepairmanSchedule($repairman_id) {
     global $conn;
     $stmt = $conn->prepare("
         SELECT rs.ID as schedule_id, rs.Date_Time as schedule_date, rs.Status as schedule_status, 
-               cp.Name as client_name, t.ID as ticket_id, t.Details as ticket_details,
-               ca.Name as appliance_name, ca.Type as appliance_type, 
-               ai.Issue as issue, ai.Details as issue_details,
-               CONCAT_WS(', ', cladd.Address_Line1, cladd.City_Min, cladd.Province) as client_address
-        FROM repairschedule rs 
-        LEFT JOIN user_clientprofile cp ON rs.Client_ID = cp.ID 
-        LEFT JOIN clientaddress cladd ON cp.ClientAdd_ID = cladd.ID
-        LEFT JOIN repairticket t ON rs.ID = t.Schedule_ID 
+cp.Name as client_name, t.ID as ticket_id, t.Details as ticket_details,
+                ca.Name as appliance_name, ca.Type as appliance_type, 
+                ai.Issue as issue, ai.Details as issue_details,
+                CONCAT_WS(', ', cp.Address_Line1, cp.City_Min, cp.Province) as client_address
+         FROM repairschedule rs 
+         LEFT JOIN user_clientprofile cp ON rs.Client_ID = cp.ID 
+         LEFT JOIN repairticket t ON rs.ID = t.Schedule_ID
         LEFT JOIN applianceissue ai ON t.ID = ai.Ticket_ID 
         LEFT JOIN clientappliances ca ON ca.ID = COALESCE(t.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = ai.ID LIMIT 1))
         WHERE rs.Repairman_ID = ? 
@@ -704,7 +676,7 @@ function getRepairmanDashboardStats($repairman_id) {
     $completed_week = $stmt->get_result()->fetch_assoc()['count'];
     
     // Get rating
-    $stmt = $conn->prepare("SELECT rb.Ratings FROM user_repairmanprofile rp JOIN repairmanagerbackground rb ON rp.RepairmanBG_ID = rb.ID WHERE rp.User_ID = ?");
+    $stmt = $conn->prepare("SELECT Ratings FROM user_repairmanprofile WHERE User_ID = ?");
     $stmt->bind_param("i", $repairman_id);
     $stmt->execute();
     $rating_row = $stmt->get_result()->fetch_assoc();
@@ -771,11 +743,10 @@ function getAdminDashboardStats() {
     
     // Top repairmen
     $stmt = $conn->prepare("
-        SELECT urp.*, rb.Ratings, 
+        SELECT urp.*, 
             (SELECT COUNT(*) FROM repairhistory rh WHERE rh.Repairman_ID = urp.ID) AS CompletedRepairs 
         FROM user_repairmanprofile urp 
-        JOIN repairmanagerbackground rb ON urp.RepairmanBG_ID = rb.ID 
-        ORDER BY rb.Ratings DESC LIMIT 5
+        ORDER BY urp.Ratings DESC LIMIT 5
     ");
     $stmt->execute();
     $top_repairmen = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -810,10 +781,9 @@ function getAdminCustomers($search = null) {
         $stmt = $conn->prepare("
             SELECT users.*, user_clientprofile.ID AS ProfileID, user_clientprofile.Name AS ProfileName, 
                    user_clientprofile.Email AS ProfileEmail, user_clientprofile.Status AS ProfileStatus,
-                   clientaddress.City_Min, clientaddress.Province
+                   user_clientprofile.City_Min, user_clientprofile.Province
             FROM users 
             JOIN user_clientprofile ON users.ID = user_clientprofile.User_ID 
-            LEFT JOIN clientaddress ON user_clientprofile.ClientAdd_ID = clientaddress.ID 
             WHERE users.Role = 'customer' AND (user_clientprofile.Name LIKE ? OR user_clientprofile.Email LIKE ?) 
             ORDER BY users.Created_At DESC
         ");
@@ -822,10 +792,9 @@ function getAdminCustomers($search = null) {
         $stmt = $conn->prepare("
             SELECT users.*, user_clientprofile.ID AS ProfileID, user_clientprofile.Name AS ProfileName, 
                    user_clientprofile.Email AS ProfileEmail, user_clientprofile.Status AS ProfileStatus,
-                   clientaddress.City_Min, clientaddress.Province
+                   user_clientprofile.City_Min, user_clientprofile.Province
             FROM users 
             JOIN user_clientprofile ON users.ID = user_clientprofile.User_ID 
-            LEFT JOIN clientaddress ON user_clientprofile.ClientAdd_ID = clientaddress.ID 
             WHERE users.Role = 'customer' 
             ORDER BY users.Created_At DESC
         ");
@@ -839,11 +808,10 @@ function getAdminCustomerById($id) {
     $stmt = $conn->prepare("
         SELECT users.*, user_clientprofile.ID AS ProfileID, user_clientprofile.Name AS ProfileName, 
                user_clientprofile.Email AS ProfileEmail, user_clientprofile.Status AS ProfileStatus,
-               clientaddress.Address_Line1, clientaddress.Address_Line2, clientaddress.Brgy, 
-               clientaddress.City_Min, clientaddress.Province, clientaddress.Region, clientaddress.Zip_Code
+               user_clientprofile.Address_Line1, user_clientprofile.Address_Line2, user_clientprofile.Brgy, 
+               user_clientprofile.City_Min, user_clientprofile.Province, user_clientprofile.Region, user_clientprofile.Zip_Code
         FROM users 
         JOIN user_clientprofile ON users.ID = user_clientprofile.User_ID 
-        LEFT JOIN clientaddress ON user_clientprofile.ClientAdd_ID = clientaddress.ID 
         WHERE user_clientprofile.ID = ? AND users.Role = 'customer'
     ");
     $stmt->bind_param("i", $id);
@@ -862,7 +830,22 @@ function deactivateAdminCustomer($id) {
     global $conn;
     $stmt = $conn->prepare("UPDATE user_clientprofile SET Status='inactive' WHERE ID=?");
     $stmt->bind_param("i", $id);
-    return $stmt->execute();
+    $stmt->execute();
+
+    $stmt2 = $conn->prepare("UPDATE users u JOIN user_clientprofile up ON u.ID = up.User_ID SET u.Status='inactive' WHERE up.ID=?");
+    $stmt2->bind_param("i", $id);
+    return $stmt2->execute();
+}
+
+function activateAdminCustomer($id) {
+    global $conn;
+    $stmt = $conn->prepare("UPDATE user_clientprofile SET Status='active' WHERE ID=?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+
+    $stmt2 = $conn->prepare("UPDATE users u JOIN user_clientprofile up ON u.ID = up.User_ID SET u.Status='active' WHERE up.ID=?");
+    $stmt2->bind_param("i", $id);
+    return $stmt2->execute();
 }
 
 function getAdminRepairmen($search = null) {
@@ -870,18 +853,16 @@ function getAdminRepairmen($search = null) {
     if ($search) {
         $search = "%$search%";
         $stmt = $conn->prepare("
-            SELECT urp.*, rb.Skills, rb.Ratings 
+            SELECT urp.* 
             FROM user_repairmanprofile urp 
-            JOIN repairmanagerbackground rb ON urp.RepairmanBG_ID = rb.ID 
             WHERE urp.Name LIKE ? OR urp.Email LIKE ? 
             ORDER BY urp.ID DESC
         ");
         $stmt->bind_param("ss", $search, $search);
     } else {
         $stmt = $conn->prepare("
-            SELECT urp.*, rb.Skills, rb.Ratings 
+            SELECT urp.* 
             FROM user_repairmanprofile urp 
-            JOIN repairmanagerbackground rb ON urp.RepairmanBG_ID = rb.ID 
             ORDER BY urp.ID DESC
         ");
     }
@@ -892,9 +873,8 @@ function getAdminRepairmen($search = null) {
 function getAdminRepairmanById($id) {
     global $conn;
     $stmt = $conn->prepare("
-        SELECT urp.*, rb.Skills, rb.Education, rb.Certifications, rb.Assessment, rb.Ratings 
+        SELECT urp.* 
         FROM user_repairmanprofile urp 
-        JOIN repairmanagerbackground rb ON urp.RepairmanBG_ID = rb.ID 
         WHERE urp.ID = ?
     ");
     $stmt->bind_param("i", $id);
@@ -902,18 +882,17 @@ function getAdminRepairmanById($id) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function addAdminRepairman($name, $email, $password, $address, $mobile, $tel, $certs_json = null, $skills = null, $education = null) {
+function addAdminRepairman($name, $email, $password, $address, $mobile, $certs_json = null, $skills = null, $education = null, $facebook_page = null) {
     global $conn;
     startTransaction();
     try {
         $user_id = createUser($name, $email, $password, 'repairman');
-        $bg_id = insertOrder('repairmanagerbackground', [
-            'Skills' => $skills, 'Education' => $education,
-            'Certifications' => $certs_json ? $certs_json : null
-        ]);
         $profile_id = insertOrder('user_repairmanprofile', [
             'Name' => $name, 'Email' => $email, 'Address' => $address,
-            'MobileNo' => $mobile, 'TelNo' => $tel, 'RepairmanBG_ID' => $bg_id, 'User_ID' => $user_id
+            'MobileNo' => $mobile, 'User_ID' => $user_id,
+            'Skills' => $skills, 'Education' => $education,
+            'Certifications' => $certs_json ? $certs_json : null,
+            'FacebookPage' => $facebook_page
         ]);
         commitTransaction();
         return $profile_id;
@@ -927,10 +906,10 @@ function activateAdminRepairman($id) {
     return setRepairmanActivation($id, true);
 }
 
-function updateAdminRepairman($id, $name, $email, $address, $mobile, $tel, $availability) {
+function updateAdminRepairman($id, $name, $email, $address, $mobile, $availability, $education = null, $facebook_page = null) {
     global $conn;
-    $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Name=?, Email=?, Address=?, MobileNo=?, TelNo=?, Availability=? WHERE ID=?");
-    $stmt->bind_param("ssssssi", $name, $email, $address, $mobile, $tel, $availability, $id);
+    $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Name=?, Email=?, Address=?, MobileNo=?, Availability=?, Education=?, FacebookPage=? WHERE ID=?");
+    $stmt->bind_param("sssssssi", $name, $email, $address, $mobile, $availability, $education, $facebook_page, $id);
     return $stmt->execute();
 }
 
@@ -940,7 +919,7 @@ function deactivateAdminRepairman($id) {
 
 function deleteAdminRepairman($id) {
     global $conn;
-    $stmt = $conn->prepare("SELECT User_ID, RepairmanBG_ID FROM user_repairmanprofile WHERE ID=?");
+    $stmt = $conn->prepare("SELECT User_ID FROM user_repairmanprofile WHERE ID=?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $profile = $stmt->get_result()->fetch_assoc();
@@ -950,7 +929,6 @@ function deleteAdminRepairman($id) {
     startTransaction();
     try {
         deleteRecord('user_repairmanprofile', "ID = $id");
-        deleteRecord('repairmanagerbackground', "ID = {$profile['RepairmanBG_ID']}");
         deleteRecord('users', "ID = {$profile['User_ID']}");
         commitTransaction();
         return true;

@@ -102,11 +102,11 @@
           <div class="grid-2">
             <div class="form-group">
               <label>Mobile Number</label>
-              <input type="text" value="0917-555-1234">
+              <input type="text" id="mobileInput" value="0917-555-1234">
             </div>
             <div class="form-group">
-              <label>Telephone Number</label>
-              <input type="text" value="(02) 8888-5678">
+              <label>Facebook Page Link</label>
+              <input type="url" id="facebookPageInput" placeholder="https://facebook.com/yourpage" value="">
             </div>
           </div>
         </div>
@@ -138,18 +138,7 @@
             <h2>Education</h2>
           </div>
           <div class="card-body">
-            <div style="margin-bottom: 14px;">
-              <div style="font-weight: 600; color: var(--text); font-size: 0.95rem;">TESDA National Certification</div>
-              <p style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">Certified Electronics Technician | 2018</p>
-            </div>
-            <div style="margin-bottom: 14px;">
-              <div style="font-weight: 600; color: var(--text); font-size: 0.95rem;">AMA Computer Learning Center</div>
-              <p style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">Diploma in Computer Technology | 2015 - 2017</p>
-            </div>
-            <div>
-              <div style="font-weight: 600; color: var(--text); font-size: 0.95rem;">Quezon City High School</div>
-              <p style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">High School Diploma | 2011 - 2015</p>
-            </div>
+            <textarea id="educationInput" rows="4" placeholder="Enter your educational background (e.g. degrees, certifications, training programs)" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;font-family:inherit;resize:vertical;"></textarea>
           </div>
         </div>
       </div>
@@ -327,7 +316,7 @@
         </div>
         <div class="form-group">
           <label>Certificate Document (PDF / image)</label>
-          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif">
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp">
         </div>
       </div>
       <div class="modal-footer">
@@ -390,12 +379,15 @@
 
       document.querySelector('#modalSaveProfile .btn-primary').onclick = function() {
         var inputs = document.querySelectorAll('.card-body input');
+        var eduInput = document.getElementById('educationInput');
+        var fbInput = document.getElementById('facebookPageInput');
         var data = 'user_id=' + userId + '&action=save_profile';
         data += '&name=' + encodeURIComponent(inputs[0] ? inputs[0].value : '');
         data += '&email=' + encodeURIComponent(inputs[1] ? inputs[1].value : '');
         data += '&address=' + encodeURIComponent(inputs[2] ? inputs[2].value : '');
         data += '&mobile=' + encodeURIComponent(inputs[3] ? inputs[3].value : '');
-        data += '&tel=' + encodeURIComponent(inputs[4] ? inputs[4].value : '');
+        data += '&facebook_page=' + encodeURIComponent(fbInput ? fbInput.value : '');
+        data += '&education=' + encodeURIComponent(eduInput ? eduInput.value : '');
         closeModal('modalSaveProfile');
         postAction(data).then(function() { showAlert('Profile saved successfully!', 'success'); }).catch(function() {});
       };
@@ -463,7 +455,7 @@
             if (p.Email) inputs[1].value = p.Email;
             if (p.Address) inputs[2].value = p.Address;
             if (p.MobileNo) inputs[3].value = p.MobileNo;
-            if (p.TelNo) inputs[4].value = p.TelNo;
+            if (p.FacebookPage) inputs[4].value = p.FacebookPage;
           }
 
           if (p.Name) {
@@ -514,31 +506,10 @@
           }
 
           if (p.Education) {
-            var eduArr = Array.isArray(p.Education) ? p.Education : [];
-            if (typeof p.Education === 'string' && p.Education.trim()) {
-              eduArr = [{ title: 'Education', description: p.Education }];
+            var eduInput = document.getElementById('educationInput');
+            if (eduInput) {
+              eduInput.value = typeof p.Education === 'string' ? p.Education : JSON.stringify(p.Education);
             }
-            var eduCards = document.querySelectorAll('.card');
-            eduCards.forEach(function(card) {
-              var h2 = card.querySelector('h2');
-              if (h2 && h2.textContent === 'Education') {
-                var cardBody = card.querySelector('.card-body');
-                if (cardBody) {
-                  if (eduArr.length) {
-                    cardBody.innerHTML = '';
-                    eduArr.forEach(function(edu) {
-                      var div = document.createElement('div');
-                      div.style.cssText = 'margin-bottom:14px;';
-                      div.innerHTML = '<div style="font-weight:600;color:var(--text);font-size:0.95rem;">' + escHtml(edu.title || edu.name || '') + '</div>' +
-                        '<p style="font-size:0.85rem;color:var(--muted);margin-top:2px;">' + escHtml(edu.detail || edu.description || '') + '</p>';
-                      cardBody.appendChild(div);
-                    });
-                  } else {
-                    cardBody.innerHTML = '<span style="color:var(--muted);font-size:0.9rem;">No education background listed yet.</span>';
-                  }
-                }
-              }
-            });
           }
 
           if (p.Certifications) {

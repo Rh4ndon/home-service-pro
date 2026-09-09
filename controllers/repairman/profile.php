@@ -67,7 +67,8 @@ function handle_update($user_id) {
     $email = $_POST['email'] ?? '';
     $address = $_POST['address'] ?? '';
     $mobile = $_POST['mobile'] ?? '';
-    $tel = $_POST['tel'] ?? '';
+    $facebook_page = $_POST['facebook_page'] ?? '';
+    $education = $_POST['education'] ?? null;
 
     if (empty($name) || empty($email)) {
         http_response_code(400);
@@ -75,7 +76,13 @@ function handle_update($user_id) {
         return;
     }
 
-    if (updateRepairmanProfile($user_id, $name, $email, $address, $mobile, $tel)) {
+    if (updateRepairmanProfile($user_id, $name, $email, $address, $mobile, $facebook_page)) {
+        if ($education !== null) {
+            $profile = getRepairmanProfile($user_id);
+            if ($profile) {
+                updateRepairmanEducation($profile['ID'], $education);
+            }
+        }
         echo json_encode(["success" => true, "message" => "Profile updated successfully."]);
     } else {
         http_response_code(500);
@@ -120,7 +127,7 @@ function handle_add_skill($user_id) {
     $skills_array[] = $skill;
     $new_skills = implode(',', array_unique($skills_array));
 
-    if (updateRepairmanSkills($profile['RepairmanBG_ID'], $new_skills)) {
+    if (updateRepairmanSkills($profile['ID'], $new_skills)) {
         echo json_encode(["success" => true, "message" => "Skill added successfully.", "skills" => $new_skills]);
     } else {
         http_response_code(500);
@@ -151,7 +158,7 @@ function handle_remove_skill($user_id) {
     });
     $new_skills = implode(',', $skills_array);
 
-    if (updateRepairmanSkills($profile['RepairmanBG_ID'], $new_skills)) {
+    if (updateRepairmanSkills($profile['ID'], $new_skills)) {
         echo json_encode(["success" => true, "message" => "Skill removed successfully.", "skills" => $new_skills]);
     } else {
         http_response_code(500);
@@ -200,7 +207,7 @@ function handle_add_cert($user_id) {
 
     $new_certs = json_encode($certs_array);
 
-    if (updateRepairmanCerts($profile['RepairmanBG_ID'], $new_certs)) {
+    if (updateRepairmanCerts($profile['ID'], $new_certs)) {
         echo json_encode(["success" => true, "message" => "Certificate added successfully.", "certifications" => $certs_array]);
     } else {
         http_response_code(500);

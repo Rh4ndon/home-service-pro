@@ -50,11 +50,38 @@
               </div>
             </div>
             <div class="form-group">
+              <label for="education">Educational Background</label>
+              <textarea id="education" rows="3" placeholder="e.g. TESDA NC II Refrigeration and Air Conditioning, BS in Computer Science from AMA" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;font-family:inherit;resize:vertical;"></textarea>
+              <small style="color: var(--muted); font-size: 0.78rem;">List your educational background and relevant training</small>
+            </div>
+            <div class="form-group">
+              <label>Skills</label>
+              <div id="skillRows">
+                <div class="skill-row" style="display:flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                  <select class="skill-select" style="flex:1; padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;">
+                    <option value="">Select a skill...</option>
+                    <option value="refrigerator">Refrigerator Repair</option>
+                    <option value="air-conditioner">Air Conditioner Repair</option>
+                    <option value="washing-machine">Washing Machine Repair</option>
+                    <option value="dishwasher">Dishwasher Repair</option>
+                    <option value="oven">Oven/Stove Repair</option>
+                    <option value="microwave">Microwave Repair</option>
+                    <option value="television">Television Repair</option>
+                    <option value="water-heater">Water Heater Repair</option>
+                    <option value="dryer">Dryer Repair</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeSkillRow(this)" title="Remove" hidden>&times;</button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="addSkillRow()">+ Add another skill</button>
+            </div>
+            <div class="form-group">
               <label>Certificates</label>
               <div id="certRows">
                 <div class="cert-row" style="display:grid; grid-template-columns: 1fr 1.2fr auto; gap: 8px; margin-bottom: 8px; align-items: center;">
                   <input type="text" class="cert-name" placeholder="e.g., TESDA NC II" />
-                  <input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif" />
+                  <input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp" />
                   <button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeCertRow(this)" title="Remove" hidden>&times;</button>
                 </div>
               </div>
@@ -96,13 +123,39 @@
       row.className = 'cert-row';
       row.style.cssText = 'display:grid; grid-template-columns: 1fr 1.2fr auto; gap: 8px; margin-bottom: 8px; align-items: center;';
       row.innerHTML = '<input type="text" class="cert-name" placeholder="e.g., TESDA NC II" />' +
-        '<input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif" />' +
+        '<input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp" />' +
         '<button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeCertRow(this)" title="Remove">&times;</button>';
       rows.appendChild(row);
       document.querySelectorAll('.cert-row .cert-name')[0].closest('.cert-row').querySelector('button').hidden = false;
     }
     function removeCertRow(btn) {
       var row = btn.closest('.cert-row');
+      row.parentNode.removeChild(row);
+    }
+    function addSkillRow() {
+      var rows = document.getElementById('skillRows');
+      var row = document.createElement('div');
+      row.className = 'skill-row';
+      row.style.cssText = 'display:flex; gap: 8px; margin-bottom: 8px; align-items: center;';
+      row.innerHTML = '<select class="skill-select" style="flex:1; padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;">' +
+        '<option value="">Select a skill...</option>' +
+        '<option value="refrigerator">Refrigerator Repair</option>' +
+        '<option value="air-conditioner">Air Conditioner Repair</option>' +
+        '<option value="washing-machine">Washing Machine Repair</option>' +
+        '<option value="dishwasher">Dishwasher Repair</option>' +
+        '<option value="oven">Oven/Stove Repair</option>' +
+        '<option value="microwave">Microwave Repair</option>' +
+        '<option value="television">Television Repair</option>' +
+        '<option value="water-heater">Water Heater Repair</option>' +
+        '<option value="dryer">Dryer Repair</option>' +
+        '<option value="other">Other</option>' +
+        '</select>' +
+        '<button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeSkillRow(this)" title="Remove">&times;</button>';
+      rows.appendChild(row);
+      document.querySelectorAll('.skill-row .skill-select')[0].closest('.skill-row').querySelector('button').hidden = false;
+    }
+    function removeSkillRow(btn) {
+      var row = btn.closest('.skill-row');
       row.parentNode.removeChild(row);
     }
     function isPhMobile(v) {
@@ -127,9 +180,15 @@
       var password = document.getElementById('password').value;
       var btn = this; var orig = btn.innerHTML;
       btn.innerHTML = 'Creating Account...'; btn.disabled = true;
+      var education = document.getElementById('education').value.trim();
+      var skills = [];
+      document.querySelectorAll('#skillRows .skill-select').forEach(function(sel) {
+        if (sel.value) skills.push(sel.value);
+      });
       var fd = new FormData();
       fd.append('name', name); fd.append('email', email); fd.append('mobile', mobile);
-      fd.append('password', password); fd.append('role', 'repairman');
+      fd.append('password', password); fd.append('role', 'repairman'); fd.append('education', education);
+      fd.append('skills', skills.join(','));
       var rows = document.querySelectorAll('#certRows .cert-row');
       rows.forEach(function(row) {
         var certName = row.querySelector('.cert-name').value.trim();

@@ -314,7 +314,24 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('deactivateCustomerModal')">Cancel</button>
-        <button class="btn btn-warning" onclick="doAction('deactivateCustomerModal','Customer deactivated successfully!')">Deactivate</button>
+        <button class="btn btn-warning" id="deactivateCustomerBtn">Deactivate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activate Customer Confirmation Modal -->
+  <div class="modal-overlay" id="activateCustomerModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Confirm Activation</h3>
+        <button class="modal-close" onclick="closeModal('activateCustomerModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to activate this customer? They will be able to book new repairs immediately.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('activateCustomerModal')">Cancel</button>
+        <button class="btn btn-success" id="activateCustomerBtn">Activate</button>
       </div>
     </div>
   </div>
@@ -362,6 +379,24 @@
       return '<span class="badge badge-success">Active</span>';
     }
 
+    function renderActionButtons(profileId, status) {
+      var s = (status || 'active').toLowerCase();
+      var activateBtn = s === 'inactive'
+        ? '<button class="btn btn-sm btn-success" data-action="activate" data-id="' + profileId + '">Activate</button>'
+        : '';
+      var deactivateBtn = s === 'active'
+        ? '<button class="btn btn-sm btn-warning" data-action="deactivate" data-id="' + profileId + '">Deactivate</button>'
+        : '';
+      return '<div class="action-btns">' +
+        '<button class="btn btn-sm btn-secondary" data-action="view" data-id="' + profileId + '">' +
+          '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+        '<button class="btn btn-sm btn-secondary" data-action="edit" data-id="' + profileId + '">' +
+          '<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+        activateBtn +
+        deactivateBtn +
+        '</div>';
+    }
+
     function formatDate(d) {
       if (!d) return '';
       var dt = new Date(d);
@@ -391,13 +426,7 @@
           '<td>-</td>' +
           '<td>' + since + '</td>' +
           '<td>' + renderBadge(status) + '</td>' +
-          '<td><div class="action-btns">' +
-          '<button class="btn btn-sm btn-secondary" data-action="view" data-id="' + profileId + '">' +
-            '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
-          '<button class="btn btn-sm btn-secondary" data-action="edit" data-id="' + profileId + '">' +
-            '<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
-          '<button class="btn btn-sm btn-warning" data-action="deactivate" data-id="' + profileId + '">Deactivate</button>' +
-          '</div></td></tr>';
+          '<td>' + renderActionButtons(profileId, status) + '</td></tr>';
       });
       tbody.innerHTML = html;
     }
@@ -432,6 +461,8 @@
 
       if (action === 'deactivate') {
         openModal('deactivateCustomerModal');
+      } else if (action === 'activate') {
+        openModal('activateCustomerModal');
       } else if (action === 'view') {
         fetch(baseUrl + '?id=' + encodeURIComponent(id))
           .then(function(r) { return r.json(); })
@@ -480,7 +511,7 @@
       }
     });
 
-    var deactivateBtn = document.querySelector('#deactivateCustomerModal .btn-warning');
+    var deactivateBtn = document.getElementById('deactivateCustomerBtn');
     if (deactivateBtn) {
       deactivateBtn.addEventListener('click', function() {
         if (!selectedCustomerId) return;
@@ -492,12 +523,35 @@
           .then(function(data) {
             closeModal('deactivateCustomerModal');
             if (data.success) {
+              showAlert('Customer deactivated successfully.', 'success');
               loadCustomers(searchInput ? searchInput.value : '');
             } else {
               showAlert(data.error || 'Failed to deactivate customer', 'error');
             }
           })
           .catch(function(err) { console.error('Deactivate error:', err); });
+      });
+    }
+
+    var activateBtn = document.getElementById('activateCustomerBtn');
+    if (activateBtn) {
+      activateBtn.addEventListener('click', function() {
+        if (!selectedCustomerId) return;
+        var fd = new FormData();
+        fd.append('action', 'activate');
+        fd.append('id', selectedCustomerId);
+        fetch(baseUrl, { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            closeModal('activateCustomerModal');
+            if (data.success) {
+              showAlert('Customer activated successfully.', 'success');
+              loadCustomers(searchInput ? searchInput.value : '');
+            } else {
+              showAlert(data.error || 'Failed to activate customer', 'error');
+            }
+          })
+          .catch(function(err) { console.error('Activate error:', err); });
       });
     }
 

@@ -273,17 +273,37 @@
           <label>Email Address</label>
           <input type="email" id="addEmail" placeholder="Enter email address">
         </div>
-        <div class="form-group">
-          <label>Mobile Number</label>
-          <input type="tel" id="addMobile" placeholder="09171234567">
-        </div>
-        <div class="form-group">
-          <label>Address</label>
-          <input type="text" id="addAddress" placeholder="Enter home address">
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Mobile Number</label>
+            <input type="tel" id="addMobile" placeholder="09171234567">
+          </div>
+          <div class="form-group">
+            <label>Facebook Page Link</label>
+            <input type="url" id="addFacebookPage" placeholder="https://facebook.com/yourpage">
+          </div>
         </div>
         <div class="form-group">
           <label>Skills</label>
-          <input type="text" id="addSkills" placeholder="e.g. Refrigerator, Aircon, Plumbing">
+          <div id="addSkillRows">
+            <div class="skill-row" style="display:flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+              <select class="skill-select" style="flex:1; padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;">
+                <option value="">Select a skill...</option>
+                <option value="refrigerator">Refrigerator Repair</option>
+                <option value="air-conditioner">Air Conditioner Repair</option>
+                <option value="washing-machine">Washing Machine Repair</option>
+                <option value="dishwasher">Dishwasher Repair</option>
+                <option value="oven">Oven/Stove Repair</option>
+                <option value="microwave">Microwave Repair</option>
+                <option value="television">Television Repair</option>
+                <option value="water-heater">Water Heater Repair</option>
+                <option value="dryer">Dryer Repair</option>
+                <option value="other">Other</option>
+              </select>
+              <button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeAdminSkillRow(this)" title="Remove" hidden>&times;</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addAdminSkillRow()">+ Add another skill</button>
         </div>
         <div class="form-group">
           <label>Education</label>
@@ -294,7 +314,7 @@
           <div id="addCertRows">
             <div class="cert-row" style="display:grid; grid-template-columns: 1.2fr 1.4fr auto; gap: 8px; margin-bottom: 8px; align-items: center;">
               <input type="text" class="cert-name" placeholder="e.g., TESDA NC II">
-              <input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif">
+              <input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp">
               <button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeAdminCertRow(this)" title="Remove" hidden>&times;</button>
             </div>
           </div>
@@ -334,8 +354,8 @@
             <input type="tel" id="editMobile">
           </div>
           <div class="form-group">
-            <label>Telephone Number</label>
-            <input type="tel" id="editTel">
+            <label>Facebook Page Link</label>
+            <input type="url" id="editFacebookPage" placeholder="https://facebook.com/yourpage">
           </div>
         </div>
         <div class="form-group">
@@ -344,6 +364,10 @@
             <option>Available</option>
             <option>Unavailable</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>Education</label>
+          <textarea id="editEducation" rows="3" placeholder="Educational background" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;font-family:inherit;resize:vertical;"></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -382,7 +406,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('deactivateModal')">Cancel</button>
-        <button class="btn btn-warning" onclick="doAction('deactivateModal','Repairman deactivated successfully!')">Deactivate</button>
+        <button class="btn btn-warning" id="deactivateBtn">Deactivate</button>
       </div>
     </div>
   </div>
@@ -430,12 +454,38 @@
     row.className = 'cert-row';
     row.style.cssText = 'display:grid; grid-template-columns: 1.2fr 1.4fr auto; gap: 8px; margin-bottom: 8px; align-items: center;';
     row.innerHTML = '<input type="text" class="cert-name" placeholder="e.g., TESDA NC II">' +
-      '<input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif">' +
+      '<input type="file" class="cert-file" accept=".pdf,.jpg,.jpeg,.png,.webp">' +
       '<button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeAdminCertRow(this)" title="Remove">&times;</button>';
     rows.appendChild(row);
   }
   function removeAdminCertRow(btn) {
     var row = btn.closest('.cert-row');
+    if (row.parentNode) row.parentNode.removeChild(row);
+  }
+  function addAdminSkillRow() {
+    var rows = document.getElementById('addSkillRows');
+    var row = document.createElement('div');
+    row.className = 'skill-row';
+    row.style.cssText = 'display:flex; gap: 8px; margin-bottom: 8px; align-items: center;';
+    row.innerHTML = '<select class="skill-select" style="flex:1; padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;">' +
+      '<option value="">Select a skill...</option>' +
+      '<option value="refrigerator">Refrigerator Repair</option>' +
+      '<option value="air-conditioner">Air Conditioner Repair</option>' +
+      '<option value="washing-machine">Washing Machine Repair</option>' +
+      '<option value="dishwasher">Dishwasher Repair</option>' +
+      '<option value="oven">Oven/Stove Repair</option>' +
+      '<option value="microwave">Microwave Repair</option>' +
+      '<option value="television">Television Repair</option>' +
+      '<option value="water-heater">Water Heater Repair</option>' +
+      '<option value="dryer">Dryer Repair</option>' +
+      '<option value="other">Other</option>' +
+      '</select>' +
+      '<button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeAdminSkillRow(this)" title="Remove">&times;</button>';
+    rows.appendChild(row);
+    document.querySelectorAll('.skill-row .skill-select')[0].closest('.skill-row').querySelector('button').hidden = false;
+  }
+  function removeAdminSkillRow(btn) {
+    var row = btn.closest('.skill-row');
     if (row.parentNode) row.parentNode.removeChild(row);
   }
   (function() {
@@ -503,6 +553,9 @@
         var activateBtn = status === 'inactive'
           ? '<button class="btn btn-sm btn-success" data-action="activate" data-id="' + profileId + '">Activate</button>'
           : '';
+        var deactivateBtn = status === 'active'
+          ? '<button class="btn btn-sm btn-warning" data-action="deactivate" data-id="' + profileId + '">Deactivate</button>'
+          : '';
         html += '<tr data-id="' + profileId + '">' +
           '<td>' + profileId + '</td>' +
           '<td>' + name + '</td>' +
@@ -517,7 +570,7 @@
           '<button class="btn btn-sm btn-secondary" data-action="edit" data-id="' + profileId + '">' +
             '<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
           activateBtn +
-          '<button class="btn btn-sm btn-warning" data-action="deactivate" data-id="' + profileId + '">Deactivate</button>' +
+          deactivateBtn +
           '<button class="btn btn-sm btn-danger" data-action="delete" data-id="' + profileId + '">' +
             '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
           '</div></td></tr>';
@@ -572,11 +625,15 @@
               if (certs) {
                 var certArr = null;
                 try { certArr = JSON.parse(certs); } catch (e) { certArr = null; }
-                if (Array.isArray(certArr)) {
+                    if (Array.isArray(certArr)) {
                   if (!certArr.length) certsHtml = 'N/A';
                   else certsHtml = certArr.map(function(c) {
                     var label = escHtml(c.name || 'Certificate');
-                    if (c.file) label += ' <a href="' + escAttr(c.file) + '" target="_blank" class="btn btn-secondary btn-sm" style="margin-left:6px;">View Document</a>';
+                    if (c.file) {
+                      var filePath = escAttr(c.file);
+                      if (filePath.indexOf('http') !== 0 && filePath.indexOf('/') !== 0) filePath = '../../' + filePath;
+                      label += ' <a href="' + filePath + '" target="_blank" class="btn btn-secondary btn-sm" style="margin-left:6px;">View Document</a>';
+                    }
                     return '<div style="margin-bottom:6px;line-height:1.6;">' + label + '</div>';
                   }).join('');
                 } else {
@@ -592,8 +649,8 @@
                   '<div><h3 style="font-size:1.15rem;font-weight:700;">' + name + '</h3>' +
                   '<p style="font-size:0.88rem;color:var(--muted);">' + r.ID + ' &middot; ' + email + '</p></div></div>' +
                   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">' +
-                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Mobile</div><div style="font-size:0.92rem;font-weight:500;">' + mobile + '</div></div>' +
-                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Tel No.</div><div style="font-size:0.92rem;font-weight:500;">' + tel + '</div></div>' +
+'<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Mobile</div><div style="font-size:0.92rem;font-weight:500;">' + mobile + '</div></div>' +
+          '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Facebook Page</div><div style="font-size:0.92rem;font-weight:500;">' + (r.FacebookPage || '—') + '</div></div>' +
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Address</div><div style="font-size:0.92rem;font-weight:500;">' + addr + '</div></div>' +
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Skills</div><div style="font-size:0.92rem;font-weight:500;">' + skills + '</div></div>' +
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Rating</div><div style="font-size:0.92rem;"><span class="stars">' + stars + '</span> ' + rating.toFixed(1) + '</div></div>' +
@@ -616,19 +673,55 @@
               var emailInput = document.getElementById('editEmail');
               var addressInput = document.getElementById('editAddress');
               var mobileInput = document.getElementById('editMobile');
-              var telInput = document.getElementById('editTel');
+              var fbInput = document.getElementById('editFacebookPage');
               var availSelect = document.getElementById('editAvailability');
               if (nameInput) nameInput.value = r.Name || '';
               if (emailInput) emailInput.value = r.Email || '';
               if (addressInput) addressInput.value = r.Address || '';
               if (mobileInput) mobileInput.value = r.MobileNo || '';
-              if (telInput) telInput.value = r.TelNo || '';
+              if (fbInput) fbInput.value = r.FacebookPage || '';
               if (availSelect) {
                 var avail = String(r.Availability || 'available').toLowerCase();
                 var label = (avail === '0' || avail === 'unavailable') ? 'Unavailable' : 'Available';
                 for (var o = 0; o < availSelect.options.length; o++) {
                   availSelect.options[o].selected = availSelect.options[o].value === label || availSelect.options[o].text === label;
                 }
+              }
+              var educationInput = document.getElementById('editEducation');
+              if (educationInput) educationInput.value = r.Education || '';
+              // Populate skills dropdown
+              if (r.Skills) {
+                var skillsArr = typeof r.Skills === 'string' ? r.Skills.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : r.Skills;
+                var skillRows = document.querySelectorAll('#addSkillRows .skill-row');
+                skillsArr.forEach(function(skill, i) {
+                  if (i === 0 && skillRows.length === 1) {
+                    skillRows[0].querySelector('.skill-select').value = skill;
+                    skillRows[0].querySelector('button').hidden = false;
+                  } else {
+                    // Add a new row
+                    var rows = document.getElementById('addSkillRows');
+                    var row = document.createElement('div');
+                    row.className = 'skill-row';
+                    row.style.cssText = 'display:flex; gap: 8px; margin-bottom: 8px; align-items: center;';
+                    row.innerHTML = '<select class="skill-select" style="flex:1; padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;">' +
+                      '<option value="">Select a skill...</option>' +
+                      '<option value="refrigerator">Refrigerator Repair</option>' +
+                      '<option value="air-conditioner">Air Conditioner Repair</option>' +
+                      '<option value="washing-machine">Washing Machine Repair</option>' +
+                      '<option value="dishwasher">Dishwasher Repair</option>' +
+                      '<option value="oven">Oven/Stove Repair</option>' +
+                      '<option value="microwave">Microwave Repair</option>' +
+                      '<option value="television">Television Repair</option>' +
+                      '<option value="water-heater">Water Heater Repair</option>' +
+                      '<option value="dryer">Dryer Repair</option>' +
+                      '<option value="other">Other</option>' +
+                      '</select>' +
+                      '<button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeAdminSkillRow(this)" title="Remove">&times;</button>';
+                    rows.appendChild(row);
+                    row.querySelector('.skill-select').value = skill;
+                    row.querySelector('button').hidden = false;
+                  }
+                })
               }
               openModal('editRepairmanModal');
             }
@@ -643,27 +736,32 @@
       }
     });
 
-    var addBtn = document.querySelector('#addRepairmanModal .btn-primary');
+var addBtn = document.querySelector('#addRepairmanModal .btn-primary');
     if (addBtn) {
       addBtn.addEventListener('click', function() {
         var name = (document.getElementById('addName') || {}).value || '';
         var email = (document.getElementById('addEmail') || {}).value || '';
         var mobile = (document.getElementById('addMobile') || {}).value || '';
         var address = (document.getElementById('addAddress') || {}).value || '';
-        var skills = (document.getElementById('addSkills') || {}).value || '';
         var education = (document.getElementById('addEducation') || {}).value || '';
+        var facebook_page = (document.getElementById('addFacebookPage') || {}).value || '';
         if (!name || !email) { showAlert('Name and email are required', 'error'); return; }
         if (mobile && !/^(09\d{9}|639\d{9})$/.test(mobile.replace(/[^0-9]/g, ''))) {
           showAlert('Please enter a valid Philippine mobile number (e.g. 09171234567)', 'error'); return;
         }
+        var skills = [];
+        document.querySelectorAll('#addSkillRows .skill-select').forEach(function(sel) {
+          if (sel.value) skills.push(sel.value);
+        });
         var fd = new FormData();
         fd.append('action', 'add');
         fd.append('name', name);
         fd.append('email', email);
         fd.append('mobile', mobile);
         fd.append('address', address);
-        fd.append('skills', skills);
+        fd.append('skills', skills.join(','));
         fd.append('education', education);
+        fd.append('facebook_page', facebook_page);
         fd.append('password', 'TempPass123!');
         var rows = document.querySelectorAll('#addCertRows .cert-row');
         rows.forEach(function(row) {
@@ -708,8 +806,8 @@
         var emailInput = document.getElementById('editEmail');
         var addressInput = document.getElementById('editAddress');
         var mobileInput = document.getElementById('editMobile');
-        var telInput = document.getElementById('editTel');
         var availSelect = document.getElementById('editAvailability');
+        var educationInput = document.getElementById('editEducation');
         var fd = new FormData();
         fd.append('action', 'update');
         fd.append('id', selectedRepairmanId);
@@ -717,8 +815,8 @@
         fd.append('email', emailInput ? emailInput.value : '');
         fd.append('address', addressInput ? addressInput.value : '');
         fd.append('mobile', mobileInput ? mobileInput.value : '');
-        fd.append('tel', telInput ? telInput.value : '');
         fd.append('availability', availSelect ? availSelect.value : '');
+        fd.append('education', educationInput ? educationInput.value : '');
         fetch(baseUrl, { method: 'POST', body: fd })
           .then(function(r) { return r.json(); })
           .then(function(data) {
@@ -756,7 +854,7 @@
       });
     }
 
-    var deactivateBtn = document.querySelector('#deactivateModal .btn-warning');
+    var deactivateBtn = document.getElementById('deactivateBtn');
     if (deactivateBtn) {
       deactivateBtn.addEventListener('click', function() {
         if (!selectedRepairmanId) return;
@@ -768,6 +866,7 @@
           .then(function(data) {
             closeModal('deactivateModal');
             if (data.success) {
+              showAlert('Repairman deactivated successfully.', 'success');
               loadRepairmen(searchInput ? searchInput.value : '');
             } else {
               showAlert(data.error || 'Failed to deactivate repairman', 'error');

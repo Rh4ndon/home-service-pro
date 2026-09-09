@@ -57,46 +57,26 @@ if (isEmailTaken($email)) {
 $userId = createUser($name, $email, $password, $role, ($role === 'repairman' ? 'inactive' : 'active'));
 
 if ($role === 'customer') {
-    insertRecord('clientaddress', [
-        'Address_Line1' => '',
-        'City_Min' => '',
-        'Province' => '',
-        'Zip_Code' => ''
-    ]);
-    $clientAddId = mysqli_insert_id($conn);
-
-    insertOrder('clientcontact', [
-        'Prl_MobileNo' => null,
-        'Prl_TelNo' => null,
-        'Sec_MobileNo' => null,
-        'Sec_TelNo' => null
-    ]);
-    $clientContactId = mysqli_insert_id($conn);
-
     insertRecord('user_clientprofile', [
         'Name' => $name,
         'Email' => $email,
-        'ClientAdd_ID' => $clientAddId,
-        'ClientContact_ID' => $clientContactId,
         'User_ID' => $userId
     ]);
+}
 
-} elseif ($role === 'repairman') {
+if ($role === 'repairman') {
     $cert_entries = collectCertEntriesFromUploads();
     $certs_json = $cert_entries ? json_encode($cert_entries) : null;
-
-    insertOrder('repairmanagerbackground', [
-        'Skills' => null,
-        'Education' => null,
-        'Certifications' => $certs_json
-    ]);
-    $bgId = mysqli_insert_id($conn);
+    $education = trim($_POST['education'] ?? '');
+    $skills = trim($_POST['skills'] ?? '');
 
     insertRecord('user_repairmanprofile', [
         'Name' => $name,
         'Email' => $email,
         'MobileNo' => $mobile,
-        'RepairmanBG_ID' => $bgId,
+        'Education' => $education ?: null,
+        'Skills' => $skills ?: null,
+        'Certifications' => $certs_json,
         'User_ID' => $userId,
         'Status' => 'inactive'
     ]);

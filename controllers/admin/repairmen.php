@@ -67,7 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $certs_json = $cert_entries ? json_encode($cert_entries) : null;
             $skills = trim($_POST['skills'] ?? '');
             $education = trim($_POST['education'] ?? '');
-            $profileId = addAdminRepairman($name, $email, $password, $address, $mobile, $tel, $certs_json, $skills, $education);
+            $facebook_page = trim($_POST['facebook_page'] ?? '');
+            $profileId = addAdminRepairman($name, $email, $password, $address, $mobile, $certs_json, $skills, $education, $facebook_page);
 
             echo json_encode([
                 'success' => true,
@@ -110,10 +111,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = $_POST['email'] ?? '';
         $address = $_POST['address'] ?? '';
         $mobile = $_POST['mobile'] ?? '';
-        $tel = $_POST['tel'] ?? '';
         $availability = $_POST['availability'] ?? '';
+        $education = $_POST['education'] ?? null;
+        $facebook_page = $_POST['facebook_page'] ?? null;
 
-        updateAdminRepairman($id, $name, $email, $address, $mobile, $tel, $availability);
+        updateAdminRepairman($id, $name, $email, $address, $mobile, $availability, $education, $facebook_page);
 
         echo json_encode([
             'success' => true,

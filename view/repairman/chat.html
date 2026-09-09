@@ -634,9 +634,9 @@
       }
 
       function startSSE() {
-        if (!userId) return;
+        if (!userId || !currentContactId) return;
         if (eventSource) eventSource.close();
-        eventSource = new EventSource('../../controllers/chat/stream.php?user_id=' + userId + '&user_role=repairman&contact_id=' + (currentContactId || '') + '&contact_role=' + currentContactRole);
+        eventSource = new EventSource('../../controllers/chat/stream.php?user_id=' + userId + '&user_role=repairman&contact_id=' + currentContactId + '&contact_role=' + currentContactRole);
         eventSource.onmessage = function(e) {
           try {
             var d = JSON.parse(e.data);

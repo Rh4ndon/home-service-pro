@@ -80,6 +80,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    if ($action === 'activate') {
+        $id = $_POST['id'] ?? '';
+
+        if (empty($id)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'ID is required']);
+            exit;
+        }
+
+        activateAdminCustomer($id);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Customer activated successfully'
+        ]);
+        exit;
+    }
+
     http_response_code(400);
     echo json_encode(['error' => 'Invalid action']);
     exit;
