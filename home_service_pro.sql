@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 08, 2026 at 10:31 PM
+-- Generation Time: Sep 09, 2026 at 03:45 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -57,15 +57,6 @@ CREATE TABLE `applianceissue` (
   `Ticket_ID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `applianceissue`
---
-
-INSERT INTO `applianceissue` (`ID`, `Issue`, `Details`, `Detailed_Report`, `Ticket_ID`) VALUES
-(1, 'Not cooling', 'Not cooling', NULL, 1),
-(2, 'Not cooling', 'Not cooling', NULL, 2),
-(5, 'Its now rotating', 'Its now rotating', NULL, 5);
-
 -- --------------------------------------------------------
 
 --
@@ -83,17 +74,27 @@ CREATE TABLE `chat_messages` (
   `Created_At` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `chat_messages`
+-- Table structure for table `clientappliances`
 --
 
-INSERT INTO `chat_messages` (`ID`, `Sender_ID`, `Sender_Role`, `Receiver_ID`, `Receiver_Role`, `Message`, `Is_Read`, `Created_At`) VALUES
-(1, 3, 'customer', 1, 'repairman', 'Hello repairman!', 1, '2026-09-08 01:05:22'),
-(2, 3, 'customer', 1, 'repairman', 'Hey there', 1, '2026-09-09 03:27:38');
+CREATE TABLE `clientappliances` (
+  `ID` int(11) NOT NULL,
+  `Client_ID` int(11) NOT NULL,
+  `Name` varchar(255) NOT NULL,
+  `Type` varchar(100) NOT NULL,
+  `Make` varchar(100) DEFAULT NULL,
+  `Year` int(11) DEFAULT NULL,
+  `Details` text DEFAULT NULL,
+  `Issue_ID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `repairhistory`
 --
 
 CREATE TABLE `repairhistory` (
@@ -106,13 +107,6 @@ CREATE TABLE `repairhistory` (
   `Date` datetime NOT NULL DEFAULT current_timestamp(),
   `Status` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `repairhistory`
---
-
-INSERT INTO `repairhistory` (`ID`, `Repairman_ID`, `Repairer_ID`, `Schedule_ID`, `Ticket_ID`, `ClientAppliances_ID`, `Date`, `Status`) VALUES
-(2, 1, NULL, 1, 1, 2, '2026-09-08 00:59:11', 'Completed');
 
 -- --------------------------------------------------------
 
@@ -127,15 +121,6 @@ CREATE TABLE `repairschedule` (
   `Status` varchar(50) NOT NULL DEFAULT 'Scheduled',
   `Repairman_ID` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `repairschedule`
---
-
-INSERT INTO `repairschedule` (`ID`, `Client_ID`, `Date_Time`, `Status`, `Repairman_ID`) VALUES
-(1, 1, '2026-09-10 10:00:00', 'In Progress', 1),
-(2, 1, '2026-09-10 10:00:00', 'Scheduled', NULL),
-(5, 1, '2026-09-11 13:00:00', 'Scheduled', NULL);
 
 -- --------------------------------------------------------
 
@@ -152,15 +137,6 @@ CREATE TABLE `repairticket` (
   `Details` text DEFAULT NULL,
   `Schedule_ID` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `repairticket`
---
-
-INSERT INTO `repairticket` (`ID`, `Client_ID`, `Appliance_ID`, `Repairman_ID`, `Status`, `Details`, `Schedule_ID`) VALUES
-(1, 1, 2, 1, 'Completed', 'Not cooling', 1),
-(2, 1, 3, 1, 'Completed', 'Not cooling', 2),
-(5, 1, 2, NULL, 'Open', 'Its now rotating', 5);
 
 -- --------------------------------------------------------
 
@@ -185,7 +161,8 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`ID`, `Name`, `Email`, `Password`, `Role`, `Status`, `Created_At`) VALUES
 (1, 'John Doe', 'john@gmail.com', '$2y$10$H/IR5RASyhbVIDqeLC3KZOFjGOCrlQN/DHlBvqN08t1aOMzjllRmC', 'repairman', 'active', '2026-09-07 22:31:21'),
 (2, 'Jane Smith', 'jane@gmail.com', '$2y$10$fwdAj4z6PuvsXcNTbS4LwehqFlreRH4n77YTcezdne24pO2trb72q', 'repairman', 'active', '2026-09-07 22:37:10'),
-(3, 'Ben Dover', 'ben@gmail.com', '$2y$10$xSbNw2NCmeufAssMqAxE/uWxCQPvlqYdAjf4Ecz.ChoQFJvuWDtL2', 'customer', 'active', '2026-09-07 22:39:02');
+(3, 'Ben Dover', 'ben@gmail.com', '$2y$10$xSbNw2NCmeufAssMqAxE/uWxCQPvlqYdAjf4Ecz.ChoQFJvuWDtL2', 'customer', 'active', '2026-09-07 22:39:02'),
+(8, 'Juan Dela Cruz', 'juan@gmail.com', '$2y$10$jOZgRpC.ixBSpA3ib..i7.IzkhFZVNfP2Od8XRa8KDTkaXRQ1r1RS', 'repairman', 'active', '2026-09-09 15:53:27');
 
 -- --------------------------------------------------------
 
@@ -214,8 +191,8 @@ CREATE TABLE `user_clientprofile` (
 -- Dumping data for table `user_clientprofile`
 --
 
-INSERT INTO `user_clientprofile` (`ID`, `User_ID`, `Name`, `Email`, `Address_Line1`, `Address_Line2`, `Brgy`, `City_Min`, `Province`, `Region`, `Zip_Code`, `Prl_MobileNo`, `Prl_TelNo`, `Sec_MobileNo`, `Sec_TelNo`, `Status`) VALUES
-(1, 3, 'Ben Dover', 'ben@gmail.com', '', NULL, NULL, '', '', NULL, '', NULL, NULL, NULL, NULL, 'active');
+INSERT INTO `user_clientprofile` (`ID`, `User_ID`, `Name`, `Email`, `Address_Line1`, `Address_Line2`, `Brgy`, `City_Min`, `Province`, `Region`, `Zip_Code`, `Prl_MobileNo`, `Sec_MobileNo`, `Status`) VALUES
+(1, 3, 'Ben Dover', 'ben@gmail.com', '', NULL, NULL, '', '', NULL, '', NULL, NULL, 'active');
 
 -- --------------------------------------------------------
 
@@ -248,7 +225,8 @@ CREATE TABLE `user_repairmanprofile` (
 
 INSERT INTO `user_repairmanprofile` (`ID`, `User_ID`, `Name`, `Email`, `Address`, `MobileNo`, `FacebookPage`, `Availability`, `Details`, `Skills`, `Education`, `Certifications`, `Assessment`, `Ratings`, `Reviews`, `Status`) VALUES
 (1, 1, 'John Doe', 'john@gmail.com', '123 Test St', '09171234567', NULL, NULL, NULL, 'Dishwasher Repair', NULL, '[{\"name\":\"Test Certification\",\"issued\":\"2024-01-15\",\"valid_until\":\"2025-01-15\"}]', NULL, 0.00, NULL, 'active'),
-(2, NULL, 'Jane Smith', 'jane@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, 'active');
+(2, 2, 'Jane Smith', 'jane@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, 'active'),
+(7, 8, 'Juan Dela Cruz', 'juan@gmail.com', NULL, '09123456789', NULL, NULL, NULL, NULL, NULL, '[{\"name\":\"Tesda\",\"file\":null},{\"name\":\"Tesda 2\",\"file\":null}]', NULL, 0.00, NULL, 'active');
 
 --
 -- Indexes for dumped tables
@@ -278,24 +256,12 @@ ALTER TABLE `chat_messages`
   ADD KEY `idx_chat_created` (`Created_At`);
 
 --
--- Indexes for table `clientaddress`
---
-ALTER TABLE `clientaddress`
-  ADD PRIMARY KEY (`ID`);
-
---
 -- Indexes for table `clientappliances`
 --
 ALTER TABLE `clientappliances`
   ADD PRIMARY KEY (`ID`),
   ADD KEY `fk_appliance_issue` (`Issue_ID`),
   ADD KEY `fk_appliance_client` (`Client_ID`);
-
---
--- Indexes for table `clientcontact`
---
-ALTER TABLE `clientcontact`
-  ADD PRIMARY KEY (`ID`);
 
 --
 -- Indexes for table `repairhistory`
@@ -375,6 +341,12 @@ ALTER TABLE `chat_messages`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `clientappliances`
+--
+ALTER TABLE `clientappliances`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
 -- AUTO_INCREMENT for table `repairhistory`
 --
 ALTER TABLE `repairhistory`
@@ -396,7 +368,7 @@ ALTER TABLE `repairticket`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `user_clientprofile`
@@ -408,7 +380,7 @@ ALTER TABLE `user_clientprofile`
 -- AUTO_INCREMENT for table `user_repairmanprofile`
 --
 ALTER TABLE `user_repairmanprofile`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- Constraints for dumped tables
