@@ -1,19 +1,13 @@
-**Repairman Profile Debugging
-Customer Dashboard Recent Ticket is dummy data
-Admin Dashboard Recent Activity is dummy data and System Overview is dummy data
-Admin Manage Repairman no button or way to view repairman certificates and its uploaded certificates
-Admin Manage Repairman remove address field on edit repairman form
-Repairman Tickets still use dummy data 
-Repairman Messages still not using real data
-Repairman Profile under skills not using real data
-Repairman Profile on certifications no way to view uploaded certificates
-
-
 **Location Logic
-on the repairman location and customer location we should use leaflet js as a map
-Both the customer and repairman should add there location address it should be coordinates so they should pin on map or option to use device location
+On the repairman location and customer location we should use leaflet js as a map
+Both the customer and repairman should add there location address it should be coordinates so they should pin on map or option to use device location and not the traditional address text which cant be use on map
 This coordinated will be used to find each other due to this is a web base app the user might be from different places so the coordinated and address are important
-the web app should show nearest repairman available like within 10km they should have option to adjust until 30km only since its already far 
-im thinking if we measure places base on radius or base on route or path on roads i think that is more practical.
+The web app should show nearest repairman available like within 10km customer should have option to adjust until 30km only since its already far 
+The app should measure places base on route or path on roads to more practical unlike on facebook that uses radius.
+
+The current setup assign the new Book Service to a default repairman which is not existing then the admin still needs to assign the repairman to the customer on the ticket management that is not good for automation.
+The admin work is only to activate and deactivate users and not assigning the repairman to the customer on the ticket management thats only a backup if there are conflicts.
+When customer send a booking service it should find nearest repairman base on there location 
+
 
 **Voice Call functionality

@@ -153,35 +153,8 @@
           Add Skill
         </button>
       </div>
-      <div class="card-body" style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
-          Air Conditioner Repair
-          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
-        </span>
-        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
-          Refrigerator Repair
-          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
-        </span>
-        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
-          Washing Machine Repair
-          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
-        </span>
-        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
-          Television Repair
-          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
-        </span>
-        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
-          Microwave Oven Repair
-          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
-        </span>
-        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
-          Gas Range Repair
-          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
-        </span>
-        <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
-          Electric Fan Repair
-          <button style="background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;" onclick="openModal('modalRemoveSkill')">&times;</button>
-        </span>
+      <div class="card-body" id="skillsContainer" style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <div class="empty-state" style="color:var(--muted);font-size:0.9rem;">No skills listed yet. Click "Add Skill" to add your first skill.</div>
       </div>
     </div>
 
@@ -194,37 +167,8 @@
           Add Certification
         </button>
       </div>
-      <div class="card-body-flush">
-        <div class="list-item">
-          <div class="list-avatar" style="background: var(--success);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M12 15l-2 5l9-9l-9 9l2-5z"/><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87l6.91-1.01L12 2z"/></svg>
-          </div>
-          <div class="list-info">
-            <h4>TESDA NC II - Consumer Electronics Servicing</h4>
-            <p>Issued: March 2018 | Valid until: March 2023</p>
-          </div>
-          <span class="badge badge-warning">Expiring Soon</span>
-        </div>
-        <div class="list-item">
-          <div class="list-avatar" style="background: var(--primary);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M12 15l-2 5l9-9l-9 9l2-5z"/><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87l6.91-1.01L12 2z"/></svg>
-          </div>
-          <div class="list-info">
-            <h4>Samsung Authorized Service Provider</h4>
-            <p>Issued: June 2020 | Valid until: June 2026</p>
-          </div>
-          <span class="badge badge-success">Active</span>
-        </div>
-        <div class="list-item">
-          <div class="list-avatar" style="background: var(--info);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M12 15l-2 5l9-9l-9 9l2-5z"/><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87l6.91-1.01L12 2z"/></svg>
-          </div>
-          <div class="list-info">
-            <h4>EPA 608 Certification - Refrigerant Handling</h4>
-            <p>Issued: September 2019 | Valid until: Lifetime</p>
-          </div>
-          <span class="badge badge-success">Active</span>
-        </div>
+      <div class="card-body-flush" id="certificationsContainer">
+        <div class="empty-state" style="text-align:center;padding:40px 20px;color:var(--muted);font-size:0.9rem;">No certifications yet. Click "Add Certification" to add your first certification.</div>
       </div>
     </div>
 
@@ -265,7 +209,19 @@
       <div class="modal-body">
         <div class="form-group">
           <label>Skill Name</label>
-          <input type="text" placeholder="e.g., Dishwasher Repair">
+          <select style="flex:1; padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;">
+                    <option value="">Select a skill...</option>
+                    <option value="refrigerator">Refrigerator Repair</option>
+                    <option value="air-conditioner">Air Conditioner Repair</option>
+                    <option value="washing-machine">Washing Machine Repair</option>
+                    <option value="dishwasher">Dishwasher Repair</option>
+                    <option value="oven">Oven/Stove Repair</option>
+                    <option value="microwave">Microwave Repair</option>
+                    <option value="television">Television Repair</option>
+                    <option value="water-heater">Water Heater Repair</option>
+                    <option value="dryer">Dryer Repair</option>
+                    <option value="other">Other</option>
+                  </select>
         </div>
       </div>
       <div class="modal-footer">
@@ -302,26 +258,80 @@
       <div class="modal-body">
         <div class="form-group">
           <label>Certification Name</label>
-          <input type="text" placeholder="e.g., TESDA NC II">
+          <input type="text" id="addCertName" placeholder="e.g., TESDA NC II">
         </div>
         <div class="grid-2">
           <div class="form-group">
             <label>Issued Date</label>
-            <input type="date">
+            <input type="date" id="addCertIssued">
           </div>
           <div class="form-group">
             <label>Valid Until</label>
-            <input type="date">
+            <input type="date" id="addCertValidUntil">
           </div>
         </div>
         <div class="form-group">
           <label>Certificate Document (PDF / image)</label>
-          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp">
+          <input type="file" id="addCertFile" accept=".pdf,.jpg,.jpeg,.png,.webp">
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalAddCert')">Cancel</button>
-        <button class="btn btn-primary" onclick="doAction('modalAddCert','Certification added successfully!')">Add Certification</button>
+        <button class="btn btn-primary" id="addCertBtn">Add Certification</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Certification -->
+  <div class="modal-overlay" id="modalEditCert">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Edit Certification</h3>
+        <button class="modal-close" onclick="closeModal('modalEditCert')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editCertIndex">
+        <div class="form-group">
+          <label>Certification Name</label>
+          <input type="text" id="editCertName" placeholder="e.g., TESDA NC II">
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Issued Date</label>
+            <input type="date" id="editCertIssued">
+          </div>
+          <div class="form-group">
+            <label>Valid Until</label>
+            <input type="date" id="editCertValidUntil">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Certificate Document (PDF / image)</label>
+          <input type="file" id="editCertFile" accept=".pdf,.jpg,.jpeg,.png,.webp">
+          <p style="font-size:0.8rem;color:var(--muted);margin-top:4px;">Leave empty to keep current document</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalEditCert')">Cancel</button>
+        <button class="btn btn-primary" id="editCertBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Remove Certification -->
+  <div class="modal-overlay" id="modalRemoveCert">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Remove Certification</h3>
+        <button class="modal-close" onclick="closeModal('modalRemoveCert')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to remove this certification from your profile?</p>
+        <input type="hidden" id="removeCertIndex">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalRemoveCert')">Cancel</button>
+        <button class="btn btn-danger" id="removeCertBtn">Remove</button>
       </div>
     </div>
   </div>
@@ -403,7 +413,7 @@
       }
 
       document.querySelector('#modalAddSkill .btn-primary').onclick = function() {
-        var input = document.querySelector('#modalAddSkill input[type="text"]');
+        var input = document.querySelector('#modalAddSkill select');
         var skill = input ? input.value.trim() : '';
         if (!skill) return;
         postAction('user_id=' + userId + '&action=add_skill&skill=' + encodeURIComponent(skill))
@@ -413,17 +423,30 @@
       document.querySelector('#modalRemoveSkill .btn-danger').onclick = function() {
         var skillEl = document.querySelector('.card-body span[style*="inline-flex"] button[style*="danger"]');
         if (!skillEl) return;
-        var skillName = skillEl.parentElement.textContent.trim().replace(/\u00d7$/, '').trim();
+        var displayLabel = skillEl.parentElement.textContent.trim().replace(/\u00d7$/, '').trim();
+        // Map display label back to stored value
+        var skillLabelsReverse = {
+          'Refrigerator Repair': 'refrigerator',
+          'Air Conditioner Repair': 'air-conditioner',
+          'Washing Machine Repair': 'washing-machine',
+          'Dishwasher Repair': 'dishwasher',
+          'Oven/Stove Repair': 'oven',
+          'Microwave Repair': 'microwave',
+          'Television Repair': 'television',
+          'Water Heater Repair': 'water-heater',
+          'Dryer Repair': 'dryer',
+          'Other': 'other'
+        };
+        var skillName = skillLabelsReverse[displayLabel] || displayLabel;
         postAction('user_id=' + userId + '&action=remove_skill&skill=' + encodeURIComponent(skillName))
           .then(function() { location.reload(); }).catch(function() {});
       };
 
-      document.querySelector('#modalAddCert .btn-primary').onclick = function() {
-        var inputs = document.querySelectorAll('#modalAddCert input');
-        var certName = inputs[0] ? inputs[0].value.trim() : '';
-        var issued = inputs[1] ? inputs[1].value : '';
-        var valid = inputs[2] ? inputs[2].value : '';
-        var fileInput = inputs[3];
+      document.querySelector('#addCertBtn').onclick = function() {
+        var certName = document.getElementById('addCertName').value.trim();
+        var issued = document.getElementById('addCertIssued').value;
+        var valid = document.getElementById('addCertValidUntil').value;
+        var fileInput = document.getElementById('addCertFile');
         if (!certName) { showAlert('Please enter a certification name.', 'error'); return; }
         var fd = new FormData();
         fd.append('user_id', userId);
@@ -435,8 +458,88 @@
         fetch('../../controllers/repairman/profile.php', { method: 'POST', body: fd })
           .then(function(r) { return r.json(); })
           .then(function(res) {
-            if (res.success) { showAlert('Certificate added successfully.', 'success'); location.reload(); }
-            else { showAlert(res.message || 'Failed to add certificate.', 'error'); closeModal('modalAddCert'); }
+            if (res.success) {
+              showAlert('Certificate added successfully.', 'success');
+              document.getElementById('addCertName').value = '';
+              document.getElementById('addCertIssued').value = '';
+              document.getElementById('addCertValidUntil').value = '';
+              document.getElementById('addCertFile').value = '';
+              closeModal('modalAddCert');
+              location.reload();
+            }
+            else { showAlert(res.message || 'Failed to add certificate.', 'error'); }
+          })
+          .catch(function() {});
+      };
+
+      // Edit certification
+      window.openEditCertModal = function(index) {
+        var certArr = null;
+        var p = null;
+        // Fetch fresh data to get current certs
+        fetch('../../controllers/repairman/profile.php?user_id=' + userId)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.error) return;
+            p = data.data || {};
+            if (p.Certifications) {
+              try { certArr = JSON.parse(p.Certifications); } catch (e) { certArr = null; }
+              if (!Array.isArray(certArr)) certArr = p.Certifications ? [{ name: String(p.Certifications) }] : [];
+              if (certArr && certArr[index]) {
+                var cert = certArr[index];
+                document.getElementById('editCertIndex').value = index;
+                document.getElementById('editCertName').value = cert.name || '';
+                document.getElementById('editCertIssued').value = cert.issued || '';
+                document.getElementById('editCertValidUntil').value = cert.valid_until || '';
+                document.getElementById('editCertFile').value = '';
+                openModal('modalEditCert');
+              }
+            }
+          })
+          .catch(function() {});
+      };
+
+      document.querySelector('#editCertBtn').onclick = function() {
+        var index = document.getElementById('editCertIndex').value;
+        var certName = document.getElementById('editCertName').value.trim();
+        var issued = document.getElementById('editCertIssued').value;
+        var valid = document.getElementById('editCertValidUntil').value;
+        var fileInput = document.getElementById('editCertFile');
+        if (!certName) { showAlert('Please enter a certification name.', 'error'); return; }
+        var fd = new FormData();
+        fd.append('user_id', userId);
+        fd.append('action', 'edit_cert');
+        fd.append('cert_index', index);
+        fd.append('cert_name', certName);
+        fd.append('issued', issued);
+        fd.append('valid_until', valid);
+        if (fileInput && fileInput.files.length) fd.append('cert_file', fileInput.files[0]);
+        fetch('../../controllers/repairman/profile.php', { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(res) {
+            if (res.success) { showAlert('Certificate updated successfully.', 'success'); closeModal('modalEditCert'); location.reload(); }
+            else { showAlert(res.message || 'Failed to update certificate.', 'error'); }
+          })
+          .catch(function() {});
+      };
+
+      // Remove certification
+      window.openRemoveCertModal = function(index) {
+        document.getElementById('removeCertIndex').value = index;
+        openModal('modalRemoveCert');
+      };
+
+      document.querySelector('#removeCertBtn').onclick = function() {
+        var index = document.getElementById('removeCertIndex').value;
+        var fd = new FormData();
+        fd.append('user_id', userId);
+        fd.append('action', 'remove_cert');
+        fd.append('cert_index', index);
+        fetch('../../controllers/repairman/profile.php', { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(res) {
+            if (res.success) { showAlert('Certificate removed successfully.', 'success'); closeModal('modalRemoveCert'); location.reload(); }
+            else { showAlert(res.message || 'Failed to remove certificate.', 'error'); }
           })
           .catch(function() {});
       };
@@ -490,16 +593,29 @@
 
           if (p.Skills) {
             var skillsArr = typeof p.Skills === 'string' ? p.Skills.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : p.Skills;
-            var skillsContainer = document.querySelector('.card-body[style*="flex"]');
-            if (skillsContainer && skillsContainer.closest('.card').querySelector('h2').textContent === 'Skills') {
+            var skillsContainer = document.getElementById('skillsContainer');
+            if (skillsContainer) {
               skillsContainer.innerHTML = '';
               if (!skillsArr.length) {
                 skillsContainer.innerHTML = '<span style="color:var(--muted);font-size:0.9rem;">No skills listed yet.</span>';
               }
+              var skillLabels = {
+                'refrigerator': 'Refrigerator Repair',
+                'air-conditioner': 'Air Conditioner Repair',
+                'washing-machine': 'Washing Machine Repair',
+                'dishwasher': 'Dishwasher Repair',
+                'oven': 'Oven/Stove Repair',
+                'microwave': 'Microwave Repair',
+                'television': 'Television Repair',
+                'water-heater': 'Water Heater Repair',
+                'dryer': 'Dryer Repair',
+                'other': 'Other'
+              };
               skillsArr.forEach(function(skill) {
                 var span = document.createElement('span');
                 span.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:var(--panel);border-radius:10px;font-size:0.9rem;font-weight:500;';
-                span.innerHTML = escHtml(skill) + ' <button style="background:none;border:0;color:var(--danger);cursor:pointer;font-size:1.1rem;line-height:1;" onclick="openModal(\'modalRemoveSkill\')">&times;</button>';
+                var displayLabel = skillLabels[skill] || skill;
+                span.innerHTML = escHtml(displayLabel) + ' <button style="background:none;border:0;color:var(--danger);cursor:pointer;font-size:1.1rem;line-height:1;" onclick="openModal(\'modalRemoveSkill\')">&times;</button>';
                 skillsContainer.appendChild(span);
               });
             }
@@ -516,39 +632,41 @@
             var certArr = null;
             try { certArr = JSON.parse(p.Certifications); } catch (e) { certArr = null; }
             if (!Array.isArray(certArr)) certArr = p.Certifications ? [{ name: String(p.Certifications) }] : [];
-            var certCards = document.querySelectorAll('.card');
-            certCards.forEach(function(card) {
-              var h2 = card.querySelector('h2');
-              if (h2 && h2.textContent === 'Certifications') {
-                var listContainer = card.querySelector('.card-body-flush');
-                if (listContainer) {
-                  if (certArr.length) {
-                    listContainer.innerHTML = '';
-                    certArr.forEach(function(cert) {
-                      var issued = cert.issued || '—';
-                      var valid = cert.valid_until || '—';
-                      var isExpired = cert.valid_until && new Date(cert.valid_until) < new Date();
-                      var isExpiring = !isExpired && cert.valid_until && (new Date(cert.valid_until) - new Date()) < 30 * 24 * 60 * 60 * 1000;
-                      var badgeCls = isExpired ? 'badge-danger' : (isExpiring ? 'badge-warning' : 'badge-success');
-                      var badgeLabel = isExpired ? 'Expired' : (isExpiring ? 'Expiring Soon' : 'Active');
-                      var docHtml = cert.file
-                        ? '<a href="' + escAttr(cert.file) + '" target="_blank" class="btn btn-secondary btn-sm">View Document</a>'
-                        : '';
-                      var item = document.createElement('div');
-                      item.className = 'list-item';
-                      item.innerHTML = '<div class="list-avatar" style="background:var(--success);"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M12 15l-2 5l9-9l-9 9l2-5z"/><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87l6.91-1.01L12 2z"/></svg></div>' +
-                        '<div class="list-info"><h4>' + escHtml(cert.name || '') + '</h4>' +
-                        '<p>Issued: ' + escHtml(issued) + ' | Valid until: ' + escHtml(valid) + '</p></div>' +
-                        '<span class="badge ' + badgeCls + '">' + badgeLabel + '</span>' +
-                        docHtml;
-                      listContainer.appendChild(item);
-                    });
-                  } else {
-                    listContainer.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:0.9rem;text-align:center;">No certifications yet.</div>';
-                  }
-                }
+            var listContainer = document.getElementById('certificationsContainer');
+            if (listContainer) {
+              if (certArr.length) {
+                listContainer.innerHTML = '';
+                certArr.forEach(function(cert, index) {
+                  var issued = cert.issued || '—';
+                  var valid = cert.valid_until || '—';
+                  var isExpired = cert.valid_until && new Date(cert.valid_until) < new Date();
+                  var isExpiring = !isExpired && cert.valid_until && (new Date(cert.valid_until) - new Date()) < 30 * 24 * 60 * 60 * 1000;
+                  var badgeCls = isExpired ? 'badge-danger' : (isExpiring ? 'badge-warning' : 'badge-success');
+                  var badgeLabel = isExpired ? 'Expired' : (isExpiring ? 'Expiring Soon' : 'Active');
+                  var docHtml = cert.file
+                    ? (function() {
+                        var filePath = escAttr(cert.file);
+                        if (filePath.indexOf('http') !== 0 && filePath.indexOf('/') !== 0) filePath = '../../' + filePath;
+                        return '<a href="' + filePath + '" target="_blank" class="btn btn-secondary btn-sm">View Document</a>';
+                      })()
+                    : '';
+                  var item = document.createElement('div');
+                  item.className = 'list-item';
+                  item.innerHTML = '<div class="list-avatar" style="background:var(--success);"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M12 15l-2 5l9-9l-9 9l2-5z"/><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87l6.91-1.01L12 2z"/></svg></div>' +
+                    '<div class="list-info"><h4>' + escHtml(cert.name || '') + '</h4>' +
+                    '<p>Issued: ' + escHtml(issued) + ' | Valid until: ' + escHtml(valid) + '</p></div>' +
+                    '<span class="badge ' + badgeCls + '">' + badgeLabel + '</span>' +
+                    '<div class="action-btns" style="display:flex;gap:6px;flex-direction:column;">' +
+                    docHtml +
+                    '<button class="btn btn-secondary btn-sm" onclick="openEditCertModal(' + index + ')"><svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+                    '<button class="btn btn-danger btn-sm" onclick="openRemoveCertModal(' + index + ')"><svg viewBox="0 0 24 24" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
+                    '</div>';
+                  listContainer.appendChild(item);
+                });
+              } else {
+                listContainer.innerHTML = '<div class="empty-state" style="text-align:center;padding:40px 20px;color:var(--muted);font-size:0.9rem;">No certifications yet. Click "Add Certification" to add your first certification.</div>';
               }
-            });
+            }
           }
         })
         .catch(function() {});

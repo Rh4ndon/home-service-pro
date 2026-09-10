@@ -740,6 +740,28 @@ function getAdminDashboardStats() {
     $total_repairmen = countAllRecords('user_repairmanprofile', '1');
     $active_tickets = countAllRecords('repairticket', "Status IN ('Open', 'In Progress')");
     $completed_repairs = countAllRecords('repairhistory', '1');
+
+    // Pending approvals (inactive repairmen awaiting activation)
+    $pending_approvals = countAllRecords('user_repairmanprofile', "Status = 'inactive'");
+
+    // Flagged issues: open tickets with no repairman assigned
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM repairticket WHERE Status IN ('Open', 'In Progress') AND Repairman_ID IS NULL");
+    $stmt->execute();
+    $flagged_issues = $stmt->get_result()->fetch_assoc()['total'];
+
+    // Schedules today
+    $today = date('Y-m-d');
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM repairschedule WHERE DATE(Date_Time) = ? AND Status != 'Declined'");
+    $stmt->bind_param("s", $today);
+    $stmt->execute();
+    $schedules_today = $stmt->get_result()->fetch_assoc()['total'];
+
+    // Reports this week (completed repairs this week)
+    $week_start = date('Y-m-d', strtotime('monday this week'));
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM repairhistory WHERE DATE(Date) >= ?");
+    $stmt->bind_param("s", $week_start);
+    $stmt->execute();
+    $reports_this_week = $stmt->get_result()->fetch_assoc()['total'];
     
     // Top repairmen
     $stmt = $conn->prepare("
@@ -771,7 +793,7 @@ function getAdminDashboardStats() {
     $stmt->execute();
     $recent_completions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     
-    return compact('total_customers', 'total_repairmen', 'active_tickets', 'completed_repairs', 'top_repairmen', 'recent_tickets', 'recent_completions');
+    return compact('total_customers', 'total_repairmen', 'active_tickets', 'completed_repairs', 'pending_approvals', 'flagged_issues', 'schedules_today', 'reports_this_week', 'top_repairmen', 'recent_tickets', 'recent_completions');
 }
 
 function getAdminCustomers($search = null) {

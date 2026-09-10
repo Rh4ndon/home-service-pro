@@ -80,7 +80,7 @@
           <svg viewBox="0 0 24 24"><path d="M15 5v2"/><path d="M15 11v2"/><path d="M15 17v2"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
         </div>
         <div class="stat-info">
-          <h3>2</h3>
+          <h3>0</h3>
           <p>Active Tickets</p>
         </div>
       </div>
@@ -89,7 +89,7 @@
           <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </div>
         <div class="stat-info">
-          <h3>1</h3>
+          <h3>0</h3>
           <p>Scheduled Repairs</p>
         </div>
       </div>
@@ -98,7 +98,7 @@
           <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
         </div>
         <div class="stat-info">
-          <h3>3</h3>
+          <h3>0</h3>
           <p>My Appliances</p>
         </div>
       </div>
@@ -107,7 +107,7 @@
           <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <div class="stat-info">
-          <h3>5</h3>
+          <h3>0</h3>
           <p>Completed Repairs</p>
         </div>
       </div>
@@ -121,46 +121,7 @@
           <a href="my-tickets.html" class="btn btn-secondary btn-sm">View All</a>
         </div>
         <div class="card-body-flush">
-          <div class="list-item">
-            <div class="list-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">TK</div>
-            <div class="list-info">
-              <h4>Ticket #1024 — Refrigerator Not Cooling</h4>
-              <p>Samsung RT38 • Aug 15, 2026</p>
-            </div>
-            <span class="badge badge-warning">In Progress</span>
-          </div>
-          <div class="list-item">
-            <div class="list-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">TK</div>
-            <div class="list-info">
-              <h4>Ticket #1019 — Washer Leaking Water</h4>
-              <p>LG F4J5TN8W • Aug 12, 2026</p>
-            </div>
-            <span class="badge badge-info">Open</span>
-          </div>
-          <div class="list-item">
-            <div class="list-avatar" style="background: linear-gradient(135deg, #22c55e, #16a34a);">TK</div>
-            <div class="list-info">
-              <h4>Ticket #1012 — AC Not Blowing Cold</h4>
-              <p>Carrier 42QHB012DS • Aug 8, 2026</p>
-            </div>
-            <span class="badge badge-success">Completed</span>
-          </div>
-          <div class="list-item">
-            <div class="list-avatar" style="background: linear-gradient(135deg, #22c55e, #16a34a);">TK</div>
-            <div class="list-info">
-              <h4>Ticket #1005 — Microwave Won't Heat</h4>
-              <p>Panasonic NN-ST46K • Aug 2, 2026</p>
-            </div>
-            <span class="badge badge-success">Completed</span>
-          </div>
-          <div class="list-item">
-            <div class="list-avatar" style="background: linear-gradient(135deg, #22c55e, #16a34a);">TK</div>
-            <div class="list-info">
-              <h4>Ticket #998 — Electric Fan Not Spinning</h4>
-              <p>KDK A3050 • Jul 28, 2026</p>
-            </div>
-            <span class="badge badge-success">Completed</span>
-          </div>
+          <div class="empty-state" style="text-align:center;padding:32px 20px;color:var(--muted);font-size:0.9rem;">No recent tickets yet. Book your first service to see it here.</div>
         </div>
       </div>
 
@@ -171,17 +132,8 @@
             <h2>Upcoming Schedule</h2>
           </div>
           <div class="card-body">
-            <div style="display:flex; gap:16px; align-items:flex-start;">
-              <div style="min-width:60px; text-align:center; background:rgba(27,141,232,0.08); border-radius:12px; padding:12px 10px;">
-                <div style="font-size:1.6rem; font-weight:800; color:var(--primary); line-height:1;">20</div>
-                <div style="font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; margin-top:4px;">Aug</div>
-              </div>
-              <div style="flex:1;">
-                <h4 style="font-size:0.98rem; font-weight:700; margin-bottom:4px;">Refrigerator Repair — Samsung RT38</h4>
-                <p style="font-size:0.85rem; color:var(--muted); margin:0;">10:00 AM – 12:00 PM</p>
-                <p style="font-size:0.85rem; color:var(--muted); margin:4px 0 0;">Technician: Carlo Santos</p>
-              </div>
-            </div>
+            <div id="upcomingScheduleEmpty" style="text-align:center;padding:12px;color:var(--muted);font-size:0.9rem;">No upcoming scheduled repairs.</div>
+            <div id="upcomingScheduleContent" style="display:flex; gap:16px; align-items:flex-start;"></div>
           </div>
         </div>
 
@@ -250,39 +202,50 @@
         }
         // Populate recent tickets
         var ticketsContainer = document.querySelector('.card-body-flush');
-        if (ticketsContainer && data.recent_tickets && data.recent_tickets.length) {
+        if (ticketsContainer) {
           ticketsContainer.innerHTML = '';
-          data.recent_tickets.forEach(function(t) {
-            var statusBadge = 'badge-info';
-            if (t.Status === 'In Progress') statusBadge = 'badge-warning';
-            else if (t.Status === 'Completed') statusBadge = 'badge-success';
-            else if (t.Status === 'Cancelled') statusBadge = 'badge-danger';
-            var applianceName = t.ApplianceName || 'Appliance';
-            var date = new Date(t.ScheduleDate || t.Date || Date.now()).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
-            var div = document.createElement('div');
-            div.className = 'list-item';
-            div.innerHTML = '<div class="list-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">TK</div>' +
-              '<div class="list-info"><h4>Ticket #' + t.ID + ' \u2014 ' + applianceName + '</h4><p>' + date + '</p></div>' +
-              '<span class="badge ' + statusBadge + '">' + (t.Status || 'Open') + '</span>';
-            ticketsContainer.appendChild(div);
-          });
+          if (data.recent_tickets && data.recent_tickets.length) {
+            data.recent_tickets.forEach(function(t) {
+              var statusBadge = 'badge-info';
+              if (t.Status === 'In Progress') statusBadge = 'badge-warning';
+              else if (t.Status === 'Completed') statusBadge = 'badge-success';
+              else if (t.Status === 'Cancelled') statusBadge = 'badge-danger';
+              var applianceName = t.ApplianceName || 'Appliance';
+              var date = new Date(t.ScheduleDate || t.Date || Date.now()).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+              var div = document.createElement('div');
+              div.className = 'list-item';
+              div.innerHTML = '<div class="list-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">TK</div>' +
+                '<div class="list-info"><h4>Ticket #' + t.ID + ' \u2014 ' + applianceName + '</h4><p>' + date + '</p></div>' +
+                '<span class="badge ' + statusBadge + '">' + (t.Status || 'Open') + '</span>';
+              ticketsContainer.appendChild(div);
+            });
+          } else {
+            ticketsContainer.innerHTML = '<div style="text-align:center;padding:32px 20px;color:var(--muted);font-size:0.9rem;">No recent tickets yet. Book your first service to see it here.</div>';
+          }
         }
         // Populate upcoming schedule
-        var scheduleDiv = document.querySelector('.card-body > div:first-child');
-        if (scheduleDiv && data.upcoming_schedule) {
-          var s = data.upcoming_schedule;
-          var date = new Date(s.Date_Time);
-          var day = date.getDate();
-          var month = date.toLocaleDateString('en-US', {month:'short'});
-          var time = date.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
-          scheduleDiv.innerHTML = '<div style="min-width:60px; text-align:center; background:rgba(27,141,232,0.08); border-radius:12px; padding:12px 10px;">' +
-            '<div style="font-size:1.6rem; font-weight:800; color:var(--primary); line-height:1;">' + day + '</div>' +
-            '<div style="font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; margin-top:4px;">' + month + '</div>' +
-            '</div><div style="flex:1;">' +
-            '<h4 style="font-size:0.98rem; font-weight:700; margin-bottom:4px;">' + (s.ApplianceName || 'Repair') + '</h4>' +
-            '<p style="font-size:0.85rem; color:var(--muted); margin:0;">' + time + '</p>' +
-            '<p style="font-size:0.85rem; color:var(--muted); margin:4px 0 0;">Technician: ' + (s.RepairmanName || 'TBA') + '</p>' +
-            '</div>';
+        var scheduleEmpty = document.getElementById('upcomingScheduleEmpty');
+        var scheduleDiv = document.getElementById('upcomingScheduleContent');
+        if (scheduleEmpty && scheduleDiv) {
+          scheduleDiv.innerHTML = '';
+          if (data.upcoming_schedule) {
+            scheduleEmpty.style.display = 'none';
+            var s = data.upcoming_schedule;
+            var date = new Date(s.Date_Time);
+            var day = date.getDate();
+            var month = date.toLocaleDateString('en-US', {month:'short'});
+            var time = date.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+            scheduleDiv.innerHTML = '<div style="min-width:60px; text-align:center; background:rgba(27,141,232,0.08); border-radius:12px; padding:12px 10px;">' +
+              '<div style="font-size:1.6rem; font-weight:800; color:var(--primary); line-height:1;">' + day + '</div>' +
+              '<div style="font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; margin-top:4px;">' + month + '</div>' +
+              '</div><div style="flex:1;">' +
+              '<h4 style="font-size:0.98rem; font-weight:700; margin-bottom:4px;">' + (s.ApplianceName || 'Repair') + '</h4>' +
+              '<p style="font-size:0.85rem; color:var(--muted); margin:0;">' + time + '</p>' +
+              '<p style="font-size:0.85rem; color:var(--muted); margin:4px 0 0;">Technician: ' + (s.RepairmanName || 'TBA') + '</p>' +
+              '</div>';
+          } else {
+            scheduleEmpty.style.display = '';
+          }
         }
       })
       .catch(function(){});

@@ -383,36 +383,6 @@
           </div>
         </div>
         <div class="chat-contacts">
-          <div class="chat-contact active">
-            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #22c55e, #16a34a);">JD</div>
-            <div class="chat-contact-info">
-              <div class="chat-contact-name">Juan Dela Cruz</div>
-              <div class="chat-contact-preview">Thank you!</div>
-            </div>
-            <div class="chat-contact-meta">
-              <div class="chat-contact-time">10:15 AM</div>
-            </div>
-          </div>
-          <div class="chat-contact">
-            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">AM</div>
-            <div class="chat-contact-info">
-              <div class="chat-contact-name">Ana Mendoza</div>
-              <div class="chat-contact-preview">What time can you come?</div>
-            </div>
-            <div class="chat-contact-meta">
-              <div class="chat-contact-time">9:42 AM</div>
-              <div class="chat-contact-unread">1</div>
-            </div>
-          </div>
-          <div class="chat-contact">
-            <div class="chat-contact-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">AD</div>
-            <div class="chat-contact-info">
-              <div class="chat-contact-name">Admin</div>
-              <div class="chat-contact-preview">New ticket assigned to you.</div>
-            </div>
-            <div class="chat-contact-meta">
-              <div class="chat-contact-time">Yesterday</div>
-            </div>
           </div>
         </div>
       </div>
@@ -421,10 +391,10 @@
       <div class="chat-main">
         <div class="chat-header">
           <div class="chat-header-left">
-            <div class="chat-header-avatar">JD</div>
+            <div class="chat-header-avatar"></div>
             <div>
-              <div class="chat-header-name">Juan Dela Cruz</div>
-              <div class="chat-header-status">Online</div>
+              <div class="chat-header-name">Select a conversation</div>
+              <div class="chat-header-status"></div>
             </div>
           </div>
           <div class="chat-header-actions">
@@ -440,30 +410,10 @@
           </div>
         </div>
 
-        <div class="chat-messages">
-          <div class="chat-bubble sent">
-            Hello! I'm Pedro Santos, your assigned technician.
-            <div class="chat-bubble-time">10:00 AM</div>
-          </div>
-          <div class="chat-bubble received">
-            Hi Pedro! Thank you for accepting the job.
-            <div class="chat-bubble-time">10:03 AM</div>
-          </div>
-          <div class="chat-bubble sent">
-            No problem. I'll be at your location in about 15 minutes.
-            <div class="chat-bubble-time">10:05 AM</div>
-          </div>
-          <div class="chat-bubble received">
-            Great! The washing machine is in the kitchen.
-            <div class="chat-bubble-time">10:08 AM</div>
-          </div>
-          <div class="chat-bubble sent">
-            Noted. I'm almost there now.
-            <div class="chat-bubble-time">10:12 AM</div>
-          </div>
-          <div class="chat-bubble received">
-            Thank you!
-            <div class="chat-bubble-time">10:15 AM</div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="empty-state" style="text-align:center;padding:60px 20px;color:var(--muted);font-size:0.9rem;">
+            <svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--soft);fill:none;stroke-width:1.5;margin-bottom:16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <p>No messages yet. Select a contact to start chatting.</p>
           </div>
         </div>
 
@@ -541,6 +491,20 @@
           .then(function(data) {
             if (!data.contacts) return;
             contactsContainer.innerHTML = '';
+            if (!data.contacts.length) {
+              contactsContainer.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.9rem;">No conversations yet.</div>';
+              // Clear messages and header
+              if (messagesContainer) {
+                messagesContainer.innerHTML = '<div class="empty-state" style="text-align:center;padding:60px 20px;color:var(--muted);font-size:0.9rem;">' +
+                  '<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--soft);fill:none;stroke-width:1.5;margin-bottom:16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+                  '<p>No contacts available. Start a conversation when you have tickets assigned.</p></div>';
+              }
+              if (chatHeaderName) chatHeaderName.textContent = 'Select a conversation';
+              if (chatHeaderAvatar) chatHeaderAvatar.textContent = '';
+              currentContactId = null;
+              currentContactRole = 'customer';
+              return;
+            }
             data.contacts.forEach(function(c, i) {
               var contactInitials = (c.name || 'U').split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
               var div = document.createElement('div');
@@ -583,7 +547,12 @@
           .then(function(r) { return r.json(); })
           .then(function(data) {
             messagesContainer.innerHTML = '';
-            if (!data.messages) return;
+            if (!data.messages || !data.messages.length) {
+              messagesContainer.innerHTML = '<div class="empty-state" style="text-align:center;padding:60px 20px;color:var(--muted);font-size:0.9rem;">' +
+                '<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--soft);fill:none;stroke-width:1.5;margin-bottom:16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+                '<p>No messages yet. Start the conversation!</p></div>';
+              return;
+            }
             data.messages.forEach(function(m) {
               var isSent = String(m.sender_id) === String(userId);
               var time = m.time || m.created_at || '';

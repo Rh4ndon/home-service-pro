@@ -94,131 +94,7 @@
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <tr data-status="assigned">
-                <td>#1045</td>
-                <td>Ana Dela Cruz</td>
-                <td>Refrigerator</td>
-                <td>Fridge not cooling properly</td>
-                <td>Aug 18, 2026</td>
-                <td><span class="badge badge-neutral">Assigned</span></td>
-                <td class="action-btns">
-                  <button class="btn btn-primary btn-sm" onclick="openModal('modalAcceptTicket')">Accept</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
-                </td>
-              </tr>
-              <tr data-status="assigned">
-                <td>#1046</td>
-                <td>Benigno Aquino</td>
-                <td>Air Conditioner</td>
-                <td>AC making loud noise</td>
-                <td>Aug 18, 2026</td>
-                <td><span class="badge badge-neutral">Assigned</span></td>
-                <td class="action-btns">
-                  <button class="btn btn-primary btn-sm" onclick="openModal('modalAcceptTicket')">Accept</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
-                </td>
-              </tr>
-              <tr data-status="assigned">
-                <td>#1047</td>
-                <td>Leonor Rivera</td>
-                <td>Television</td>
-                <td>TV has no sound</td>
-                <td>Aug 17, 2026</td>
-                <td><span class="badge badge-neutral">Assigned</span></td>
-                <td class="action-btns">
-                  <button class="btn btn-primary btn-sm" onclick="openModal('modalAcceptTicket')">Accept</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
-                </td>
-              </tr>
-              <tr data-status="assigned">
-                <td>#1048</td>
-                <td>Gregorio del Pilar</td>
-                <td>Washing Machine</td>
-                <td>Washer not spinning</td>
-                <td>Aug 17, 2026</td>
-                <td><span class="badge badge-neutral">Assigned</span></td>
-                <td class="action-btns">
-                  <button class="btn btn-primary btn-sm" onclick="openModal('modalAcceptTicket')">Accept</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
-                </td>
-              </tr>
-              <tr data-status="progress">
-                <td>#1040</td>
-                <td>Maria Clara</td>
-                <td>Air Conditioner</td>
-                <td>Split-type AC not cooling</td>
-                <td>Aug 15, 2026</td>
-                <td><span class="badge badge-info">In Progress</span></td>
-                <td class="action-btns">
-                  <a href="chat.html" class="btn btn-primary btn-sm">Chat</a>
-                  <a href="call.html" class="btn btn-success btn-sm">Call</a>
-                  <button class="btn btn-success btn-sm" onclick="openModal('modalUpdateStatus')">Mark Complete</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
-                </td>
-              </tr>
-              <tr data-status="progress">
-                <td>#1041</td>
-                <td>Jose Rizal</td>
-                <td>Electric Fan</td>
-                <td>Fan oscillation broken</td>
-                <td>Aug 14, 2026</td>
-                <td><span class="badge badge-info">In Progress</span></td>
-                <td class="action-btns">
-                  <a href="chat.html" class="btn btn-primary btn-sm">Chat</a>
-                  <a href="call.html" class="btn btn-success btn-sm">Call</a>
-                  <button class="btn btn-success btn-sm" onclick="openModal('modalUpdateStatus')">Mark Complete</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
-                </td>
-              </tr>
-              <tr data-status="progress">
-                <td>#1042</td>
-                <td>Emilio Jacinto</td>
-                <td>Dishwasher</td>
-                <td>Dishwasher leaking water</td>
-                <td>Aug 14, 2026</td>
-                <td><span class="badge badge-info">In Progress</span></td>
-                <td class="action-btns">
-                  <a href="chat.html" class="btn btn-primary btn-sm">Chat</a>
-                  <a href="call.html" class="btn btn-success btn-sm">Call</a>
-                  <button class="btn btn-success btn-sm" onclick="openModal('modalUpdateStatus')">Mark Complete</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
-                </td>
-              </tr>
-              <tr data-status="completed">
-                <td>#1035</td>
-                <td>Corazon Aquino</td>
-                <td>Microwave Oven</td>
-                <td>Microwave not heating</td>
-                <td>Aug 12, 2026</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
-                </td>
-              </tr>
-              <tr data-status="completed">
-                <td>#1036</td>
-                <td>Ramon Magsaysay</td>
-                <td>Gas Range</td>
-                <td>Stove burner not igniting</td>
-                <td>Aug 11, 2026</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
-                </td>
-              </tr>
-              <tr data-status="completed">
-                <td>#1037</td>
-                <td>Gabriela Silang</td>
-                <td>Water Heater</td>
-                <td>Heater not producing hot water</td>
-                <td>Aug 10, 2026</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td class="action-btns">
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('modalViewTicket')">View</button>
-                </td>
-              </tr>
-            </tbody>
+            <tbody></tbody>
           </table>
         </div>
       </div>
@@ -427,10 +303,20 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
           var tickets = data.data || data.tickets || data;
-          if (!tickets || !tickets.length) return;
           var tbody = document.querySelector('#ticketTable tbody');
           if (!tbody) return;
           tbody.innerHTML = '';
+          if (!tickets || !tickets.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">No tickets assigned.</td></tr>';
+            var tabs = document.querySelectorAll('.tab');
+            if (tabs.length >= 4) {
+              tabs[0].textContent = 'All (0)';
+              tabs[1].textContent = 'Assigned to Me (0)';
+              tabs[2].textContent = 'In Progress (0)';
+              tabs[3].textContent = 'Completed (0)';
+            }
+            return;
+          }
           var counts = { all: 0, assigned: 0, progress: 0, completed: 0 };
 
           tickets.forEach(function(t) {

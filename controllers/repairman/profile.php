@@ -56,6 +56,12 @@ function handle_post() {
         case 'add_cert':
             handle_add_cert($user_id);
             break;
+        case 'edit_cert':
+            handle_edit_cert($user_id);
+            break;
+        case 'remove_cert':
+            handle_remove_cert($user_id);
+            break;
         default:
             http_response_code(400);
             echo json_encode(["success" => false, "message" => "Invalid action."]);
@@ -212,6 +218,92 @@ function handle_add_cert($user_id) {
     } else {
         http_response_code(500);
         echo json_encode(["success" => false, "message" => "Failed to add certificate."]);
+    }
+}
+
+function handle_edit_cert($user_id) {
+    $cert_index = $_POST['cert_index'] ?? '';
+    $cert_name = $_POST['cert_name'] ?? '';
+    $issued = $_POST['issued'] ?? '';
+    $valid_until = $_POST['valid_until'] ?? '';
+
+    if ($cert_index === '' || empty($cert_name)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Certificate index and name are required."]);
+        return;
+    }
+
+    $profile = getRepairmanProfile($user_id);
+    if (!$profile) {
+        http_response_code(404);
+        echo json_encode(["success" => false, "message" => "Repairman profile not found."]);
+        return;
+    }
+
+    $current_certs = $profile['Certifications'] ?? '[]';
+    $certs_array = json_decode($current_certs, true);
+    if (!is_array($certs_array) || !isset($certs_array[$cert_index])) {
+        http_response_code(404);
+        echo json_encode(["success" => false, "message" => "Certificate not found."]);
+        return;
+    }
+
+    // Update the certificate
+    $certs_array[$cert_index]['name'] = $cert_name;
+    $certs_array[$cert_index]['issued'] = $issued;
+    $certs_array[$cert_index]['valid_until'] = $valid_until;
+
+    // Attach an uploaded document, if any
+    if (!empty($_FILES['cert_file']) && $_FILES['cert_file']['error'] === UPLOAD_ERR_OK) {
+        $path = saveUploadedCertFile($_FILES['cert_file']['tmp_name'], $_FILES['cert_file']['name']);
+        if ($path) {
+            $certs_array[$cert_index]['file'] = $path;
+        }
+    }
+
+    $new_certs = json_encode($certs_array);
+
+    if (updateRepairmanCerts($profile['ID'], $new_certs)) {
+        echo json_encode(["success" => true, "message" => "Certificate updated successfully.", "certifications" => $certs_array]);
+    } else {
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => "Failed to update certificate."]);
+    }
+}
+
+function handle_remove_cert($user_id) {
+    $cert_index = $_POST['cert_index'] ?? '';
+
+    if ($cert_index === '') {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Certificate index is required."]);
+        return;
+    }
+
+    $profile = getRepairmanProfile($user_id);
+    if (!$profile) {
+        http_response_code(404);
+        echo json_encode(["success" => false, "message" => "Repairman profile not found."]);
+        return;
+    }
+
+    $current_certs = $profile['Certifications'] ?? '[]';
+    $certs_array = json_decode($current_certs, true);
+    if (!is_array($certs_array) || !isset($certs_array[$cert_index])) {
+        http_response_code(404);
+        echo json_encode(["success" => false, "message" => "Certificate not found."]);
+        return;
+    }
+
+    // Remove the certificate
+    array_splice($certs_array, $cert_index, 1);
+    $new_certs = json_encode(array_values($certs_array)); // Re-index array
+
+    if (updateRepairmanCerts($profile['ID'], $new_certs)) {
+        echo json_encode(["success" => true, "message" => "Certificate removed successfully.", "certifications" => $certs_array]);
+    } else {
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => "Failed to remove certificate."]);
     }
 }
 

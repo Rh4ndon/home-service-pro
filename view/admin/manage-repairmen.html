@@ -213,43 +213,7 @@
         <button class="modal-close" onclick="closeModal('viewProfileModal')">&times;</button>
       </div>
       <div class="modal-body">
-        <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
-          <div class="list-avatar" style="width:56px;height:56px;font-size:1.1rem;background:linear-gradient(135deg,#22c55e,#16a34a);">JD</div>
-          <div>
-            <h3 style="font-size:1.15rem;font-weight:700;">Juan Dela Rosa</h3>
-            <p style="font-size:0.88rem;color:var(--muted);">R001 &middot; juan.delarosa@email.com</p>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
-            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Mobile</div>
-            <div style="font-size:0.92rem;font-weight:500;">09171234567</div>
-          </div>
-          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
-            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Tel No.</div>
-            <div style="font-size:0.92rem;font-weight:500;">(02) 8123-4567</div>
-          </div>
-          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;">
-            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Address</div>
-            <div style="font-size:0.92rem;font-weight:500;">45 Rizal St., Brgy. San Antonio, Quezon City, Metro Manila, 1112</div>
-          </div>
-          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
-            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Skills</div>
-            <div style="font-size:0.92rem;font-weight:500;">Refrigerator, Aircon</div>
-          </div>
-          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;">
-            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Rating</div>
-            <div style="font-size:0.92rem;"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span> 5.0</div>
-          </div>
-          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;">
-            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Education</div>
-            <div style="font-size:0.92rem;font-weight:500;">Technical Education and Skills Development Authority (TESDA) - NCII Refrigeration and Air Conditioning</div>
-          </div>
-          <div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;">
-            <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Certifications</div>
-            <div style="font-size:0.92rem;font-weight:500;">TESDA NCII Refrigeration & Air Conditioning Servicing, DOLE Safety Training Certificate</div>
-          </div>
-        </div>
+        <div class="empty-state" style="text-align:center;padding:40px 20px;color:var(--muted);font-size:0.9rem;">Select a repairman to view their profile details.</div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('viewProfileModal')">Close</button>
@@ -343,10 +307,6 @@
         <div class="form-group">
           <label>Email Address</label>
           <input type="email" id="editEmail">
-        </div>
-        <div class="form-group">
-          <label>Address</label>
-          <input type="text" id="editAddress">
         </div>
         <div class="grid-2">
           <div class="form-group">
@@ -545,7 +505,20 @@
       repairmen.forEach(function(r) {
         var name = r.Name || '';
         var email = r.Email || '';
+        var skillLabels = {
+          'refrigerator': 'Refrigerator Repair',
+          'air-conditioner': 'Air Conditioner Repair',
+          'washing-machine': 'Washing Machine Repair',
+          'dishwasher': 'Dishwasher Repair',
+          'oven': 'Oven/Stove Repair',
+          'microwave': 'Microwave Repair',
+          'television': 'Television Repair',
+          'water-heater': 'Water Heater Repair',
+          'dryer': 'Dryer Repair',
+          'other': 'Other'
+        };
         var skills = r.Skills || '';
+        var skillsDisplay = skills.split(',').map(function(s) { return skillLabels[s.trim()] || s.trim(); }).join(', ');
         var rating = r.Ratings || 0;
         var avail = r.Availability || 'available';
         var status = (r.Status || 'active').toLowerCase();
@@ -560,7 +533,7 @@
           '<td>' + profileId + '</td>' +
           '<td>' + name + '</td>' +
           '<td>' + email + '</td>' +
-          '<td>' + skills + '</td>' +
+          '<td>' + skillsDisplay + '</td>' +
           '<td><span class="stars">' + renderStars(rating) + '</span></td>' +
           '<td>' + renderAvailability(avail) + '</td>' +
           '<td>' + renderStatus(status) + '</td>' +
@@ -616,7 +589,6 @@
               var email = r.Email || '';
               var mobile = r.MobileNo || '';
               var tel = r.TelNo || '';
-              var addr = r.Address || 'N/A';
               var skills = r.Skills || 'N/A';
               var rating = parseFloat(r.Ratings) || 0;
               var education = r.Education || 'N/A';
@@ -651,8 +623,7 @@
                   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">' +
 '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Mobile</div><div style="font-size:0.92rem;font-weight:500;">' + mobile + '</div></div>' +
           '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Facebook Page</div><div style="font-size:0.92rem;font-weight:500;">' + (r.FacebookPage || '—') + '</div></div>' +
-                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Address</div><div style="font-size:0.92rem;font-weight:500;">' + addr + '</div></div>' +
-                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Skills</div><div style="font-size:0.92rem;font-weight:500;">' + skills + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Skills</div><div style="font-size:0.92rem;font-weight:500;">' + skillsDisplay + '</div></div>' +
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Rating</div><div style="font-size:0.92rem;"><span class="stars">' + stars + '</span> ' + rating.toFixed(1) + '</div></div>' +
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Education</div><div style="font-size:0.92rem;font-weight:500;">' + education + '</div></div>' +
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Certifications</div><div style="font-size:0.92rem;font-weight:500;">' + certsHtml + '</div></div>' +
@@ -671,13 +642,11 @@
               var modal = document.getElementById('editRepairmanModal');
               var nameInput = document.getElementById('editName');
               var emailInput = document.getElementById('editEmail');
-              var addressInput = document.getElementById('editAddress');
               var mobileInput = document.getElementById('editMobile');
               var fbInput = document.getElementById('editFacebookPage');
               var availSelect = document.getElementById('editAvailability');
               if (nameInput) nameInput.value = r.Name || '';
               if (emailInput) emailInput.value = r.Email || '';
-              if (addressInput) addressInput.value = r.Address || '';
               if (mobileInput) mobileInput.value = r.MobileNo || '';
               if (fbInput) fbInput.value = r.FacebookPage || '';
               if (availSelect) {
@@ -742,7 +711,6 @@ var addBtn = document.querySelector('#addRepairmanModal .btn-primary');
         var name = (document.getElementById('addName') || {}).value || '';
         var email = (document.getElementById('addEmail') || {}).value || '';
         var mobile = (document.getElementById('addMobile') || {}).value || '';
-        var address = (document.getElementById('addAddress') || {}).value || '';
         var education = (document.getElementById('addEducation') || {}).value || '';
         var facebook_page = (document.getElementById('addFacebookPage') || {}).value || '';
         if (!name || !email) { showAlert('Name and email are required', 'error'); return; }
@@ -758,7 +726,6 @@ var addBtn = document.querySelector('#addRepairmanModal .btn-primary');
         fd.append('name', name);
         fd.append('email', email);
         fd.append('mobile', mobile);
-        fd.append('address', address);
         fd.append('skills', skills.join(','));
         fd.append('education', education);
         fd.append('facebook_page', facebook_page);
@@ -777,7 +744,7 @@ var addBtn = document.querySelector('#addRepairmanModal .btn-primary');
             if (data.success) {
               closeModal('addRepairmanModal');
               loadRepairmen(searchInput ? searchInput.value : '');
-              ['addName', 'addEmail', 'addMobile', 'addAddress', 'addSkills'].forEach(function(id) {
+              ['addName', 'addEmail', 'addMobile'].forEach(function(id) {
                 var el = document.getElementById(id);
                 if (el) el.value = '';
               });
@@ -804,7 +771,6 @@ var addBtn = document.querySelector('#addRepairmanModal .btn-primary');
         if (!selectedRepairmanId) return;
         var nameInput = document.getElementById('editName');
         var emailInput = document.getElementById('editEmail');
-        var addressInput = document.getElementById('editAddress');
         var mobileInput = document.getElementById('editMobile');
         var availSelect = document.getElementById('editAvailability');
         var educationInput = document.getElementById('editEducation');
@@ -813,7 +779,6 @@ var addBtn = document.querySelector('#addRepairmanModal .btn-primary');
         fd.append('id', selectedRepairmanId);
         fd.append('name', nameInput ? nameInput.value : '');
         fd.append('email', emailInput ? emailInput.value : '');
-        fd.append('address', addressInput ? addressInput.value : '');
         fd.append('mobile', mobileInput ? mobileInput.value : '');
         fd.append('availability', availSelect ? availSelect.value : '');
         fd.append('education', educationInput ? educationInput.value : '');

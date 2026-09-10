@@ -4,14 +4,16 @@ include '../../models/functions.php';
 
 header('Content-Type: application/json');
 
-function get_user_id() {
+function get_user_id()
+{
     if (!empty($_SESSION['user_id'])) return $_SESSION['user_id'];
     if (!empty($_GET['user_id'])) return $_GET['user_id'];
     if (!empty($_POST['user_id'])) return $_POST['user_id'];
     return null;
 }
 
-function handle_get() {
+function handle_get()
+{
     $user_id = get_user_id();
     if (!$user_id) {
         http_response_code(400);
@@ -30,7 +32,8 @@ function handle_get() {
     echo json_encode(["success" => true, "data" => $tickets]);
 }
 
-function handle_post() {
+function handle_post()
+{
     $user_id = get_user_id();
     if (!$user_id) {
         http_response_code(400);
@@ -53,7 +56,8 @@ function handle_post() {
     }
 }
 
-function handle_accept($user_id) {
+function handle_accept($user_id)
+{
     $ticket_id = $_POST['ticket_id'] ?? '';
 
     if (empty($ticket_id)) {
@@ -77,7 +81,8 @@ function handle_accept($user_id) {
     }
 }
 
-function handle_complete($user_id) {
+function handle_complete($user_id)
+{
     $ticket_id = $_POST['ticket_id'] ?? '';
 
     if (empty($ticket_id)) {

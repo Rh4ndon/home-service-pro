@@ -456,10 +456,10 @@
       <div class="chat-main">
         <div class="chat-header">
           <div class="chat-header-left">
-            <div class="chat-header-avatar">PS</div>
+            <div class="chat-header-avatar"></div>
             <div>
-              <div class="chat-header-name">Pedro Santos</div>
-              <div class="chat-header-status">Online</div>
+              <div class="chat-header-name">Select a conversation</div>
+              <div class="chat-header-status"></div>
             </div>
           </div>
           <div class="chat-header-actions">
@@ -492,17 +492,8 @@
         <div class="chat-map-placeholder"></div>
         <div class="chat-map-info">
           <div class="chat-map-info-label">Technician Location</div>
-          <div class="chat-map-info-row">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span>123 Rizal St, Makati City</span>
-          </div>
-          <div class="chat-map-info-row">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            ETA: <span style="margin-left:4px;">12 minutes</span>
-          </div>
-          <div class="chat-map-info-row">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-            0917-123-4567
+          <div class="empty-state" style="text-align:center;padding:20px;color:var(--muted);font-size:0.85rem;">
+            Select a conversation to see technician details
           </div>
         </div>
       </div>
@@ -565,14 +556,33 @@
       'linear-gradient(135deg, #ef4444, #dc2626)'
     ];
 
-    function loadContacts() {
-      if (!userId || !contactsContainer) return;
-      fetch('../../controllers/chat/contacts.php?user_id=' + userId + '&user_role=customer')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (!data.contacts) return;
-          contactsContainer.innerHTML = '';
-          data.contacts.forEach(function(c, i) {
+function loadContacts() {
+        if (!userId || !contactsContainer) return;
+        fetch('../../controllers/chat/contacts.php?user_id=' + userId + '&user_role=customer')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (!data.contacts) return;
+            contactsContainer.innerHTML = '';
+            if (!data.contacts.length) {
+              contactsContainer.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.9rem;">No conversations yet.</div>';
+              if (messagesContainer) {
+                messagesContainer.innerHTML = '<div class="empty-state" style="text-align:center;padding:60px 20px;color:var(--muted);font-size:0.9rem;">' +
+                  '<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--soft);fill:none;stroke-width:1.5;margin-bottom:16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+                  '<p>No contacts available. Start a conversation when you book a service.</p></div>';
+              }
+              if (chatHeaderName) chatHeaderName.textContent = 'Select a conversation';
+              if (chatHeaderAvatar) chatHeaderAvatar.textContent = '';
+              // Reset map panel
+              var mapInfo = document.querySelector('.chat-map-info');
+              if (mapInfo) {
+                mapInfo.innerHTML = '<div class="chat-map-info-label">Technician Location</div>' +
+                  '<div class="empty-state" style="text-align:center;padding:20px;color:var(--muted);font-size:0.85rem;">Select a conversation to see technician details</div>';
+              }
+              currentContactId = null;
+              currentContactRole = 'repairman';
+              return;
+            }
+            data.contacts.forEach(function(c, i) {
             var contactInitials = (c.name || 'U').split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
             var div = document.createElement('div');
             div.className = 'chat-contact';
@@ -613,9 +623,14 @@
       fetch('../../controllers/chat/messages.php?user_id=' + userId + '&user_role=customer&contact_id=' + contactId + '&contact_role=' + (contactRole || 'repairman'))
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          messagesContainer.innerHTML = '';
-          if (!data.messages) return;
-          data.messages.forEach(function(m) {
+messagesContainer.innerHTML = '';
+            if (!data.messages || !data.messages.length) {
+              messagesContainer.innerHTML = '<div class="empty-state" style="text-align:center;padding:60px 20px;color:var(--muted);font-size:0.9rem;">' +
+                '<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--soft);fill:none;stroke-width:1.5;margin-bottom:16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+                '<p>No messages yet. Start the conversation!</p></div>';
+              return;
+            }
+            data.messages.forEach(function(m) {
             var isSent = String(m.sender_id) === String(userId);
             var time = m.time || m.created_at || '';
             if (time && time.length > 5) {
