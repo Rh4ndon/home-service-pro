@@ -71,10 +71,12 @@ function handle_post() {
 function handle_update($user_id) {
     $name = $_POST['name'] ?? '';
     $email = $_POST['email'] ?? '';
-    $address = $_POST['address'] ?? '';
     $mobile = $_POST['mobile'] ?? '';
     $facebook_page = $_POST['facebook_page'] ?? '';
     $education = $_POST['education'] ?? null;
+    $latitude = $_POST['latitude'] ?? '';
+    $longitude = $_POST['longitude'] ?? '';
+    $formatted_address = $_POST['formatted_address'] ?? '';
 
     if (empty($name) || empty($email)) {
         http_response_code(400);
@@ -82,7 +84,12 @@ function handle_update($user_id) {
         return;
     }
 
-    if (updateRepairmanProfile($user_id, $name, $email, $address, $mobile, $facebook_page)) {
+    // Keep the old address for backward compatibility, but don't require it
+    $old_address = ''; // No longer collected from UI
+    if (updateRepairmanProfile($user_id, $name, $email, $old_address, $mobile, $facebook_page)) {
+        if ($latitude !== '' && $longitude !== '') {
+            updateRepairmanLocation($user_id, $latitude, $longitude, $formatted_address);
+        }
         if ($education !== null) {
             $profile = getRepairmanProfile($user_id);
             if ($profile) {

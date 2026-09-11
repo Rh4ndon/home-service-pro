@@ -44,6 +44,25 @@
                 </button>
               </div>
             </div>
+            <div class="form-group">
+              <label for="pickupLocation">Your Location <span style="color:var(--danger);">*</span></label>
+              <p style="font-size:0.82rem;color:var(--muted);margin-top:4px;margin-bottom:10px;">Pin your address on the map, search for it, or use your device location. This lets nearby repairmen find you.</p>
+              <div class="hs-location-picker">
+                <div class="hs-map-wrap">
+                  <div class="hs-map-canvas" id="signupMap"></div>
+                  <div class="hs-search-bar">
+                    <div class="hs-search-bar-inner">
+                      <input type="text" id="signupAddressSearch" placeholder="Search your address..." autocomplete="off" />
+                      <button type="button" class="hs-locate-btn" id="signupLocateBtn">&#9672; Use my location</button>
+                    </div>
+                  </div>
+                </div>
+                <input type="hidden" id="signupLat" />
+                <input type="hidden" id="signupLng" />
+                <input type="hidden" id="signupAddress" />
+                <div class="hs-location-status" id="signupLocationStatus">Set your location using the map, search, or device location.</div>
+              </div>
+            </div>
             <button class="btn btn-primary" type="button" id="signupBtn">Create Account</button>
           </form>
         </div>
@@ -73,7 +92,31 @@
     </div>
 
     <script src="../shared.js"></script>
+    <script src="../location-picker.js"></script>
     <script>
+    var signupLocationStatusEl = document.getElementById('signupLocationStatus');
+
+    function signupLocationReady() {
+      return !!document.getElementById('signupLat').value && !!document.getElementById('signupLng').value;
+    }
+    function updateLocationStatus() {
+      if (signupLocationReady()) {
+        var addr = document.getElementById('signupAddress').value;
+        signupLocationStatusEl.classList.remove('is-required');
+        signupLocationStatusEl.textContent = 'Location set: ' + (addr || document.getElementById('signupLat').value + ', ' + document.getElementById('signupLng').value);
+      }
+    }
+    initLocationPicker({
+      mapEl: 'signupMap',
+      latInput: 'signupLat',
+      lngInput: 'signupLng',
+      addressInput: 'signupAddress',
+      searchInput: 'signupAddressSearch',
+      deviceBtn: 'signupLocateBtn',
+      onSelect: function(){ updateLocationStatus(); },
+      onLocating: function(on){ if (signupLocationStatusEl) signupLocationStatusEl.textContent = on ? 'Fetching location...' : 'Location set.'; }
+    });
+
     document.getElementById('signupBtn').addEventListener('click', function() {
       var name = document.getElementById('fullName').value.trim();
       var email = document.getElementById('email').value.trim();
@@ -81,6 +124,10 @@
       var confirmPassword = document.getElementById('confirmPassword').value;
       if (!name || !email || !password || !confirmPassword) { showAlert('Please fill in all fields', 'warning'); return; }
       if (password !== confirmPassword) { showAlert('Passwords do not match', 'warning'); return; }
+      if (!signupLocationReady()) {
+        showAlert('Please set your location on the map before continuing.', 'warning');
+        return;
+      }
       openModal('confirmSignup');
     });
     document.getElementById('confirmSignupBtn').addEventListener('click', function() {
@@ -91,6 +138,9 @@
       btn.innerHTML = 'Creating Account...'; btn.disabled = true;
       var fd = new FormData();
       fd.append('name', name); fd.append('email', email); fd.append('password', password); fd.append('role', 'customer');
+      fd.append('latitude', document.getElementById('signupLat').value);
+      fd.append('longitude', document.getElementById('signupLng').value);
+      fd.append('formatted_address', document.getElementById('signupAddress').value);
       fetch('../../controllers/register.php', { method: 'POST', body: fd })
         .then(function(r){ return r.json(); })
         .then(function(data){

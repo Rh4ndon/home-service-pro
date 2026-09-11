@@ -15,20 +15,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'name' => $profile['Name'],
         'full_name' => $profile['Name'],
         'email' => $profile['Email'],
-        'address' => [
-            'address_line1' => $profile['Address_Line1'] ?? '',
-            'address_line2' => $profile['Address_Line2'] ?? '',
-            'barangay' => $profile['Brgy'] ?? '',
-            'city' => $profile['City_Min'] ?? '',
-            'province' => $profile['Province'] ?? '',
-            'region' => $profile['Region'] ?? '',
-            'zip_code' => $profile['Zip_Code'] ?? '',
-        ],
+        'latitude' => $profile['Latitude'] ?? null,
+        'longitude' => $profile['Longitude'] ?? null,
+        'formatted_address' => $profile['Formatted_Address'] ?? '',
         'contact' => [
             'primary_mobile' => $profile['Prl_MobileNo'] ?? '',
-            'primary_telephone' => $profile['Prl_TelNo'] ?? '',
-            'secondary_mobile' => $profile['Sec_MobileNo'] ?? '',
-            'secondary_telephone' => $profile['Sec_TelNo'] ?? '',
         ],
     ];
     echo json_encode(['status' => 'success', 'profile' => $response]);
@@ -41,28 +32,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     updateCustomerProfile($profile['ID'], $name, $email);
 
-    // Update address and contact fields directly on profile
+    // Update mobile only
     $stmt = $GLOBALS['conn']->prepare("
         UPDATE user_clientprofile 
-        SET Address_Line1=?, Address_Line2=?, Brgy=?, City_Min=?, Province=?, Region=?, Zip_Code=?,
-            Prl_MobileNo=?, Prl_TelNo=?, Sec_MobileNo=?, Sec_TelNo=?
+        SET Prl_MobileNo=?
         WHERE ID=?
     ");
-    $stmt->bind_param("sssssssssssi",
-        $_POST['address_line1'] ?? '',
-        $_POST['address_line2'] ?? '',
-        $_POST['barangay'] ?? '',
-        $_POST['city'] ?? '',
-        $_POST['province'] ?? '',
-        $_POST['region'] ?? '',
-        $_POST['zip_code'] ?? '',
-        $_POST['primary_mobile'] ?? '',
-        $_POST['primary_telephone'] ?? '',
-        $_POST['secondary_mobile'] ?? '',
-        $_POST['secondary_telephone'] ?? '',
-        $profile['ID']
-    );
+    $pm = $_POST['primary_mobile'] ?? '';
+    $stmt->bind_param("si", $pm, $profile['ID']);
     $stmt->execute();
+
+    // Update geographic coordinates (map pin) separately
+    updateCustomerLocation(
+        $profile['ID'],
+        $_POST['latitude'] ?? '',
+        $_POST['longitude'] ?? '',
+        $_POST['formatted_address'] ?? ''
+    );
 
     echo json_encode(['status' => 'success', 'message' => 'Profile updated successfully.']);
     exit;

@@ -142,66 +142,35 @@
         </form>
       </div>
 
-      <!-- Address -->
+      <!-- Service Location (Map Pin) -->
       <div class="profile-section">
-        <div class="section-label">Address</div>
-        <form id="addressForm" onsubmit="return false;">
-          <div class="grid-2">
-            <div class="form-group">
-              <label for="addressLine1">Address Line 1</label>
-              <input type="text" id="addressLine1" value="123 Rizal Avenue" />
-            </div>
-            <div class="form-group">
-              <label for="addressLine2">Address Line 2</label>
-              <input type="text" id="addressLine2" value="Unit 4B, Sunshine Towers" />
-            </div>
-          </div>
-          <div class="grid-2">
-            <div class="form-group">
-              <label for="brgy">Barangay</label>
-              <input type="text" id="brgy" value="San Antonio" />
-            </div>
-            <div class="form-group">
-              <label for="city">City / Municipality</label>
-              <input type="text" id="city" value="Makati City" />
+        <div class="section-label">Service Location</div>
+        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:14px;">This coordinates-based address is what repairmen use to find you. Pin it on the map, search it, or use your device location.</p>
+        <div class="hs-location-picker">
+          <div class="hs-map-wrap">
+            <div class="hs-map-canvas" id="profileMap"></div>
+            <div class="hs-search-bar">
+              <div class="hs-search-bar-inner">
+                <input type="text" id="profileAddressSearch" placeholder="Search your address..." autocomplete="off" />
+                <button type="button" class="hs-locate-btn" id="profileLocateBtn">&#9672; Use my location</button>
+              </div>
             </div>
           </div>
-          <div class="grid-2">
-            <div class="form-group">
-              <label for="province">Province</label>
-              <input type="text" id="province" value="Metro Manila" />
-            </div>
-            <div class="form-group">
-              <label for="region">Region</label>
-              <input type="text" id="region" value="NCR" />
-            </div>
-          </div>
-          <div class="form-group" style="max-width:280px;">
-            <label for="zipCode">Zip Code</label>
-            <input type="text" id="zipCode" value="1203" />
-          </div>
-        </form>
+          <input type="hidden" id="profileLat" />
+          <input type="hidden" id="profileLng" />
+          <input type="hidden" id="profileAddress" />
+          <div class="hs-location-status" id="profileLocationStatus">Set your location using the map, search, or device location.</div>
+        </div>
       </div>
 
       <!-- Contact Information -->
       <div class="profile-section">
         <div class="section-label">Contact Information</div>
         <form id="contactForm" onsubmit="return false;">
-          <div class="grid-2">
-            <div class="form-group">
-              <label for="prlMobile">Primary Mobile No.</label>
-              <input type="tel" id="prlMobile" value="+63 917 123 4567" />
-            </div>
-            <div class="form-group">
-              <label for="prlTel">Primary Telephone No.</label>
-              <input type="tel" id="prlTel" value="(02) 8888-1234" />
-            </div>
+          <div class="form-group">
+            <label for="prlMobile">Mobile Number</label>
+            <input type="tel" id="prlMobile" value="+63 917 123 4567" />
           </div>
-          <div class="grid-2">
-            <div class="form-group">
-              <label for="secMobile">Secondary Mobile No.</label>
-              <input type="tel" id="secMobile" value="+63 928 765 4321" />
-            </div>
             <div class="form-group">
               <label for="secTel">Secondary Telephone No.</label>
               <input type="tel" id="secTel" value="" placeholder="Optional" />
@@ -258,6 +227,7 @@
   </div>
 
   <script src="../shared.js"></script>
+  <script src="../location-picker.js"></script>
   <script>
   (function() {
     if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
@@ -280,20 +250,31 @@
         var con = d.contact || {};
         document.getElementById('profileName').value = d.name || d.full_name || userName || '';
         document.getElementById('profileEmail').value = d.email || '';
-        document.getElementById('addressLine1').value = d.address_line1 || addr.address_line1 || '';
-        document.getElementById('addressLine2').value = d.address_line2 || addr.address_line2 || '';
-        document.getElementById('brgy').value = d.barangay || addr.barangay || '';
-        document.getElementById('city').value = d.city || addr.city || '';
-        document.getElementById('province').value = d.province || addr.province || '';
-        document.getElementById('region').value = d.region || addr.region || '';
-        document.getElementById('zipCode').value = d.zip_code || addr.zip_code || '';
         document.getElementById('prlMobile').value = d.primary_mobile || con.primary_mobile || '';
-        document.getElementById('prlTel').value = d.primary_telephone || con.primary_telephone || '';
-        document.getElementById('secMobile').value = d.secondary_mobile || con.secondary_mobile || '';
-        document.getElementById('secTel').value = d.secondary_telephone || con.secondary_telephone || '';
-        if (profileAvatar) profileAvatar.textContent = getInitials(d.name || d.full_name || userName);
-        if (profileNameDisplay) profileNameDisplay.textContent = d.name || d.full_name || userName || '';
-        if (profileEmailDisplay) profileEmailDisplay.textContent = d.email || '';
+
+        var initLat = parseFloat(d.latitude) || '';
+        var initLng = parseFloat(d.longitude) || '';
+        document.getElementById('profileLat').value = initLat;
+        document.getElementById('profileLng').value = initLng;
+        document.getElementById('profileAddress').value = d.formatted_address || '';
+        var statusEl = document.getElementById('profileLocationStatus');
+        if (initLat && initLng) {
+          statusEl.classList.remove('is-required');
+          statusEl.textContent = 'Location set: ' + (d.formatted_address || (initLat + ', ' + initLng));
+        }
+        initLocationPicker({
+          mapEl: 'profileMap',
+          latInput: 'profileLat',
+          lngInput: 'profileLng',
+          addressInput: 'profileAddress',
+          searchInput: 'profileAddressSearch',
+          deviceBtn: 'profileLocateBtn',
+          onSelect: function() {
+            var s = document.getElementById('profileLocationStatus');
+            if (s) { s.classList.remove('is-required'); s.textContent = 'Location set.'; }
+          },
+          onLocating: function(on) { if (statusEl) statusEl.textContent = on ? 'Fetching location...' : 'Location set.'; }
+        });
       })
       .catch(function(){});
 
@@ -302,17 +283,13 @@
       fd.append('user_id', userId);
       fd.append('name', document.getElementById('profileName').value);
       fd.append('email', document.getElementById('profileEmail').value);
-      fd.append('address_line1', document.getElementById('addressLine1').value);
-      fd.append('address_line2', document.getElementById('addressLine2').value);
-      fd.append('barangay', document.getElementById('brgy').value);
-      fd.append('city', document.getElementById('city').value);
-      fd.append('province', document.getElementById('province').value);
-      fd.append('region', document.getElementById('region').value);
-      fd.append('zip_code', document.getElementById('zipCode').value);
       fd.append('primary_mobile', document.getElementById('prlMobile').value);
-      fd.append('primary_telephone', document.getElementById('prlTel').value);
-      fd.append('secondary_mobile', document.getElementById('secMobile').value);
-      fd.append('secondary_telephone', document.getElementById('secTel').value);
+      fd.append('latitude', document.getElementById('profileLat').value);
+      fd.append('longitude', document.getElementById('profileLng').value);
+      fd.append('formatted_address', document.getElementById('profileAddress').value);
+      fd.append('latitude', document.getElementById('profileLat').value);
+      fd.append('longitude', document.getElementById('profileLng').value);
+      fd.append('formatted_address', document.getElementById('profileAddress').value);
       fetch('../../controllers/customer/profile.php', { method: 'POST', body: fd })
         .then(function(r){ return r.json(); })
         .then(function(data){

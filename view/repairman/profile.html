@@ -89,15 +89,30 @@
         <div class="card-body">
           <div class="form-group">
             <label>Full Name</label>
-            <input type="text" value="Pedro Santos">
+            <input type="text" id="profileNameInput" value="Pedro Santos">
           </div>
           <div class="form-group">
             <label>Email Address</label>
-            <input type="email" value="pedro.santos@email.com">
+            <input type="email" id="profileEmailInput" value="pedro.santos@email.com">
           </div>
           <div class="form-group">
-            <label>Address</label>
-            <input type="text" value="456 Tandang Sora Ave, Quezon City">
+            <label>Service Location (Map Pin) <span style="color:var(--danger);">*</span></label>
+            <p style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">Pin your address on the map, search it, or use your device location. This is where customers find you.</p>
+            <div class="hs-location-picker">
+              <div class="hs-map-wrap">
+                <div class="hs-map-canvas" id="profileMap"></div>
+                <div class="hs-search-bar">
+                  <div class="hs-search-bar-inner">
+                    <input type="text" id="profileAddressSearch" placeholder="Search your address..." autocomplete="off" />
+                    <button type="button" class="hs-locate-btn" id="profileLocateBtn">&#9672; Use my location</button>
+                  </div>
+                </div>
+              </div>
+              <input type="hidden" id="profileLat" />
+              <input type="hidden" id="profileLng" />
+              <input type="hidden" id="profileAddress" />
+              <div class="hs-location-status" id="profileLocationStatus">Set your location using the map, search, or device location.</div>
+            </div>
           </div>
           <div class="grid-2">
             <div class="form-group">
@@ -354,9 +369,13 @@
   </div>
 
   <script src="../shared.js"></script>
+  <script src="../location-picker.js"></script>
   <script>
     (function() {
-      if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+      if (!localStorage.getItem('is_logged_in')) { 
+        window.location.href = 'login.html'; 
+        return; 
+      }
 
       var userId = localStorage.getItem('id');
       var userName = localStorage.getItem('name') || 'Repairman';
@@ -384,22 +403,32 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: body
-        }).then(function(r) { return r.json(); });
+        }).then(function(r) { 
+          return r.json(); 
+        }).catch(function(err) {
+          
+          throw err;
+        });
       }
 
+      var fbInput = document.getElementById('facebookPageInput');
+      var eduInput = document.getElementById('educationInput');
+
       document.querySelector('#modalSaveProfile .btn-primary').onclick = function() {
-        var inputs = document.querySelectorAll('.card-body input');
-        var eduInput = document.getElementById('educationInput');
-        var fbInput = document.getElementById('facebookPageInput');
         var data = 'user_id=' + userId + '&action=save_profile';
-        data += '&name=' + encodeURIComponent(inputs[0] ? inputs[0].value : '');
-        data += '&email=' + encodeURIComponent(inputs[1] ? inputs[1].value : '');
-        data += '&address=' + encodeURIComponent(inputs[2] ? inputs[2].value : '');
-        data += '&mobile=' + encodeURIComponent(inputs[3] ? inputs[3].value : '');
+        data += '&name=' + encodeURIComponent(document.getElementById('profileNameInput').value || '');
+        data += '&email=' + encodeURIComponent(document.getElementById('profileEmailInput').value || '');
+        data += '&mobile=' + encodeURIComponent(document.getElementById('mobileInput').value || '');
         data += '&facebook_page=' + encodeURIComponent(fbInput ? fbInput.value : '');
         data += '&education=' + encodeURIComponent(eduInput ? eduInput.value : '');
+        data += '&latitude=' + encodeURIComponent(document.getElementById('profileLat').value || '');
+        data += '&longitude=' + encodeURIComponent(document.getElementById('profileLng').value || '');
+        data += '&formatted_address=' + encodeURIComponent(document.getElementById('profileAddress').value || '');
         closeModal('modalSaveProfile');
-        postAction(data).then(function() { showAlert('Profile saved successfully!', 'success'); }).catch(function() {});
+        postAction(data).then(function() { showAlert('Profile saved successfully!', 'success'); }).catch(function(err) { 
+          
+          showAlert('Failed to save profile.', 'error'); 
+        });
       };
 
       var availToggle = document.querySelector('.avail-row input[type="checkbox"]');
@@ -408,11 +437,11 @@
           var available = this.checked ? 1 : 0;
           postAction('user_id=' + userId + '&action=update_availability&available=' + available)
             .then(function(res) { if (res && res.success !== undefined && !res.success) showAlert(res.message || 'Failed.', 'error'); })
-            .catch(function() {});
-        });
-      }
+            .catch(function(err) { });
+          });
+        }
 
-      document.querySelector('#modalAddSkill .btn-primary').onclick = function() {
+document.querySelector('#modalAddSkill .btn-primary').onclick = function() {
         var input = document.querySelector('#modalAddSkill select');
         var skill = input ? input.value.trim() : '';
         if (!skill) return;
@@ -420,27 +449,10 @@
           .then(function() { location.reload(); }).catch(function() {});
       };
 
-      document.querySelector('#modalRemoveSkill .btn-danger').onclick = function() {
-        var skillEl = document.querySelector('.card-body span[style*="inline-flex"] button[style*="danger"]');
-        if (!skillEl) return;
-        var displayLabel = skillEl.parentElement.textContent.trim().replace(/\u00d7$/, '').trim();
-        // Map display label back to stored value
-        var skillLabelsReverse = {
-          'Refrigerator Repair': 'refrigerator',
-          'Air Conditioner Repair': 'air-conditioner',
-          'Washing Machine Repair': 'washing-machine',
-          'Dishwasher Repair': 'dishwasher',
-          'Oven/Stove Repair': 'oven',
-          'Microwave Repair': 'microwave',
-          'Television Repair': 'television',
-          'Water Heater Repair': 'water-heater',
-          'Dryer Repair': 'dryer',
-          'Other': 'other'
-        };
-        var skillName = skillLabelsReverse[displayLabel] || displayLabel;
-        postAction('user_id=' + userId + '&action=remove_skill&skill=' + encodeURIComponent(skillName))
+      function removeSkill(btn, skill) {
+        postAction('user_id=' + userId + '&action=remove_skill&skill=' + encodeURIComponent(skill))
           .then(function() { location.reload(); }).catch(function() {});
-      };
+      }
 
       document.querySelector('#addCertBtn').onclick = function() {
         var certName = document.getElementById('addCertName').value.trim();
@@ -544,22 +556,49 @@
           .catch(function() {});
       };
 
-      if (!userId) return;
+if (!userId) {
+        return;
+      }
 
       fetch('../../controllers/repairman/profile.php?user_id=' + userId)
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
         .then(function(data) {
           if (data.error) return;
           var p = data.data || {};
 
-          var inputs = document.querySelectorAll('.card-body input');
-          if (inputs.length >= 5) {
-            if (p.Name) inputs[0].value = p.Name;
-            if (p.Email) inputs[1].value = p.Email;
-            if (p.Address) inputs[2].value = p.Address;
-            if (p.MobileNo) inputs[3].value = p.MobileNo;
-            if (p.FacebookPage) inputs[4].value = p.FacebookPage;
+          document.getElementById('profileNameInput').value = p.Name || '';
+          document.getElementById('profileEmailInput').value = p.Email || '';
+          document.getElementById('mobileInput').value = p.MobileNo || '';
+          if (fbInput) fbInput.value = p.FacebookPage || '';
+          if (eduInput) eduInput.value = p.Education || '';
+
+          // Map pin data
+          var initLat = parseFloat(p.Latitude) || '';
+          var initLng = parseFloat(p.Longitude) || '';
+          document.getElementById('profileLat').value = initLat;
+          document.getElementById('profileLng').value = initLng;
+          document.getElementById('profileAddress').value = p.Formatted_Address || '';
+          var statusEl = document.getElementById('profileLocationStatus');
+          if (initLat && initLng) {
+            statusEl.classList.remove('is-required');
+            statusEl.textContent = 'Location set: ' + (p.Formatted_Address || (initLat + ', ' + initLng));
           }
+          // Initialize picker directly (like customer profile)
+          initLocationPicker({
+            mapEl: 'profileMap',
+            latInput: 'profileLat',
+            lngInput: 'profileLng',
+            addressInput: 'profileAddress',
+            searchInput: 'profileAddressSearch',
+            deviceBtn: 'profileLocateBtn',
+            initialLat: initLat || 14.5995,
+            initialLng: initLng || 120.9842,
+            onSelect: function() { var s = document.getElementById('profileLocationStatus'); if (s) { s.classList.remove('is-required'); s.textContent = 'Location set.'; } },
+            onLocating: function(on) { if (statusEl) statusEl.textContent = on ? 'Fetching location...' : 'Location set.'; }
+          });
 
           if (p.Name) {
             if (profileNameEl) profileNameEl.textContent = p.Name;
@@ -578,6 +617,7 @@
           }
 
           var rating = parseFloat(String(p.Ratings ?? '').replace(',', '.')) || 0;
+          
           if (rating > 0) {
             var stars = document.getElementById('profileStars');
             var ratingSpan = document.getElementById('profileRating');
@@ -591,9 +631,11 @@
             if (ratingSpan2) ratingSpan2.textContent = 'No ratings yet';
           }
 
+          
           if (p.Skills) {
             var skillsArr = typeof p.Skills === 'string' ? p.Skills.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : p.Skills;
             var skillsContainer = document.getElementById('skillsContainer');
+            
             if (skillsContainer) {
               skillsContainer.innerHTML = '';
               if (!skillsArr.length) {
@@ -615,12 +657,14 @@
                 var span = document.createElement('span');
                 span.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:var(--panel);border-radius:10px;font-size:0.9rem;font-weight:500;';
                 var displayLabel = skillLabels[skill] || skill;
-                span.innerHTML = escHtml(displayLabel) + ' <button style="background:none;border:0;color:var(--danger);cursor:pointer;font-size:1.1rem;line-height:1;" onclick="openModal(\'modalRemoveSkill\')">&times;</button>';
+                span.innerHTML = escHtml(displayLabel) + ' <button style="background:none;border:0;color:var(--danger);cursor:pointer;font-size:1.1rem;line-height:1;" onclick="removeSkill(this, \'' + escHtml(skill) + '\')">&times;</button>';
                 skillsContainer.appendChild(span);
+                
               });
             }
           }
 
+          
           if (p.Education) {
             var eduInput = document.getElementById('educationInput');
             if (eduInput) {
@@ -628,11 +672,17 @@
             }
           }
 
+          
           if (p.Certifications) {
             var certArr = null;
-            try { certArr = JSON.parse(p.Certifications); } catch (e) { certArr = null; }
+            try { certArr = JSON.parse(p.Certifications); } catch (e) { 
+              
+              certArr = null; 
+            }
+            
             if (!Array.isArray(certArr)) certArr = p.Certifications ? [{ name: String(p.Certifications) }] : [];
             var listContainer = document.getElementById('certificationsContainer');
+            
             if (listContainer) {
               if (certArr.length) {
                 listContainer.innerHTML = '';
@@ -669,7 +719,9 @@
             }
           }
         })
-        .catch(function() {});
+        .catch(function(err) { 
+          
+        });
 
       function escHtml(str) {
         var d = document.createElement('div');
@@ -679,6 +731,12 @@
       function escAttr(str) {
         return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       }
+      
+      // Remove skill function - globally accessible
+      window.removeSkill = function(btn, skill) {
+        postAction('user_id=' + userId + '&action=remove_skill&skill=' + encodeURIComponent(skill))
+          .then(function() { location.reload(); }).catch(function() {});
+      };
     })();
   </script>
 </body>

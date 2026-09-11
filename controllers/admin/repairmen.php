@@ -36,52 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? 'add';
 
-    if ($action === 'add') {
-        $name = trim($_POST['name'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
-        $address = $_POST['address'] ?? '';
-        $mobile = $_POST['mobile'] ?? '';
-        $tel = $_POST['tel'] ?? '';
-
-        if (empty($name) || empty($email) || empty($password)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Name, email, and password are required']);
-            exit;
-        }
-
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Invalid email format']);
-            exit;
-        }
-
-        if (isEmailTaken($email)) {
-            http_response_code(409);
-            echo json_encode(['error' => 'Email already exists']);
-            exit;
-        }
-
-        try {
-            $cert_entries = collectCertEntriesFromUploads();
-            $certs_json = $cert_entries ? json_encode($cert_entries) : null;
-            $skills = trim($_POST['skills'] ?? '');
-            $education = trim($_POST['education'] ?? '');
-            $facebook_page = trim($_POST['facebook_page'] ?? '');
-            $profileId = addAdminRepairman($name, $email, $password, $address, $mobile, $certs_json, $skills, $education, $facebook_page);
-
-            echo json_encode([
-                'success' => true,
-                'id' => $profileId,
-                'message' => 'Repairman created successfully'
-            ]);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Failed to create repairman: ' . $e->getMessage()]);
-        }
-        exit;
-    }
-
     if ($action === 'activate') {
         $id = $_POST['id'] ?? '';
         if (empty($id)) {

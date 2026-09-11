@@ -21,40 +21,32 @@
       <div class="sidebar-section">
         <div class="sidebar-section-label">Main Menu</div>
         <a href="dashboard.html" class="sidebar-link">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
         </a>
         <a href="book-service.html" class="sidebar-link">
-          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
           Book Service
         </a>
         <a href="my-tickets.html" class="sidebar-link active">
-          <svg viewBox="0 0 24 24"><path d="M15 5v2"/><path d="M15 11v2"/><path d="M15 17v2"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
           My Tickets
         </a>
         <a href="my-appliances.html" class="sidebar-link">
-          <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           My Appliances
         </a>
         <a href="chat.html" class="sidebar-link">
-          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Messages
         </a>
         <a href="profile.html" class="sidebar-link">
-          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Profile
         </a>
       </div>
-      </nav>
+    </nav>
     <div class="sidebar-user">
       <div class="sidebar-avatar">JD</div>
       <div class="sidebar-user-info">
         <div class="sidebar-user-name">Juan Dela Cruz</div>
         <div class="sidebar-user-role">Customer</div>
       </div>
-      <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">
-        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
+      <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">&times;</button>
     </div>
   </aside>
 
@@ -67,7 +59,6 @@
       </div>
       <div class="header-actions">
         <a href="book-service.html" class="btn btn-primary">
-          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New Ticket
         </a>
       </div>
@@ -77,7 +68,7 @@
     <div class="tabs">
       <button class="tab active" onclick="filterTickets('all', this)">All</button>
       <button class="tab" onclick="filterTickets('open', this)">Open</button>
-      <button class="tab" onclick="filterTickets('in-progress', this)">In Progress</button>
+      <button class="tab" onclick="filterTickets('in_progress', this)">In Progress</button>
       <button class="tab" onclick="filterTickets('completed', this)">Completed</button>
     </div>
 
@@ -96,71 +87,7 @@
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <tr data-status="in-progress">
-                <td><strong>#1024</strong></td>
-                <td>Samsung RT38 Refrigerator</td>
-                <td>Not cooling properly</td>
-                <td>Aug 15, 2026</td>
-                <td><span class="badge badge-warning">In Progress</span></td>
-                <td>
-                  <div class="action-btns">
-                    <a href="chat.html" class="btn btn-primary btn-sm">Chat</a>
-                  <a href="call.html" class="btn btn-success btn-sm">Call</a>
-                  <button class="btn btn-secondary btn-sm" onclick="openModal('viewTicketModal')">View</button>
-                  </div>
-                </td>
-              </tr>
-              <tr data-status="open">
-                <td><strong>#1019</strong></td>
-                <td>LG F4J5TN8W Washer</td>
-                <td>Leaking water from bottom</td>
-                <td>Aug 12, 2026</td>
-                <td><span class="badge badge-info">Open</span></td>
-                <td>
-                  <div class="action-btns">
-                    <button class="btn btn-secondary btn-sm" onclick="openModal('viewTicketModal')">View</button>
-                    <button class="btn btn-secondary btn-sm" onclick="openModal('cancelTicketModal')">Cancel</button>
-                  </div>
-                </td>
-              </tr>
-              <tr data-status="completed">
-                <td><strong>#1012</strong></td>
-                <td>Carrier 42QHB012DS AC</td>
-                <td>Not blowing cold air</td>
-                <td>Aug 8, 2026</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td>
-                  <div class="action-btns">
-                    <button class="btn btn-secondary btn-sm" onclick="openModal('viewTicketModal')">View</button>
-                  </div>
-                </td>
-              </tr>
-              <tr data-status="completed">
-                <td><strong>#1005</strong></td>
-                <td>Panasonic NN-ST46K Microwave</td>
-                <td>Won't heat food</td>
-                <td>Aug 2, 2026</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td>
-                  <div class="action-btns">
-                    <button class="btn btn-secondary btn-sm" onclick="openModal('viewTicketModal')">View</button>
-                  </div>
-                </td>
-              </tr>
-              <tr data-status="completed">
-                <td><strong>#998</strong></td>
-                <td>KDK A3050 Electric Fan</td>
-                <td>Not spinning</td>
-                <td>Jul 28, 2026</td>
-                <td><span class="badge badge-success">Completed</span></td>
-                <td>
-                  <div class="action-btns">
-                    <button class="btn btn-secondary btn-sm" onclick="openModal('viewTicketModal')">View</button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
+            <tbody></tbody>
           </table>
         </div>
       </div>
@@ -171,35 +98,27 @@
   <div class="modal-overlay" id="viewTicketModal">
     <div class="modal" style="max-width:540px;">
       <div class="modal-header">
-        <h3>Ticket #1024 Details</h3>
+        <h3 id="modalTicketTitle">Ticket Details</h3>
         <button class="modal-close" onclick="closeModal('viewTicketModal')">&times;</button>
       </div>
       <div class="modal-body">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-          <div>
-            <p style="font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:4px;">Appliance</p>
-            <p style="font-weight:600; margin:0;">Samsung RT38 Refrigerator</p>
-          </div>
-          <div>
-            <p style="font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:4px;">Status</p>
-            <p style="margin:0;"><span class="badge badge-warning">In Progress</span></p>
-          </div>
-          <div>
-            <p style="font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:4px;">Date Filed</p>
-            <p style="margin:0;">August 15, 2026</p>
-          </div>
-          <div>
-            <p style="font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:4px;">Technician</p>
-            <p style="margin:0;">Carlo Santos</p>
-          </div>
+          <div><strong>Client:</strong> <span id="modalClientName">—</span></div>
+          <div><strong>Date Opened:</strong> <span id="modalTicketDate">—</span></div>
+          <div><strong>Appliance:</strong> <span id="modalAppliance">—</span></div>
+          <div><strong>Status:</strong> <span id="modalTicketStatus">—</span></div>
         </div>
         <div style="margin-top:18px;">
-          <p style="font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:4px;">Issue Description</p>
-          <p style="margin:0; line-height:1.6;">The refrigerator is not cooling properly. The temperature inside rises to room temperature within a few hours. The compressor appears to be running but the cooling coils are not getting cold. This started 3 days ago.</p>
+          <strong>Issue Description:</strong>
+          <p id="modalIssue" style="margin-top:4px; line-height:1.6;">—</p>
         </div>
         <div style="margin-top:18px;">
-          <p style="font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:4px;">Repair Schedule</p>
-          <p style="margin:0;">August 20, 2026 &bull; 10:00 AM – 12:00 PM</p>
+          <strong>Repair Schedule:</strong>
+          <p id="modalSchedule">—</p>
+        </div>
+        <div style="margin-top:18px;">
+          <strong>Client Address:</strong>
+          <p id="modalAddress">—</p>
         </div>
       </div>
       <div class="modal-footer">
@@ -244,119 +163,228 @@
 
   <script src="../shared.js"></script>
   <script>
-  (function() {
-    if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
-    var userId = localStorage.getItem('id');
-    var userName = localStorage.getItem('name');
-    var allTickets = [];
-    var currentFilter = 'all';
-    var sidebarUserName = document.querySelector('.sidebar-user-name');
-    var sidebarAvatar = document.querySelector('.sidebar-avatar');
-    if (sidebarUserName) sidebarUserName.textContent = userName || 'Customer';
-    if (sidebarAvatar) sidebarAvatar.textContent = (userName || 'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
-
-    function statusBadge(status) {
-      var map = { 'Open': 'badge-info', 'In Progress': 'badge-warning', 'Completed': 'badge-success', 'Cancelled': 'badge-danger' };
-      return '<span class="badge ' + (map[status] || 'badge-info') + '">' + status + '</span>';
-    }
-    var TYPE_LABELS = {
-      'refrigerator': 'Refrigerator',
-      'washing-machine': 'Washing Machine',
-      'air-conditioner': 'Air Conditioner',
-      'microwave': 'Microwave',
-      'oven': 'Oven / Stove',
-      'dishwasher': 'Dishwasher',
-      'electric-fan': 'Electric Fan',
-      'water-heater': 'Water Heater',
-      'other': 'Other'
-    };
-    function applianceLabel(t) {
-      var name = t.ApplianceName || t.appliance_name || t.Appliance || '';
-      var type = t.ApplianceType || t.appliance_type || t.type || '';
-      var label = TYPE_LABELS[type] || type || '';
-      if (name && label) return name + ' ' + label;
-      return name || label || '—';
-    }
-    function formatDate(d) {
-      if (!d) return '';
-      var dt = new Date(d);
-      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return months[dt.getMonth()] + ' ' + dt.getDate() + ', ' + dt.getFullYear();
-    }
-    function renderTickets(tickets) {
-      var tbody = document.querySelector('#ticketsTable tbody');
-      if (!tickets.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted);">No tickets found.</td></tr>'; return; }
-      tbody.innerHTML = tickets.map(function(t) {
-        // Controller returns uppercase column names: ID, Status, Details, ScheduleDate, ApplianceName, etc.
-        var id = t.ID || t.id;
-        var status = t.Status || t.status;
-        var statusLower = status ? status.toLowerCase().replace(/ /g, '-') : 'open';
-        var appliance = applianceLabel(t);
-        var issue = t.Details || t.details || t.issue_description || t.issue || '';
-        var date = t.ScheduleDate || t.Created_At || t.created_at || t.date || '';
-        var actions = '<div class="action-btns">';
-        if (status !== 'Completed' && status !== 'Cancelled') {
-          actions += '<a href="chat.html" class="btn btn-primary btn-sm">Chat</a>';
-          actions += '<a href="call.html" class="btn btn-success btn-sm">Call</a>';
-        }
-        actions += '<button class="btn btn-secondary btn-sm" onclick="openModal(\'viewTicketModal\')">View</button>';
-        if (status === 'Open') {
-          actions += '<button class="btn btn-secondary btn-sm" onclick="window._cancelTicketId=' + id + ';openModal(\'cancelTicketModal\')">Cancel</button>';
-        }
-        actions += '</div>';
-        return '<tr data-status="' + statusLower + '">' +
-          '<td><strong>#' + id + '</strong></td>' +
-          '<td>' + appliance + '</td>' +
-          '<td>' + issue + '</td>' +
-          '<td>' + formatDate(date) + '</td>' +
-          '<td>' + statusBadge(status) + '</td>' +
-          '<td>' + actions + '</td></tr>';
-      }).join('');
-    }
-
-    window.filterTickets = function(status, btn) {
-      currentFilter = status;
+    function filterTickets(status, btn) {
       document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
       btn.classList.add('active');
       if (status === 'all') { renderTickets(allTickets); return; }
-      renderTickets(allTickets.filter(function(t) { return t.status.toLowerCase().replace(/ /g, '-') === status; }));
-    };
-
-    document.getElementById('confirmCancelBtn').addEventListener('click', function() {
-      var ticketId = window._cancelTicketId;
-      if (!ticketId) return;
-      var fd = new FormData();
-      fd.append('action', 'cancel');
-      fd.append('ticket_id', ticketId);
-      fd.append('user_id', userId);
-      fetch('../../controllers/customer/tickets.php', { method: 'POST', body: fd })
-        .then(function(r){ return r.json(); })
-        .then(function(data){
-          closeModal('cancelTicketModal');
-          if (isSuccess(data)) { showAlert(data.message || 'Ticket cancelled successfully.', 'success'); loadTickets(); } else { showAlert(data.message || 'Error cancelling ticket.', 'error'); }
-        })
-        .catch(function(){ closeModal('cancelTicketModal'); showAlert('Network error.', 'error'); });
-    });
-
-    function loadTickets() {
-      fetch('../../controllers/customer/tickets.php?user_id=' + userId)
-        .then(function(r){ return r.json(); })
-        .then(function(data){
-          allTickets = data.tickets || data || [];
-          if (!Array.isArray(allTickets)) allTickets = [];
-          if (currentFilter === 'all') { renderTickets(allTickets); } else { window.filterTickets(currentFilter, document.querySelector('.tab.active')); }
-        })
-        .catch(function(){});
+      renderTickets(allTickets.filter(function(t) { 
+        var s = (t.ticket_status || t.status || '').toLowerCase().replace(/_/g, '-');
+        return s === status;
+      }));
     }
 
-    document.getElementById('logoutBtn').addEventListener('click', function() {
-      fetch('../../controllers/logout.php', { method: 'POST' })
-        .then(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; })
-        .catch(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; });
-    });
+    (function() {
+      if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
 
-    loadTickets();
-  })();
+      var userId = localStorage.getItem('id');
+      var userName = localStorage.getItem('name');
+      var allTickets = [];
+
+      document.querySelectorAll('.sidebar-user-name').forEach(function(el) { 
+        el.textContent = userName || 'Customer'; 
+      });
+      var initials = (userName || 'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+      document.querySelectorAll('.sidebar-avatar').forEach(function(el) { el.textContent = initials; });
+
+      function logout() {
+        fetch('../../controllers/logout.php', { method: 'POST' })
+          .then(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; })
+          .catch(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; });
+      }
+      document.querySelectorAll('#logoutModal .btn-danger').forEach(function(btn) { btn.onclick = logout; });
+
+      function statusBadge(status) {
+        var map = { 
+          'open': 'badge-info', 
+          'in-progress': 'badge-warning', 
+          'completed': 'badge-success', 
+          'cancelled': 'badge-danger'
+        };
+        var cls = map[(status || '').toLowerCase().replace(/_/g, '-')] || 'badge-info';
+        return '<span class="badge ' + cls + '">' + (status || 'Unknown') + '</span>';
+      }
+
+      function formatDate(d) {
+        if (!d) return '';
+        try {
+          var dt = new Date(d);
+          var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          return months[dt.getMonth()] + ' ' + dt.getDate() + ', ' + dt.getFullYear();
+        } catch(e) { return ''; }
+      }
+
+      function buildTicketDetails(ticket) {
+        var details = [];
+        var name = ticket.appliance_name || ticket.ApplianceName || '';
+        var type = ticket.appliance_type || ticket.ApplianceType || '';
+        if (name) details.push(name);
+        if (type) details.push('(' + type + ')');
+        var make = ticket.appliance_make || ticket.ApplianceMake || '';
+        var year = ticket.appliance_year || ticket.ApplianceYear || '';
+        if (make) details.push('Brand: ' + make);
+        if (year) details.push('Year: ' + year);
+        return details.join(' | ') || '—';
+      }
+
+      function buildAddress(ticket) {
+        if (ticket.client_formatted_address) return ticket.client_formatted_address;
+        var parts = [];
+        if (ticket.Address_Line1) parts.push(ticket.Address_Line1);
+        if (ticket.Brgy) parts.push(ticket.Brgy);
+        if (ticket.City_Min) parts.push(ticket.City_Min);
+        if (ticket.Province) parts.push(ticket.Province);
+        return parts.join(', ') || 'Address not available';
+      }
+
+      window.viewTicketAndChat = function(ticketId) {
+        if (!allTickets || !allTickets.length) {
+          showAlert('Error: Ticket data not loaded. Please refresh the page.', 'error');
+          return;
+        }
+        
+        var ticket = allTickets.find(function(t) { 
+          var tid = String(t.ticket_id || t.id || t.ID || '');
+          return tid === String(ticketId); 
+        });
+        
+        if (!ticket) {
+          showAlert('Error: Ticket not found.', 'error');
+          return;
+        }
+
+        var repairmanId = ticket.Repairman_ID || ticket.repairman_id;
+        if (!repairmanId) {
+          showAlert('No repairman assigned to this ticket yet.', 'warning');
+          return;
+        }
+
+        // Store current ticket in localStorage to start conversation
+        localStorage.setItem('currentTicketId', ticketId);
+        localStorage.setItem('currentRepairmanId', repairmanId);
+        localStorage.setItem('currentConversationType', 'customer-repairman');
+        
+        // Navigate to chat page - chat.html will handle creating conversation if needed
+        window.location.href = 'chat.html?ticket_id=' + ticketId + '&repairman_id=' + repairmanId;
+      };
+
+      window.viewTicket = function(ticketId) {
+        var ticket = allTickets.find(function(t) { 
+          return (t.ticket_id || t.id || t.ID) === ticketId; 
+        });
+        if (!ticket) return;
+
+        // Show ticket details in modal
+        document.getElementById('modalTicketTitle').textContent = 'Ticket #' + ticketId + ' Details';
+        document.getElementById('modalClientName').textContent = ticket.client_name || '—';
+        document.getElementById('modalTicketDate').textContent = formatDate(ticket.schedule_date) || formatDate(ticket.created_at) || '—';
+        document.getElementById('modalAppliance').textContent = buildTicketDetails(ticket);
+        document.getElementById('modalTicketStatus').innerHTML = statusBadge(ticket.ticket_status || ticket.status);
+        document.getElementById('modalIssue').textContent = ticket.issue || ticket.issue_details || ticket.ticket_details || ticket.Details || '—';
+        document.getElementById('modalSchedule').textContent = formatDate(ticket.schedule_date) || '—';
+        document.getElementById('modalAddress').textContent = buildAddress(ticket);
+        
+        openModal('modalViewTicket');
+      };
+
+      function renderTickets(tickets) {
+        var tbody = document.querySelector('#ticketsTable tbody');
+        if (!tickets.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted);">No tickets found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = tickets.map(function(t) {
+          var id = t.ticket_id || t.id || t.ID || '';
+          var status = t.ticket_status || t.status || 'Open';
+          var statusLower = status.toLowerCase().replace(/_/g, '-');
+          var appliance = buildTicketDetails(t);
+          var issue = t.issue || t.issue_details || t.ticket_details || t.Details || '';
+          var date = t.schedule_date || t.created_at || t.ScheduleDate || '';
+var actions = '<div class="action-btns">';
+        if (status !== 'Completed' && status !== 'Cancelled') {
+          actions += '<button class="btn btn-primary btn-sm" onclick="viewTicketAndChat(\'' + id + '\')">Chat</button>';
+        }
+        actions += '<button class="btn btn-secondary btn-sm" onclick="viewTicket(\'' + id + '\')">View</button>';
+        if (status === 'Open') {
+          actions += '<button class="btn btn-secondary btn-sm" onclick="cancelTicket(\'' + id + '\')">Cancel</button>';
+        }
+        actions += '</div>';
+          return '<tr data-status="' + statusLower + '">' +
+            '<td><strong>#' + id + '</strong></td>' +
+            '<td>' + appliance + '</td>' +
+            '<td>' + issue + '</td>' +
+            '<td>' + formatDate(date) + '</td>' +
+            '<td>' + statusBadge(status) + '</td>' +
+            '<td>' + actions + '</td></tr>';
+        }).join('');
+      }
+
+      window.viewTicket = function(ticketId) {
+        var ticket = allTickets.find(function(t) { 
+          return String(t.ticket_id || t.id || t.ID) === String(ticketId); 
+        });
+        if (!ticket) return;
+
+        document.getElementById('modalTicketTitle').textContent = 'Ticket #' + ticketId + ' Details';
+        document.getElementById('modalClientName').textContent = ticket.client_name || '—';
+        document.getElementById('modalTicketDate').textContent = formatDate(ticket.schedule_date) || formatDate(ticket.created_at) || '—';
+        document.getElementById('modalAppliance').textContent = buildTicketDetails(ticket);
+        document.getElementById('modalTicketStatus').innerHTML = statusBadge(ticket.ticket_status || ticket.status);
+        document.getElementById('modalIssue').textContent = ticket.issue || ticket.issue_details || ticket.ticket_details || ticket.Details || '—';
+        document.getElementById('modalSchedule').textContent = formatDate(ticket.schedule_date) || '—';
+        document.getElementById('modalAddress').textContent = buildAddress(ticket);
+        
+        openModal('viewTicketModal');
+      };
+
+      window.cancelTicket = function(ticketId) {
+        window._cancelTicketId = ticketId;
+        openModal('cancelTicketModal');
+      };
+
+      document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+        var ticketId = window._cancelTicketId;
+        if (!ticketId) return;
+        var fd = new FormData();
+        fd.append('action', 'cancel');
+        fd.append('ticket_id', ticketId);
+        fd.append('user_id', userId);
+        fetch('../../controllers/customer/tickets.php', { method: 'POST', body: fd })
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            closeModal('cancelTicketModal');
+            if (data.success || data.status === 'success') { 
+              showAlert(data.message || 'Ticket cancelled successfully.', 'success'); 
+              loadTickets(); 
+            } else { 
+              showAlert(data.message || 'Error cancelling ticket.', 'error'); 
+            }
+          })
+          .catch(function(){ 
+            closeModal('cancelTicketModal'); 
+            showAlert('Network error.', 'error'); 
+          });
+      });
+
+      function loadTickets() {
+        fetch('../../controllers/customer/tickets.php?user_id=' + userId)
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            allTickets = data.tickets || data || [];
+            if (!Array.isArray(allTickets)) allTickets = [];
+            renderTickets(allTickets);
+          })
+          .catch(function(){});
+      }
+
+      loadTickets();
+
+      document.getElementById('logoutBtn').addEventListener('click', function() {
+        fetch('../../controllers/logout.php', { method: 'POST' })
+          .then(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; })
+          .catch(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; });
+      });
+
+    })();
   </script>
 </body>
 </html>

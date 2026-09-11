@@ -132,6 +132,10 @@ CREATE TABLE `repairticket` (
   `ID` int(11) NOT NULL,
   `Client_ID` int(11) NOT NULL,
   `Appliance_ID` int(11) DEFAULT NULL,
+  `Client_Lat` decimal(10,7) DEFAULT NULL,
+  `Client_Lng` decimal(10,7) DEFAULT NULL,
+  `Route_Distance_Km` decimal(6,2) DEFAULT NULL,
+  `Route_Duration_Min` int(11) DEFAULT NULL,
   `Repairman_ID` int(11) DEFAULT NULL,
   `Status` varchar(50) NOT NULL DEFAULT 'Open',
   `Details` text DEFAULT NULL,
@@ -182,6 +186,9 @@ CREATE TABLE `user_clientprofile` (
   `Province` varchar(100) DEFAULT NULL,
   `Region` varchar(100) DEFAULT NULL,
   `Zip_Code` varchar(10) DEFAULT NULL,
+  `Latitude` decimal(10,7) DEFAULT NULL,
+  `Longitude` decimal(10,7) DEFAULT NULL,
+  `Formatted_Address` varchar(500) DEFAULT NULL,
   `Prl_MobileNo` varchar(20) DEFAULT NULL,
   `Sec_MobileNo` varchar(20) DEFAULT NULL,
   `Status` enum('active','inactive') NOT NULL DEFAULT 'active'
@@ -191,8 +198,8 @@ CREATE TABLE `user_clientprofile` (
 -- Dumping data for table `user_clientprofile`
 --
 
-INSERT INTO `user_clientprofile` (`ID`, `User_ID`, `Name`, `Email`, `Address_Line1`, `Address_Line2`, `Brgy`, `City_Min`, `Province`, `Region`, `Zip_Code`, `Prl_MobileNo`, `Sec_MobileNo`, `Status`) VALUES
-(1, 3, 'Ben Dover', 'ben@gmail.com', '', NULL, NULL, '', '', NULL, '', NULL, NULL, 'active');
+INSERT INTO `user_clientprofile` (`ID`, `User_ID`, `Name`, `Email`, `Address_Line1`, `Address_Line2`, `Brgy`, `City_Min`, `Province`, `Region`, `Zip_Code`, `Latitude`, `Longitude`, `Formatted_Address`, `Prl_MobileNo`, `Sec_MobileNo`, `Status`) VALUES
+(1, 3, 'Ben Dover', 'ben@gmail.com', '', NULL, NULL, 'Manila', 'Metro Manila', NULL, '', 14.5966000, 120.9806000, 'Malate, Manila', NULL, NULL, 'active');
 
 -- --------------------------------------------------------
 
@@ -206,6 +213,9 @@ CREATE TABLE `user_repairmanprofile` (
   `Name` varchar(255) NOT NULL,
   `Email` varchar(255) NOT NULL,
   `Address` text DEFAULT NULL,
+  `Latitude` decimal(10,7) DEFAULT NULL,
+  `Longitude` decimal(10,7) DEFAULT NULL,
+  `Formatted_Address` varchar(500) DEFAULT NULL,
   `MobileNo` varchar(20) DEFAULT NULL,
   `FacebookPage` varchar(255) DEFAULT NULL,
   `Availability` varchar(50) DEFAULT NULL,
@@ -223,10 +233,10 @@ CREATE TABLE `user_repairmanprofile` (
 -- Dumping data for table `user_repairmanprofile`
 --
 
-INSERT INTO `user_repairmanprofile` (`ID`, `User_ID`, `Name`, `Email`, `Address`, `MobileNo`, `FacebookPage`, `Availability`, `Details`, `Skills`, `Education`, `Certifications`, `Assessment`, `Ratings`, `Reviews`, `Status`) VALUES
-(1, 1, 'John Doe', 'john@gmail.com', '123 Test St', '09171234567', NULL, NULL, NULL, 'Dishwasher Repair', NULL, '[{\"name\":\"Test Certification\",\"issued\":\"2024-01-15\",\"valid_until\":\"2025-01-15\"}]', NULL, 0.00, NULL, 'active'),
-(2, 2, 'Jane Smith', 'jane@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, NULL, 'active'),
-(7, 8, 'Juan Dela Cruz', 'juan@gmail.com', NULL, '09123456789', NULL, NULL, NULL, NULL, NULL, '[{\"name\":\"Tesda\",\"file\":null},{\"name\":\"Tesda 2\",\"file\":null}]', NULL, 0.00, NULL, 'active');
+INSERT INTO `user_repairmanprofile` (`ID`, `User_ID`, `Name`, `Email`, `Address`, `Latitude`, `Longitude`, `Formatted_Address`, `MobileNo`, `FacebookPage`, `Availability`, `Details`, `Skills`, `Education`, `Certifications`, `Assessment`, `Ratings`, `Reviews`, `Status`) VALUES
+(1, 1, 'John Doe', 'john@gmail.com', '123 Test St', 14.6362000, 121.0451000, 'Quezon City, Metro Manila', '09171234567', NULL, '1', NULL, 'Dishwasher Repair', NULL, '[{\"name\":\"Test Certification\",\"issued\":\"2024-01-15\",\"valid_until\":\"2025-01-15\"}]', NULL, 4.50, NULL, 'active'),
+(2, 2, 'Jane Smith', 'jane@gmail.com', NULL, 14.5547000, 121.0244000, 'Makati, Metro Manila', NULL, NULL, '1', NULL, NULL, NULL, NULL, NULL, 0.00, NULL, 'active'),
+(7, 8, 'Juan Dela Cruz', 'juan@gmail.com', NULL, 14.6091000, 120.9842000, 'Ermita, Manila', '09123456789', NULL, '1', NULL, NULL, NULL, '[{\"name\":\"Tesda\",\"file\":null},{\"name\":\"Tesda 2\",\"file\":null}]', NULL, 5.00, NULL, 'active');
 
 --
 -- Indexes for dumped tables

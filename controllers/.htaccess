@@ -1,0 +1,4 @@
+# Deny direct access to configuration files
+<FilesMatch "^(\.env|\.env\.|config\.php)$">
+  Require all denied
+</FilesMatch>

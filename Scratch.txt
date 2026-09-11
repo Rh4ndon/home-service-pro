@@ -1,5 +1,5 @@
-**Location Logic
-On the repairman location and customer location we should use leaflet js as a map
+**Adding Location Logic
+On the repairman location and customer location we should use google map I input GOOGLE_MAP_API_KEY in the controllers folder we can use that
 Both the customer and repairman should add there location address it should be coordinates so they should pin on map or option to use device location and not the traditional address text which cant be use on map
 This coordinated will be used to find each other due to this is a web base app the user might be from different places so the coordinated and address are important
 The web app should show nearest repairman available like within 10km customer should have option to adjust until 30km only since its already far 
@@ -7,7 +7,11 @@ The app should measure places base on route or path on roads to more practical u
 
 The current setup assign the new Book Service to a default repairman which is not existing then the admin still needs to assign the repairman to the customer on the ticket management that is not good for automation.
 The admin work is only to activate and deactivate users and not assigning the repairman to the customer on the ticket management thats only a backup if there are conflicts.
-When customer send a booking service it should find nearest repairman base on there location 
+When customer send a booking service it should find nearest repairman base on there location then the customer should pick available repairman on the map
+So then in the Customer booking we should have map to pick repairman and on that map when customer click a map icon of repairman it should show the repairman profile including ratings and other credibility information
+so then we have to update the registration or signup the customer and repairman should be required to input their location address either pick on map or use device location, to make it easier the map should still have search location input field.
+By doing this we are sure that customer and repairman have location on database so then we can remove the admin adding repairman on system due to this location requirement.
+
 
 
 **Voice Call functionality

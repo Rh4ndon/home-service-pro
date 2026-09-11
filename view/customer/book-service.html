@@ -119,6 +119,12 @@
             <textarea id="issueDesc" placeholder="Describe the problem you're experiencing with the appliance..."></textarea>
           </div>
 
+          <div class="form-group">
+            <label for="detailedReport">Detailed Report <span style="font-weight:400;color:var(--muted);font-size:0.85rem;">(optional)</span></label>
+            <textarea id="detailedReport" rows="5" placeholder="Provide any additional details, error messages, symptoms, or observations that may help the repairman diagnose the issue..."></textarea>
+            <p style="font-size:0.78rem;color:var(--muted);margin-top:4px;">Include things like: error codes, unusual sounds, when the problem started, troubleshooting steps already tried, etc.</p>
+          </div>
+
           <div class="grid-2">
             <div class="form-group">
               <label for="preferredDate">Preferred Date</label>
@@ -130,16 +136,86 @@
             </div>
           </div>
 
-          <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
-            <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
-            <button type="button" class="btn btn-primary" onclick="openModal('confirmBookingModal')">
-              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-              Submit Booking
-            </button>
-          </div>
         </form>
       </div>
-    </div>
+
+      <!-- CLIENT LOCATION FOR BOOKING -->
+      <div class="card">
+        <div class="card-header"><h2>Your Location</h2></div>
+        <div class="card-body">
+          <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;">Set your address to find nearby repairmen. You can pick from map, search, or use device location.</p>
+          <div class="hs-location-picker">
+            <div class="hs-map-wrap">
+              <div class="hs-map-canvas" id="bookingMap"></div>
+              <div class="hs-search-bar">
+                <div class="hs-search-bar-inner">
+                  <input type="text" id="bookingAddressSearch" placeholder="Search your address..." autocomplete="off" />
+                  <button type="button" class="hs-locate-btn" id="bookingLocateBtn">&#9672; Use my location</button>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" id="bookingLat" />
+            <input type="hidden" id="bookingLng" />
+            <input type="hidden" id="bookingAddress" />
+            <div class="hs-location-status" id="bookingLocationStatus">Set your location using the map, search, or device location.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEARCH REPAIRMEN -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Find Nearby Repairmen</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-group" style="max-width:420px;">
+            <label for="searchRadius">Search radius: <strong id="searchRadiusLabel">10 km</strong></label>
+            <input type="range" id="searchRadius" min="10" max="30" step="1" value="10" oninput="document.getElementById('searchRadiusLabel').textContent=this.value+' km';" />
+            <small style="color:var(--muted);font-size:0.8rem;">Shows available repairmen within this driving distance from your address.</small>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-primary" id="findRepairmenBtn">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Find Nearby Repairmen
+            </button>
+            <span id="findRepairmenStatus" style="display:inline-flex;align-items:center;font-size:0.88rem;color:var(--muted);"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPAIRMAN RESULTS (hidden until search) -->
+      <div id="repairmanResultsSection" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <h2 id="repairmanResultsHeader">Available Repairmen</h2>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div style="display:flex;gap:0;flex-wrap:wrap;min-height:320px;">
+              <div id="repairmanMap" style="flex:1 1 520px;height:380px;"></div>
+              <div id="repairmanList" style="flex:1 1 300px;max-height:420px;overflow-y:auto;padding:16px;"></div>
+            </div>
+            <div style="padding:14px 16px;border-top:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <span style="font-size:0.88rem;color:var(--muted);">Selected repairman:</span>
+              <span id="selectedRepairmanDisplay" style="font-weight:700;color:var(--text);">None</span>
+              <input type="hidden" id="selectedRepairmanId" />
+              <input type="hidden" id="selectedRepairmanDist" />
+              <input type="hidden" id="selectedRepairmanDur" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBMIT SECTION -->
+      <div class="card" id="submitSection" style="margin-top:0;">
+        <div class="card-body" style="display:flex; gap:12px; justify-content:flex-end;">
+          <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
+          <button type="button" class="btn btn-primary" id="submitBookingBtn" onclick="handleSubmitBookingClick()" disabled title="Please find nearby repairmen first.">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Submit Booking
+          </button>
+        </div>
+      </div>
+
   </main>
 
   <!-- CONFIRM BOOKING MODAL -->
@@ -193,6 +269,7 @@
   </div>
 
   <script src="../shared.js"></script>
+  <script src="../location-picker.js"></script>
   <script>
   (function() {
     if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
@@ -229,7 +306,6 @@
 
     var applianceSelect = document.getElementById('applianceSelect');
     var newApplianceFields = document.getElementById('newApplianceFields');
-
     applianceSelect.addEventListener('change', function() {
       newApplianceFields.style.display = (this.value === 'new') ? '' : 'none';
     });
@@ -258,7 +334,352 @@
         })
         .catch(function(){ applianceSelect.value = 'new'; newApplianceFields.style.display = ''; });
     }
+    loadAppliances();
 
+    // === BOOKING LOCATION ===
+    var bookingLocationStatusEl = document.getElementById('bookingLocationStatus');
+    function bookingLocationReady() { return !!document.getElementById('bookingLat').value && !!document.getElementById('bookingLng').value; }
+    function updateBookingLocationStatus() {
+      if (bookingLocationReady()) {
+        var addr = document.getElementById('bookingAddress').value;
+        bookingLocationStatusEl.classList.remove('is-required');
+        bookingLocationStatusEl.textContent = 'Location set: ' + (addr || document.getElementById('bookingLat').value + ', ' + document.getElementById('bookingLng').value);
+      } else {
+        bookingLocationStatusEl.classList.add('is-required');
+        bookingLocationStatusEl.textContent = 'Please set your location before finding repairmen.';
+      }
+    }
+    function initBookingPicker(initLat, initLng) {
+      var had = !!(document.getElementById('bookingLat').value && document.getElementById('bookingLng').value);
+      initLocationPicker({
+        mapEl: 'bookingMap',
+        latInput: 'bookingLat',
+        lngInput: 'bookingLng',
+        addressInput: 'bookingAddress',
+        searchInput: 'bookingAddressSearch',
+        deviceBtn: 'bookingLocateBtn',
+        initialLat: initLat || 14.5995,
+        initialLng: initLng || 120.9842,
+        onSelect: function(){ updateBookingLocationStatus(); },
+        onLocating: function(on){ if (bookingLocationStatusEl) bookingLocationStatusEl.textContent = on ? 'Fetching location...' : 'Location set.'; }
+      });
+      if (had) updateBookingLocationStatus();
+    }
+
+    // Prefill the booking location with the customer's registered location (may be updated on the map)
+    fetch('../../controllers/customer/profile.php?user_id=' + userId)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var d = (data && data.profile) || {};
+        if (d.latitude && d.longitude) {
+          document.getElementById('bookingLat').value = d.latitude;
+          document.getElementById('bookingLng').value = d.longitude;
+          document.getElementById('bookingAddress').value = d.formatted_address || '';
+          initBookingPicker(d.latitude, d.longitude);
+        } else {
+          initBookingPicker(null, null);
+        }
+      })
+      .catch(function(){ initBookingPicker(null, null); });
+
+    // === FIND NEARBY REPAIRMEN ===
+    var repairmanResultsSection = document.getElementById('repairmanResultsSection');
+    var repairmanListEl = document.getElementById('repairmanList');
+    var repairmanResultsHeader = document.getElementById('repairmanResultsHeader');
+    var selectedRepairmanIdEl = document.getElementById('selectedRepairmanId');
+    var selectedRepairmanDistEl = document.getElementById('selectedRepairmanDist');
+    var selectedRepairmanDurEl = document.getElementById('selectedRepairmanDur');
+    var selectedRepairmanDisplayEl = document.getElementById('selectedRepairmanDisplay');
+    var findStatusEl = document.getElementById('findRepairmenStatus');
+    var repairmanMapEl = document.getElementById('repairmanMap');
+    var repairmanMapObj = null;
+    var repairmanMarkers = [];
+    var repairmanCards = [];
+    var repairmanDataArr = [];
+    var selectedIndex = -1;
+    var hasSearchedRepairmen = false;
+    var anyRepairmenFound = false;
+    var directionsService = null;
+    var directionsRenderer = null;
+    var clientCenterGlobal = null;
+
+    document.getElementById('findRepairmenBtn').addEventListener('click', function(){
+      // validate form first
+      var selected = applianceSelect.value;
+      if (selected !== 'new' && selected !== '') { /* ok */ }
+      else if (selected === 'new') {
+        var at = document.getElementById('applianceType').value;
+        var an = document.getElementById('applianceName').value;
+        var mk = document.getElementById('makeBrand').value;
+        var yr = document.getElementById('yearModel').value;
+        if (!at || !an || !mk || !yr) { showAlert('Please fill in all appliance details before finding repairmen.', 'warning'); return; }
+      } else { showAlert('Please select an appliance first.', 'warning'); return; }
+      if (!document.getElementById('issueDesc').value) { showAlert('Please describe the issue.', 'warning'); return; }
+      if (!document.getElementById('preferredDate').value || !document.getElementById('preferredTime').value) { showAlert('Please set a preferred date and time.', 'warning'); return; }
+      if (!bookingLocationReady()) { showAlert('Please set your location before finding repairmen.', 'warning'); return; }
+
+      var btn = this;
+      btn.disabled = true;
+      var origHtml = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner"></span> Searching...';
+      findStatusEl.textContent = 'Searching nearby repairmen...';
+
+      var radius = document.getElementById('searchRadius').value;
+      var lat = document.getElementById('bookingLat').value;
+      var lng = document.getElementById('bookingLng').value;
+      fetch('../../controllers/customer/nearby-repairmen.php?user_id=' + userId + '&lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng) + '&radius_km=' + encodeURIComponent(radius))
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          btn.disabled = false;
+          btn.innerHTML = origHtml;
+          hasSearchedRepairmen = true;
+          if (!data || data.status !== 'success') { findStatusEl.textContent = data && data.message ? data.message : 'Search failed.'; anyRepairmenFound = false; updateSubmitBookingState(); return; }
+          findStatusEl.textContent = 'Found ' + (data.count || 0) + ' repairman' + ((data.count || 0) !== 1 ? 's' : '') + ' within ' + radius + ' km (' + (data.method === 'route' ? 'road distance' : 'estimated distance') + ').';
+          selectedRepairmanIdEl.value = '';
+          selectedRepairmanDistEl.value = '';
+          selectedRepairmanDurEl.value = '';
+          selectedRepairmanDisplayEl.textContent = 'None';
+          selectedIndex = -1;
+          anyRepairmenFound = (data.count || 0) > 0;
+          renderRepairmanResults(data.repairmen || [], { lat: parseFloat(lat), lng: parseFloat(lng) });
+          updateSubmitBookingState();
+        })
+        .catch(function(){ btn.disabled = false; btn.innerHTML = origHtml; findStatusEl.textContent = 'Network error.'; hasSearchedRepairmen = true; anyRepairmenFound = false; updateSubmitBookingState(); });
+    });
+
+    function renderRepairmanResults(repairmen, clientCenter) {
+      repairmanDataArr = repairmen;
+      clientCenterGlobal = clientCenter;
+      repairmanResultsSection.style.display = '';
+      repairmanResultsHeader.textContent = repairmen.length + ' Available Repairman' + (repairmen.length !== 1 ? 's' : '');
+      if (!repairmanMapObj) {
+        repairmanMapObj = new google.maps.Map(repairmanMapEl, {
+          center: clientCenter,
+          zoom: 13,
+          mapTypeControl: false,
+          streetViewControl: false
+        });
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer({
+          map: repairmanMapObj,
+          suppressMarkers: true,
+          polylineOptions: {
+            strokeColor: '#2563eb',
+            strokeOpacity: 0.8,
+            strokeWeight: 4
+          }
+        });
+      } else {
+        repairmanMapObj.setCenter(clientCenter);
+        repairmanMapObj.setZoom(13);
+        if (directionsRenderer) {
+          directionsRenderer.setMap(repairmanMapObj);
+          directionsRenderer.setDirections(null);
+        }
+      }
+
+      // clear old markers
+      repairmanMarkers.forEach(function(m){ if (m.setMap) m.setMap(null); });
+      repairmanMarkers = [];
+      repairmanListEl.innerHTML = '';
+      repairmanCards = [];
+
+      // client marker
+      var clientMarker = new google.maps.Marker({
+        position: clientCenter,
+        map: repairmanMapObj,
+        title: 'Your location',
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: '#1d4ed8', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 }
+      });
+      repairmanMarkers.push(clientMarker);
+
+      if (!repairmen.length) {
+        repairmanListEl.innerHTML = '<div style="padding:20px;color:var(--muted);">No repairmen found within the selected radius. Try increasing your search radius.</div>';
+        return;
+      }
+
+      repairmen.forEach(function(r, idx) {
+        var pos = { lat: parseFloat(r.Latitude), lng: parseFloat(r.Longitude) };
+        var marker = new google.maps.Marker({
+          position: pos,
+          map: repairmanMapObj,
+          title: r.Name || 'Repairman'
+        });
+        repairmanMarkers.push(marker);
+
+        var rating = parseFloat(r.Ratings || 0) || 0;
+        var stars = '';
+        for (var s = 1; s <= 5; s++) stars += s <= Math.round(rating) ? '&#9733;' : '&#9734;';
+        var skills = (r.Skills || '').split(',').map(function(x){ return x.trim(); }).filter(Boolean).slice(0, 3).join(', ');
+        var certs = '';
+        try {
+          var certArr = JSON.parse(r.Certifications || '[]');
+          certs = Array.isArray(certArr) ? certArr.length : 0;
+        } catch(e) { certs = 0; }
+
+        var infoHtml = '<div style="min-width:220px;max-width:300px;font-family:Inter,system-ui,sans-serif;font-size:13px;">' +
+          '<div style="font-weight:800;font-size:1.05rem;margin-bottom:4px;">' + escHtml(r.Name || '') + '</div>' +
+          '<div style="color:#f59e0b;margin-bottom:4px;font-size:0.95rem;">' + stars + ' <span style="color:#6b7280;font-size:0.82rem;">(' + rating.toFixed(1) + ')</span></div>' +
+          '<div style="color:#374151;margin-bottom:3px;">&#128205; ' + (r.distance_km != null ? r.distance_km + ' km' : '') + (r.duration_min != null ? ' (~' + r.duration_min + ' min)' : '') + '</div>' +
+          '<div style="color:#6b7280;margin-bottom:3px;">Completed repairs: ' + (r.CompletedRepairs || 0) + '</div>' +
+          (skills ? '<div style="color:#6b7280;margin-bottom:3px;">Skills: ' + escHtml(skills) + '</div>' : '') +
+          (certs ? '<div style="color:#6b7280;margin-bottom:3px;">Certificates: ' + certs + '</div>' : '') +
+          '<div style="margin-top:8px;"><button onclick="window._selectRepairmanFromMap(' + idx + ');" style="padding:6px 14px;background:#2563eb;color:#fff;border:0;border-radius:6px;font-size:0.85rem;font-weight:600;cursor:pointer;">Select</button></div>' +
+          '</div>';
+
+        var infoWindow = new google.maps.InfoWindow({ content: infoHtml });
+        marker.addListener('click', function(){
+          infoWindow.open(repairmanMapObj, marker);
+        });
+
+        // Card in sidebar list
+        var card = document.createElement('div');
+        card.className = 'repairman-card';
+        card.style.cssText = 'border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:12px;cursor:pointer;background:#fff;';
+        card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:start;">' +
+          '<div><div style="font-weight:700;color:#111827;font-size:1rem;">' + escHtml(r.Name || '') + '</div>' +
+          '<div style="color:#f59e0b;font-size:0.9rem;margin:3px 0;">' + stars + ' <span style="color:#6b7280;font-size:0.82rem;">' + rating.toFixed(1) + '</span></div>' +
+          '<div style="color:#4b5563;font-size:0.85rem;margin-bottom:4px;">&#128205; ' + (r.distance_km != null ? r.distance_km + ' km' : '—') + (r.duration_min != null ? ' (~' + r.duration_min + ' min drive)' : '') + '</div>' +
+          '<div style="color:#6b7280;font-size:0.82rem;">Completed repairs: ' + (r.CompletedRepairs || 0) + '</div>' +
+          (skills ? '<div style="color:#6b7280;font-size:0.82rem;margin-top:3px;">Skills: ' + escHtml(skills) + '</div>' : '') +
+          (certs ? '<div style="color:#6b7280;font-size:0.82rem;">Certificates: ' + certs + '</div>' : '') +
+          '</div>' +
+          '<div style="text-align:right;"><div style="font-size:0.82rem;color:#6b7280;margin-bottom:6px;">' + (r.route_used ? 'Road distance' : 'Est. distance') + '</div>' +
+          '<button class="select-repairman-btn" style="padding:6px 12px;background:#2563eb;color:#fff;border:0;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer;">Select</button>' +
+          '</div></div>';
+
+        (function(idx, marker){
+          card.addEventListener('click', function(){ selectRepairman(idx); });
+          card.querySelector('.select-repairman-btn').addEventListener('click', function(e){ e.stopPropagation(); selectRepairman(idx); });
+          card.addEventListener('mouseenter', function(){ marker.setAnimation(google.maps.Animation.BOUNCE); });
+          card.addEventListener('mouseleave', function(){ marker.setAnimation(null); });
+        })(idx, marker);
+
+        repairmanListEl.appendChild(card);
+        repairmanCards.push(card);
+      });
+
+      window._selectRepairmanFromMap = function(idx){ selectRepairman(idx); };
+    }
+
+    function selectRepairman(idx) {
+      var r = repairmanDataArr[idx];
+      if (!r) return;
+      selectedIndex = idx;
+      selectedRepairmanIdEl.value = r.ID || '';
+      selectedRepairmanDistEl.value = r.distance_km != null ? r.distance_km : '';
+      selectedRepairmanDurEl.value = r.duration_min != null ? r.duration_min : '';
+      var rating = parseFloat(r.Ratings || 0) || 0;
+      var stars = '';
+      for (var s = 1; s <= 5; s++) stars += s <= Math.round(rating) ? '&#9733;' : '&#9734;';
+      selectedRepairmanDisplayEl.innerHTML = escHtml(r.Name || '') + ' <span style="font-weight:400;color:#f59e0b;">' + stars + '</span> <span style="font-weight:400;color:var(--muted);font-size:0.85rem;">' + (r.distance_km != null ? r.distance_km + ' km' : '') + (r.duration_min != null ? ' (~' + r.duration_min + ' min)' : '') + '</span>';
+      repairmanCards.forEach(function(c, i){ c.style.borderColor = i === idx ? '#2563eb' : '#e5e7eb'; c.style.boxShadow = i === idx ? '0 0 0 2px rgba(37,99,235,0.18)' : 'none'; });
+      if (repairmanMarkers[idx+1]) { repairmanMapObj.panTo(repairmanMarkers[idx+1].getPosition()); }
+      
+      // Draw route from customer to selected repairman
+      if (directionsService && directionsRenderer && clientCenterGlobal) {
+        directionsService.route({
+          origin: clientCenterGlobal,
+          destination: { lat: parseFloat(r.Latitude), lng: parseFloat(r.Longitude) },
+          travelMode: google.maps.TravelMode.DRIVING
+        }, function(result, status) {
+          if (status === google.maps.DirectionsStatus.OK) {
+            directionsRenderer.setDirections(result);
+          }
+        });
+      }
+      
+      updateSubmitBookingState();
+    }
+
+    function escHtml(s) {
+      var d = document.createElement('div');
+      d.appendChild(document.createTextNode(s));
+      return d.innerHTML;
+    }
+
+    function updateSubmitBookingState() {
+      var btn = document.getElementById('submitBookingBtn');
+      var repairmanId = selectedRepairmanIdEl.value;
+      if (!hasSearchedRepairmen) {
+        btn.disabled = true;
+        btn.title = 'Please find nearby repairmen first.';
+        return;
+      }
+      if (!anyRepairmenFound) {
+        btn.disabled = true;
+        btn.title = 'No repairmen are currently available. Please try again later or increase your search radius.';
+        return;
+      }
+      if (!repairmanId) {
+        btn.disabled = true;
+        btn.title = 'Please select a repairman from the list.';
+        return;
+      }
+      btn.disabled = false;
+      btn.title = '';
+    }
+
+    window.handleSubmitBookingClick = function() {
+      // 1. Validate appliance
+      var selected = applianceSelect.value;
+      if (selected === '') {
+        showAlert('Please select an appliance or choose "Add a new / other appliance".', 'warning');
+        return;
+      }
+      if (selected === 'new') {
+        var at = document.getElementById('applianceType').value;
+        var an = document.getElementById('applianceName').value;
+        var mk = document.getElementById('makeBrand').value;
+        var yr = document.getElementById('yearModel').value;
+        if (!at) { showAlert('Please select an appliance type.', 'warning'); return; }
+        if (!an) { showAlert('Please enter the appliance name.', 'warning'); return; }
+        if (!mk) { showAlert('Please enter the make / brand.', 'warning'); return; }
+        if (!yr) { showAlert('Please enter the year.', 'warning'); return; }
+      }
+
+      // 2. Validate issue
+      if (!document.getElementById('issueDesc').value.trim()) {
+        showAlert('Please describe the issue with your appliance.', 'warning');
+        return;
+      }
+
+      // 3. Validate date & time
+      if (!document.getElementById('preferredDate').value) {
+        showAlert('Please select a preferred date.', 'warning');
+        return;
+      }
+      if (!document.getElementById('preferredTime').value) {
+        showAlert('Please select a preferred time.', 'warning');
+        return;
+      }
+
+      // 4. Validate location
+      if (!bookingLocationReady()) {
+        showAlert('Please set your location on the map before submitting.', 'warning');
+        return;
+      }
+
+      // 5. Validate repairman search
+      if (!hasSearchedRepairmen) {
+        showAlert('Please find nearby repairmen before submitting a booking. Use the "Find Nearby Repairmen" button above.', 'warning');
+        return;
+      }
+      if (!anyRepairmenFound) {
+        showAlert('No repairmen are currently available in your area. Try increasing your search radius or check back later.', 'error');
+        return;
+      }
+
+      // 6. Validate repairman selection
+      if (!selectedRepairmanIdEl.value) {
+        showAlert('Please select a repairman from the available list above before submitting your booking.', 'warning');
+        return;
+      }
+
+      openModal('confirmBookingModal');
+    };
+
+    // === SUBMIT BOOKING ===
     document.getElementById('confirmBtn').addEventListener('click', function() {
       var selected = applianceSelect.value;
       var applianceType, applianceName, makeBrand, yearModel, applianceId = null;
@@ -267,29 +688,21 @@
         applianceName = document.getElementById('applianceName').value;
         makeBrand = document.getElementById('makeBrand').value;
         yearModel = document.getElementById('yearModel').value;
-        if (!applianceType || !applianceName || !makeBrand || !yearModel) {
-          showAlert('Please fill in the appliance details.', 'warning');
-          return;
-        }
-      } else if (selected === '') {
-        showAlert('Please select an appliance or add a new one.', 'warning');
-        return;
       } else {
         var a = allAppliances.find(function(x){ return String(x.id) === String(selected); });
-        if (!a) { showAlert('Please select a valid appliance.', 'warning'); return; }
-        applianceId = a.id;
-        applianceType = a.type;
-        applianceName = a.name;
-        makeBrand = a.make;
-        yearModel = a.year;
+        if (a) {
+          applianceId = a.id;
+          applianceType = a.type;
+          applianceName = a.name;
+          makeBrand = a.make;
+          yearModel = a.year;
+        }
       }
       var issueDesc = document.getElementById('issueDesc').value;
       var preferredDate = document.getElementById('preferredDate').value;
       var preferredTime = document.getElementById('preferredTime').value;
-      if (!issueDesc || !preferredDate || !preferredTime) {
-        showAlert('Please fill in all required fields.', 'warning');
-        return;
-      }
+      var repairmanId = selectedRepairmanIdEl.value;
+
       var fd = new FormData();
       fd.append('action', 'book');
       fd.append('user_id', userId);
@@ -299,8 +712,14 @@
       fd.append('year_model', yearModel);
       if (applianceId) fd.append('appliance_id', applianceId);
       fd.append('issue_desc', issueDesc);
+      fd.append('detailed_report', document.getElementById('detailedReport').value.trim());
       fd.append('preferred_date', preferredDate);
       fd.append('preferred_time', preferredTime);
+      fd.append('repairman_id', repairmanId);
+      fd.append('client_lat', document.getElementById('bookingLat').value);
+      fd.append('client_lng', document.getElementById('bookingLng').value);
+      fd.append('route_distance_km', selectedRepairmanDistEl.value);
+      fd.append('route_duration_min', selectedRepairmanDurEl.value);
       fetch('../../controllers/customer/tickets.php', { method: 'POST', body: fd })
         .then(function(r){ return r.json(); })
         .then(function(data){
@@ -313,13 +732,14 @@
         })
         .catch(function(){ showAlert('Network error. Please try again.', 'error'); });
     });
+
     document.getElementById('logoutBtn').addEventListener('click', function() {
       fetch('../../controllers/logout.php', { method: 'POST' })
         .then(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; })
         .catch(function(){ localStorage.clear(); window.location.href = 'landing-page.html'; });
     });
 
-    loadAppliances();
+    updateSubmitBookingState();
   })();
   </script>
 </body>

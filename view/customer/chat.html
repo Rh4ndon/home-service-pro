@@ -525,6 +525,11 @@
 
     var userId = localStorage.getItem('id');
     var userName = localStorage.getItem('name') || 'Customer';
+    
+    // Get ticket_id and repairman_id from URL if present
+    var urlParams = new URLSearchParams(window.location.search);
+    var ticketIdFromUrl = urlParams.get('ticket_id');
+    var repairmanIdFromUrl = urlParams.get('repairman_id');
 
     document.querySelectorAll('.sidebar-user-name').forEach(function(el) { el.textContent = userName; });
     var initials = userName.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
@@ -547,6 +552,7 @@
     var currentContactId = null;
     var currentContactRole = 'repairman';
     var eventSource = null;
+    var initialMessageSent = false;
 
     var gradients = [
       'linear-gradient(135deg, #1b8de8, #0d71c7)',
@@ -555,6 +561,89 @@
       'linear-gradient(135deg, #f59e0b, #d97706)',
       'linear-gradient(135deg, #ef4444, #dc2626)'
     ];
+
+    function ensureInitialMessage(contactId, contactRole, ticketId) {
+      return new Promise(function(resolve, reject) {
+        console.log('ensureInitialMessage called with:', contactId, contactRole, ticketId);
+        
+        // Check if conversation already has messages
+        fetch('../../controllers/chat/messages.php?user_id=' + userId + '&user_role=customer&contact_id=' + contactId + '&contact_role=' + contactRole)
+          .then(function(r) { 
+            console.log('Messages API response status:', r.status);
+            return r.json(); 
+          })
+          .then(function(data) {
+            console.log('Existing messages:', data.messages ? data.messages.length : 0);
+            if (!data.messages || !data.messages.length) {
+              // No messages yet, send initial message
+              console.log('Sending initial message...');
+              var formData = new FormData();
+              formData.append('sender_id', userId);
+              formData.append('sender_role', 'customer');
+              formData.append('receiver_id', contactId);
+              formData.append('receiver_role', contactRole);
+              var initialMsg = 'Hello! I have submitted repair ticket #' + ticketId + '. Looking forward to your assistance!';
+              formData.append('message', initialMsg);
+              
+              fetch('../../controllers/chat/messages.php', {
+                method: 'POST',
+                body: formData
+              })
+              .then(function(r2) { 
+                console.log('Send message response:', r2.status);
+                return r2.json(); 
+              })
+              .then(function(result) {
+                console.log('Message sent result:', result);
+                resolve(result);
+              })
+              .catch(function(err) {
+                console.error('Failed to send initial message:', err);
+                resolve(false);
+              });
+            } else {
+              console.log('Conversation already exists, skipping initial message');
+              resolve(true);
+            }
+          })
+          .catch(function(err) {
+            console.error('Failed to check existing messages:', err);
+            resolve(false);
+          });
+      });
+    }
+
+    // If coming from ticket with repairman_id, set up the conversation
+    var hasUrlParams = !!(ticketIdFromUrl && repairmanIdFromUrl);
+    if (hasUrlParams && userId) {
+      console.log('Chat: URL params detected - ticket:', ticketIdFromUrl, 'repairman:', repairmanIdFromUrl);
+      currentContactId = repairmanIdFromUrl;
+      currentContactRole = 'repairman';
+      initialMessageSent = false;
+      
+      // Set header info immediately
+      if (chatHeaderName) chatHeaderName.textContent = 'Repairman (Ticket #' + ticketIdFromUrl + ')';
+      if (chatHeaderAvatar) chatHeaderAvatar.textContent = 'RP';
+      
+      // Ensure initial message is sent BEFORE loading contacts
+      ensureInitialMessage(repairmanIdFromUrl, 'repairman', ticketIdFromUrl).then(function() {
+        console.log('Chat: Initial message handled');
+        // Now load the specific conversation
+        loadMessages(repairmanIdFromUrl, 'repairman');
+        
+        // Also highlight/select this contact in the sidebar
+        setTimeout(function() {
+          var contactEl = document.querySelector('.chat-contact[data-contact-id="' + repairmanIdFromUrl + '"]');
+          if (contactEl) {
+            contactEl.click();
+          }
+        }, 800);
+      });
+    } else if (hasUrlParams && !userId) {
+      console.error('Chat: Missing userId');
+    } else if (!hasUrlParams) {
+      console.log('Chat: No URL params, loading normal contacts');
+    }
 
 function loadContacts() {
         if (!userId || !contactsContainer) return;

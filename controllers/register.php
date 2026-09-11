@@ -38,6 +38,21 @@ if (!in_array($role, ['customer', 'repairman'])) {
     exit;
 }
 
+$latitude = trim($_POST['latitude'] ?? '');
+$longitude = trim($_POST['longitude'] ?? '');
+$formatted_address = trim($_POST['formatted_address'] ?? '');
+
+if ($latitude === '' || $longitude === '') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Location is required. Please pin your address on the map or use your device location.']);
+    exit;
+}
+if (!is_numeric($latitude) || !is_numeric($longitude) || (float) $latitude < -90 || (float) $latitude > 90 || (float) $longitude < -180 || (float) $longitude > 180) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid location coordinates.']);
+    exit;
+}
+
 if ($role === 'repairman') {
     $mobile = trim($_POST['mobile'] ?? '');
     if (!isPhilippineMobile($mobile)) {
@@ -60,7 +75,10 @@ if ($role === 'customer') {
     insertRecord('user_clientprofile', [
         'Name' => $name,
         'Email' => $email,
-        'User_ID' => $userId
+        'User_ID' => $userId,
+        'Latitude' => $latitude,
+        'Longitude' => $longitude,
+        'Formatted_Address' => $formatted_address ?: null
     ]);
 }
 
@@ -78,7 +96,10 @@ if ($role === 'repairman') {
         'Skills' => $skills ?: null,
         'Certifications' => $certs_json,
         'User_ID' => $userId,
-        'Status' => 'inactive'
+        'Status' => 'inactive',
+        'Latitude' => $latitude,
+        'Longitude' => $longitude,
+        'Formatted_Address' => $formatted_address ?: null
     ]);
 }
 

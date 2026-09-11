@@ -23,6 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Accept both 'create' and 'book' for compatibility
     if ($action === 'create' || $action === 'book') {
         $date_time = trim(($_POST['preferred_date'] ?? '') . ' ' . ($_POST['preferred_time'] ?? ''));
+        $repairman_id = isset($_POST['repairman_id']) && $_POST['repairman_id'] !== '' ? (int) $_POST['repairman_id'] : null;
+        $client_lat = $_POST['client_lat'] !== '' ? $_POST['client_lat'] : null;
+        $client_lng = $_POST['client_lng'] !== '' ? $_POST['client_lng'] : null;
+        $route_distance_km = $_POST['route_distance_km'] !== '' ? $_POST['route_distance_km'] : null;
+        $route_duration_min = $_POST['route_duration_min'] !== '' ? $_POST['route_duration_min'] : null;
 
         try {
             $result = createCustomerTicket(
@@ -33,7 +38,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_POST['year'] ?? $_POST['year_model'] ?? '',
                 $_POST['issue_desc'] ?? '',
                 $date_time,
-                $_POST['appliance_id'] ?? null
+                $_POST['appliance_id'] ?? null,
+                $repairman_id,
+                $client_lat,
+                $client_lng,
+                $route_distance_km,
+                $route_duration_min,
+                $_POST['detailed_report'] ?? null
             );
             echo json_encode([
                 'status' => 'success',

@@ -286,11 +286,62 @@
 
       document.querySelector('#modalAccept .btn-success').onclick = function() {
         if (!currentScheduleId || !userId) return;
+        
+        // First accept the schedule
         fetch('../../controllers/repairman/schedule.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: 'user_id=' + userId + '&action=accept&schedule_id=' + currentScheduleId
-        }).then(function() { location.reload(); });
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          console.log('Accept response:', data);
+          if (!data.success) {
+            showAlert(data.message || 'Failed to accept appointment', 'error');
+            return;
+          }
+          
+          // After accepting, send initial message to customer
+          fetch('../../controllers/repairman/schedule.php?user_id=' + userId)
+            .then(function(r2) { return r2.json(); })
+            .then(function(schedulesData) {
+              console.log('Schedule data:', schedulesData);
+              if (!schedulesData.data) {
+                console.error('No schedules data found');
+                return;
+              }
+              var schedule = schedulesData.data.find(function(s) { return String(s.schedule_id) == String(currentScheduleId); });
+              console.log('Found schedule:', schedule);
+              if (schedule && schedule.client_id) {
+                console.log('Sending message to client:', schedule.client_id);
+                var formData = new FormData();
+                formData.append('sender_id', userId);
+                formData.append('sender_role', 'repairman');
+                formData.append('receiver_id', schedule.client_id);
+                formData.append('receiver_role', 'customer');
+                formData.append('message', 'Hello! I have accepted your repair appointment. I will be in touch shortly to confirm the details.');
+                
+                fetch('../../controllers/chat/messages.php', {
+                  method: 'POST',
+                  body: formData
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(result) {
+                  console.log('Message sent result:', result);
+                })
+                .catch(function(err) {
+                  console.error('Failed to send message:', err);
+                });
+              } else {
+                console.error('Schedule not found or no client_id:', schedule);
+              }
+            })
+            .catch(function(err) {
+              console.error('Failed to fetch schedule:', err);
+            });
+        })
+        .then(function() { location.reload(); })
+        .catch(function(err) { console.error('Accept error:', err); location.reload(); });
       };
 
       document.querySelector('#modalDecline .btn-danger').onclick = function() {

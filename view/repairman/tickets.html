@@ -103,29 +103,38 @@
 
   <!-- Modal: View Ticket Detail -->
   <div class="modal-overlay" id="modalViewTicket">
-    <div class="modal" style="width: min(560px, calc(100% - 32px));">
+    <div class="modal" style="width: min(720px, calc(100% - 32px));">
       <div class="modal-header">
-        <h3>Ticket Detail - #1045</h3>
+        <h3 id="viewTicketTitle">Ticket Detail</h3>
         <button class="modal-close" onclick="closeModal('modalViewTicket')">&times;</button>
       </div>
       <div class="modal-body">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
-          <div><strong>Client:</strong> Ana Dela Cruz</div>
-          <div><strong>Date Opened:</strong> Aug 18, 2026</div>
-          <div><strong>Appliance:</strong> Refrigerator</div>
-          <div><strong>Status:</strong> <span class="badge badge-neutral">Assigned</span></div>
+          <div><strong>Client:</strong> <span id="viewTicketClient">—</span></div>
+          <div><strong>Date Opened:</strong> <span id="viewTicketDate">—</span></div>
+          <div><strong>Appliance:</strong> <span id="viewTicketAppliance">—</span></div>
+          <div><strong>Status:</strong> <span id="viewTicketStatus">—</span></div>
         </div>
         <div style="margin-bottom: 14px;">
           <strong>Issue Description:</strong>
-          <p style="margin-top: 4px; color: var(--muted);">Client reports that the refrigerator is not cooling properly. The freezer compartment is not reaching the desired temperature and ice is melting. Compressor seems to be running but no cold air is being produced.</p>
+          <p id="viewTicketIssue" style="margin-top: 4px; color: var(--muted);">—</p>
         </div>
         <div style="margin-bottom: 14px;">
           <strong>Appliance Details:</strong>
-          <p style="margin-top: 4px; color: var(--muted);">Brand: Samsung | Model: RT28K5131S8 | Type: Double Door | Age: 3 years</p>
+          <p id="viewTicketDetails" style="margin-top: 4px; color: var(--muted);">—</p>
         </div>
-        <div>
+        <div id="viewTicketDetailedReportWrap" style="margin-bottom: 14px; display: none;">
+          <strong>Detailed Report:</strong>
+          <p id="viewTicketDetailedReport" style="margin-top: 4px; color: var(--muted); white-space: pre-wrap;">—</p>
+        </div>
+        <div style="margin-bottom: 14px;">
           <strong>Client Address:</strong>
-          <p style="margin-top: 4px; color: var(--muted);">123 Rizal St, Brgy. Loyola Heights, Quezon City</p>
+          <p id="viewTicketAddress" style="margin-top: 4px; color: var(--muted);">—</p>
+        </div>
+        <div id="viewTicketMapWrap" style="margin-bottom: 14px; display: none;">
+          <strong>Route to Client:</strong>
+          <div id="viewTicketMap" style="width: 100%; height: 280px; border-radius: 10px; margin-top: 8px; border: 1px solid var(--line);"></div>
+          <p id="viewTicketRouteInfo" style="margin-top: 6px; font-size: 0.85rem; color: var(--muted);"></p>
         </div>
       </div>
       <div class="modal-footer">
@@ -218,6 +227,37 @@
       document.querySelectorAll('#logoutModal .btn-danger').forEach(function(btn) { btn.onclick = logout; });
 
       var currentTicketId = null;
+      var allTickets = [];
+      var repairmanLocation = null;
+      var viewTicketMap = null;
+      var directionsRenderer = null;
+      var directionsService = null;
+      var googleMapsLoaded = false;
+
+      function loadGoogleMaps() {
+        if (googleMapsLoaded || window.google && window.google.maps) {
+          googleMapsLoaded = true;
+          return Promise.resolve();
+        }
+        return fetch('../../controllers/maps-config.php')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            var key = data.key || data.api_key || '';
+            return new Promise(function(resolve, reject) {
+              window.__ticketsMapReady = function() {
+                googleMapsLoaded = true;
+                resolve();
+              };
+              var s = document.createElement('script');
+              s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&callback=__ticketsMapReady';
+              s.async = true;
+              s.defer = true;
+              s.onerror = function() { reject(new Error('Failed to load Google Maps')); };
+              document.head.appendChild(s);
+            });
+          })
+          .catch(function() { return Promise.resolve(); });
+      }
 
       function getStatusMap(status) {
         var s = (status || '').toLowerCase();
@@ -231,16 +271,31 @@
       function buildActionBtns(ticket) {
         var s = (ticket.status || '').toLowerCase();
         var html = '';
+        var tid = ticket.ticket_id || ticket.id || '';
+        var clientName = (ticket.client_name || 'Client').replace(/'/g, "\\'");
+        var clientId = ticket.client_id || '';
         if (s === 'assigned' || s === 'pending') {
-          html += '<button class="btn btn-primary btn-sm" onclick="acceptTicket(' + ticket.id + ')">Accept</button>';
+          html += '<button class="btn btn-primary btn-sm" onclick="acceptTicket(' + tid + ')">Accept</button>';
         }
         if (s === 'in_progress' || s === 'progress') {
-          html += '<a href="chat.html" class="btn btn-primary btn-sm">Chat</a>';
-          html += '<button class="btn btn-success btn-sm" onclick="completeTicket(' + ticket.id + ')">Mark Complete</button>';
+          html += '<button class="btn btn-primary btn-sm" onclick="viewTicketAndChat(' + tid + ', \'' + clientName + '\', ' + clientId + ')">Chat</button>';
+          html += '<button class="btn btn-success btn-sm" onclick="completeTicket(' + tid + ')">Mark Complete</button>';
         }
-        html += '<button class="btn btn-secondary btn-sm" onclick="viewTicket(this)">View</button>';
+        html += '<button class="btn btn-secondary btn-sm" onclick="viewTicket(' + tid + ')">View</button>';
         return html;
       }
+
+      window.viewTicketAndChat = function(ticketId, clientName, clientId) {
+        if (!clientId) {
+          showAlert('Cannot start chat: Customer information not available.', 'error');
+          return;
+        }
+        localStorage.setItem('currentTicketId', ticketId);
+        localStorage.setItem('currentConversationPartner', clientName);
+        localStorage.setItem('currentConversationType', 'repairman-customer');
+        localStorage.setItem('currentCustomerId', clientId);
+        window.location.href = 'chat.html?ticket_id=' + ticketId + '&client_id=' + clientId;
+      };
 
       window.acceptTicket = function(ticketId) {
         currentTicketId = ticketId;
@@ -252,24 +307,128 @@
         openModal('modalUpdateStatus');
       };
 
-      window.viewTicket = function(btn) {
-        var row = btn.closest('tr');
-        if (!row) return;
-        var cells = row.querySelectorAll('td');
-        var modal = document.getElementById('modalViewTicket');
-        modal.querySelector('h3').textContent = 'Ticket Detail - ' + (cells[0].textContent || '');
-        var grid = modal.querySelector('[style*="grid-template-columns"]');
-        if (grid) {
-          grid.children[0].innerHTML = '<strong>Client:</strong> ' + (cells[1].textContent || '');
-          grid.children[1].innerHTML = '<strong>Date Opened:</strong> ' + (cells[4].textContent || '');
-          grid.children[2].innerHTML = '<strong>Appliance:</strong> ' + (cells[2].textContent || '');
-          grid.children[3].innerHTML = '<strong>Status:</strong> ' + (cells[5].innerHTML || '');
+      function buildAddress(ticket) {
+        if (ticket.client_formatted_address) return ticket.client_formatted_address;
+        var parts = [];
+        if (ticket.Address_Line1) parts.push(ticket.Address_Line1);
+        if (ticket.Address_Line2) parts.push(ticket.Address_Line2);
+        if (ticket.Brgy) parts.push(ticket.Brgy);
+        if (ticket.City_Min) parts.push(ticket.City_Min);
+        if (ticket.Province) parts.push(ticket.Province);
+        return parts.join(', ') || 'Address not available';
+      }
+
+      function initViewTicketMap(origin, destination, routeInfo) {
+        var mapEl = document.getElementById('viewTicketMap');
+        if (!mapEl || !google || !google.maps) return;
+        
+        if (!viewTicketMap) {
+          viewTicketMap = new google.maps.Map(mapEl, {
+            zoom: 13,
+            mapTypeControl: false,
+            streetViewControl: false
+          });
+          directionsService = new google.maps.DirectionsService();
+          directionsRenderer = new google.maps.DirectionsRenderer({
+            map: viewTicketMap,
+            suppressMarkers: false,
+            polylineOptions: {
+              strokeColor: '#2563eb',
+              strokeOpacity: 0.8,
+              strokeWeight: 5
+            }
+          });
         }
-        var issueEl = modal.querySelectorAll('[style*="margin-bottom"]');
-        if (issueEl.length > 0) {
-          var pEl = issueEl[0].querySelector('p');
-          if (pEl) pEl.textContent = cells[3].textContent || '';
+
+        directionsService.route({
+          origin: origin,
+          destination: destination,
+          travelMode: google.maps.TravelMode.DRIVING
+        }, function(result, status) {
+          if (status === google.maps.DirectionsStatus.OK) {
+            directionsRenderer.setDirections(result);
+            // Fit bounds to show full route
+            var bounds = new google.maps.LatLngBounds();
+            result.routes[0].legs.forEach(function(leg) {
+              bounds.extend(leg.start_location);
+              bounds.extend(leg.end_location);
+            });
+            viewTicketMap.fitBounds(bounds);
+          } else {
+            // Fallback: just show markers
+            directionsRenderer.setDirections(null);
+            var marker1 = new google.maps.Marker({ position: origin, map: viewTicketMap, title: 'Your Location' });
+            var marker2 = new google.maps.Marker({ position: destination, map: viewTicketMap, title: 'Client Location' });
+            var bounds = new google.maps.LatLngBounds();
+            bounds.extend(origin);
+            bounds.extend(destination);
+            viewTicketMap.fitBounds(bounds);
+          }
+        });
+
+        var routeInfoEl = document.getElementById('viewTicketRouteInfo');
+        if (routeInfoEl && routeInfo) {
+          routeInfoEl.textContent = routeInfo;
         }
+      }
+
+      window.viewTicket = function(ticketId) {
+        var ticket = allTickets.find(function(t) { return (t.ticket_id || t.id) == ticketId; });
+        if (!ticket) return;
+
+        document.getElementById('viewTicketTitle').textContent = 'Ticket Detail - #' + (ticket.ticket_id || ticket.id || '');
+        document.getElementById('viewTicketClient').textContent = ticket.client_name || '—';
+        document.getElementById('viewTicketDate').textContent = ticket.schedule_date || ticket.date_opened || '—';
+        document.getElementById('viewTicketAppliance').textContent = (ticket.appliance_name || '') + (ticket.appliance_type ? ' (' + ticket.appliance_type + ')' : '');
+        var st = getStatusMap(ticket.ticket_status || ticket.status);
+        document.getElementById('viewTicketStatus').innerHTML = '<span class="badge ' + st.cls + '">' + st.label + '</span>';
+        document.getElementById('viewTicketIssue').textContent = ticket.issue || ticket.issue_details || ticket.ticket_details || '—';
+        
+        var detailsParts = [];
+        if (ticket.appliance_make) detailsParts.push('Brand: ' + ticket.appliance_make);
+        if (ticket.appliance_year) detailsParts.push('Year: ' + ticket.appliance_year);
+        if (ticket.appliance_type) detailsParts.push('Type: ' + ticket.appliance_type);
+        document.getElementById('viewTicketDetails').textContent = detailsParts.length ? detailsParts.join(' | ') : '—';
+        
+        var address = buildAddress(ticket);
+        document.getElementById('viewTicketAddress').textContent = address;
+
+        // Show detailed report if available
+        var detailedReportWrap = document.getElementById('viewTicketDetailedReportWrap');
+        var detailedReportEl = document.getElementById('viewTicketDetailedReport');
+        if (detailedReportWrap && detailedReportEl) {
+          if (ticket.detailed_report) {
+            detailedReportWrap.style.display = '';
+            detailedReportEl.textContent = ticket.detailed_report;
+          } else {
+            detailedReportWrap.style.display = 'none';
+          }
+        }
+
+        // Show map if we have location data
+        var mapWrap = document.getElementById('viewTicketMapWrap');
+        var clientLat = ticket.Client_Lat || ticket.client_lat;
+        var clientLng = ticket.Client_Lng || ticket.client_lng;
+        
+        if (repairmanLocation && clientLat && clientLng && mapWrap) {
+          mapWrap.style.display = '';
+          var origin = { lat: parseFloat(repairmanLocation.lat), lng: parseFloat(repairmanLocation.lng) };
+          var destination = { lat: parseFloat(clientLat), lng: parseFloat(clientLng) };
+          var routeInfo = '';
+          if (ticket.Route_Distance_Km) routeInfo += 'Distance: ' + ticket.Route_Distance_Km + ' km';
+          if (ticket.Route_Duration_Min) routeInfo += (routeInfo ? ' | ' : '') + 'Est. drive: ' + ticket.Route_Duration_Min + ' min';
+          if (!routeInfo && ticket.distance_km) routeInfo = 'Distance: ' + ticket.distance_km + ' km';
+          
+          // Load Google Maps and initialize map
+          loadGoogleMaps().then(function() {
+            setTimeout(function() {
+              initViewTicketMap(origin, destination, routeInfo);
+            }, 300);
+          });
+        } else if (mapWrap) {
+          mapWrap.style.display = 'none';
+        }
+
         openModal('modalViewTicket');
       };
 
@@ -299,10 +458,22 @@
 
       if (!userId) return;
 
+      // Fetch repairman profile for location
+      fetch('../../controllers/repairman/profile.php?user_id=' + userId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var p = data.data || {};
+          if (p.Latitude && p.Longitude) {
+            repairmanLocation = { lat: p.Latitude, lng: p.Longitude };
+          }
+        })
+        .catch(function() {});
+
       fetch('../../controllers/repairman/tickets.php?user_id=' + userId)
         .then(function(r) { return r.json(); })
         .then(function(data) {
           var tickets = data.data || data.tickets || data;
+          allTickets = tickets || [];
           var tbody = document.querySelector('#ticketTable tbody');
           if (!tbody) return;
           tbody.innerHTML = '';
@@ -321,7 +492,6 @@
 
           tickets.forEach(function(t) {
             counts.all++;
-            // Map controller fields (ticket_id, client_name, appliance_name, issue, schedule_date, ticket_status)
             var status = t.ticket_status || t.status || '';
             var st = getStatusMap(status);
             counts[st.ds]++;

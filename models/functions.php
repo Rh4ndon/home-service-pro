@@ -344,17 +344,22 @@ function deleteCustomerAppliance($id, $client_id) {
 function getCustomerTickets($client_id) {
     global $conn;
     $stmt = $conn->prepare("
-        SELECT repairticket.*, repairschedule.Date_Time AS ScheduleDate, repairschedule.Status AS ScheduleStatus,
-               user_repairmanprofile.Name AS RepairmanName,
-               clientappliances.Name AS ApplianceName,
-               clientappliances.Type AS ApplianceType,
-               clientappliances.Make AS ApplianceMake,
-               clientappliances.Year AS ApplianceYear
+        SELECT repairticket.ID as ticket_id, repairticket.Status as ticket_status, repairticket.Details as ticket_details,
+               repairticket.Repairman_ID as repairman_id,
+               repairticket.Client_Lat, repairticket.Client_Lng, repairticket.Route_Distance_Km, repairticket.Route_Duration_Min,
+               cp.Name as client_name, cp.Latitude as client_lat, cp.Longitude as client_lng,
+               cp.Formatted_Address as client_formatted_address,
+               cp.Address_Line1, cp.Address_Line2, cp.Brgy, cp.City_Min, cp.Province,
+               ca.Name as appliance_name, ca.Type as appliance_type, ca.Make as appliance_make, ca.Year as appliance_year,
+               ai.Issue as issue, ai.Details as issue_details, ai.Detailed_Report as detailed_report,
+               rs.Date_Time as schedule_date, rs.Status as schedule_status,
+               urp.Name as repairman_name
         FROM repairticket
-        LEFT JOIN repairschedule ON repairticket.Schedule_ID = repairschedule.ID
-        LEFT JOIN user_repairmanprofile ON repairticket.Repairman_ID = user_repairmanprofile.ID
-        LEFT JOIN applianceissue ON applianceissue.Ticket_ID = repairticket.ID
-        LEFT JOIN clientappliances ON clientappliances.ID = COALESCE(repairticket.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = applianceissue.ID LIMIT 1))
+        LEFT JOIN user_clientprofile cp ON repairticket.Client_ID = cp.ID
+        LEFT JOIN repairschedule rs ON repairticket.Schedule_ID = rs.ID
+        LEFT JOIN user_repairmanprofile urp ON repairticket.Repairman_ID = urp.ID
+        LEFT JOIN applianceissue ai ON repairticket.ID = ai.Ticket_ID
+        LEFT JOIN clientappliances ca ON ca.ID = COALESCE(repairticket.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = ai.ID LIMIT 1))
         WHERE repairticket.Client_ID = ?
         ORDER BY repairticket.ID DESC
     ");
@@ -363,18 +368,31 @@ function getCustomerTickets($client_id) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function createCustomerTicket($client_id, $appliance_type, $appliance_name, $make_brand, $year, $issue_desc, $date_time, $appliance_id = null) {
+function createCustomerTicket($client_id, $appliance_type, $appliance_name, $make_brand, $year, $issue_desc, $date_time, $appliance_id = null, $repairman_id = null, $client_lat = null, $client_lng = null, $route_distance_km = null, $route_duration_min = null, $detailed_report = null) {
     global $conn;
     startTransaction();
     try {
+        // Confirm the chosen repairman is still valid before assigning
+        if ($repairman_id && !isRepairmanAssignable($repairman_id)) {
+            throw new Exception('The selected repairman is no longer available.');
+        }
+
         // 1. Insert ticket first (no schedule yet)
         $ticket_id = insertOrder('repairticket', [
-            'Client_ID' => $client_id, 'Status' => 'Open', 'Details' => $issue_desc
+            'Client_ID' => $client_id,
+            'Status' => 'Open',
+            'Details' => $issue_desc,
+            'Repairman_ID' => $repairman_id,
+            'Client_Lat' => $client_lat,
+            'Client_Lng' => $client_lng,
+            'Route_Distance_Km' => $route_distance_km,
+            'Route_Duration_Min' => $route_duration_min
         ]);
         
         // 2. Insert issue linked to ticket
         $issue_id = insertOrder('applianceissue', [
-            'Issue' => $issue_desc, 'Details' => $issue_desc, 'Ticket_ID' => $ticket_id
+            'Issue' => $issue_desc, 'Details' => $issue_desc, 'Ticket_ID' => $ticket_id,
+            'Detailed_Report' => $detailed_report
         ]);
         
         // 3. Link to an existing appliance, or create a new one
@@ -395,7 +413,8 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
         
         // 4. Insert schedule
         $schedule_id = insertOrder('repairschedule', [
-            'Client_ID' => $client_id, 'Date_Time' => $date_time, 'Status' => 'Scheduled'
+            'Client_ID' => $client_id, 'Date_Time' => $date_time, 'Status' => 'Scheduled',
+            'Repairman_ID' => $repairman_id
         ]);
         
         // 5. Update ticket with schedule_id
@@ -563,9 +582,14 @@ function getRepairmanTickets($repairman_id) {
     global $conn;
     $stmt = $conn->prepare("
         SELECT t.ID as ticket_id, t.Status as ticket_status, t.Details as ticket_details, 
-               cp.Name as client_name, ca.Name as appliance_name, ca.Type as appliance_type, 
-               ai.Issue as issue, ai.Details as issue_details,
-               rs.Date_Time as schedule_date, rs.Status as schedule_status
+               t.Client_ID as client_id,
+               t.Client_Lat, t.Client_Lng, t.Route_Distance_Km, t.Route_Duration_Min,
+                cp.Name as client_name, cp.Latitude as client_lat, cp.Longitude as client_lng,
+                cp.Formatted_Address as client_formatted_address,
+                cp.Address_Line1, cp.Address_Line2, cp.Brgy, cp.City_Min, cp.Province,
+                ca.Name as appliance_name, ca.Type as appliance_type, ca.Make as appliance_make, ca.Year as appliance_year,
+                ai.Issue as issue, ai.Details as issue_details, ai.Detailed_Report as detailed_report,
+                 rs.Date_Time as schedule_date, rs.Status as schedule_status
         FROM repairticket t 
         LEFT JOIN user_clientprofile cp ON t.Client_ID = cp.ID 
         LEFT JOIN applianceissue ai ON t.ID = ai.Ticket_ID 
@@ -632,7 +656,8 @@ function getRepairmanSchedule($repairman_id) {
     global $conn;
     $stmt = $conn->prepare("
         SELECT rs.ID as schedule_id, rs.Date_Time as schedule_date, rs.Status as schedule_status, 
-cp.Name as client_name, t.ID as ticket_id, t.Details as ticket_details,
+               rs.Client_ID as client_id,
+               cp.Name as client_name, t.ID as ticket_id, t.Details as ticket_details,
                 ca.Name as appliance_name, ca.Type as appliance_type, 
                 ai.Issue as issue, ai.Details as issue_details,
                 CONCAT_WS(', ', cp.Address_Line1, cp.City_Min, cp.Province) as client_address
@@ -714,7 +739,7 @@ function getRepairmanHistory($repairman_id, $date_from = null, $date_to = null, 
     $sql = "SELECT rh.ID as history_id, rh.Date as repair_date, rh.Status as repair_status, 
                    rs.Date_Time as schedule_date, t.ID as ticket_id, t.Details as ticket_details,
                    ca.Name as appliance_name, ca.Type as appliance_type, 
-                   ai.Issue as issue, ai.Details as issue_details,
+               ai.Issue as issue, ai.Details as issue_details, ai.Detailed_Report as detailed_report,
                    cp.Name as client_name, cp.Email as client_email
             FROM repairhistory rh 
             LEFT JOIN repairschedule rs ON rh.Schedule_ID = rs.ID 
@@ -1088,4 +1113,195 @@ function getChatMessageById($id) {
     $stmt->bind_param("i", $id);
     $stmt->execute();
     return $stmt->get_result()->fetch_assoc();
+}
+
+// ==========================================
+// LOCATION & MATCHING MODEL FUNCTIONS
+// ==========================================
+
+function getGoogleMapsApiKey() {
+    $env_file = __DIR__ . '/../controllers/.env';
+    $key = '';
+    if (file_exists($env_file)) {
+        $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (!$line || strpos($line, '#') === 0) continue;
+            if (strpos($line, 'GOOGLE_MAP_API_KEY=') === 0) {
+                $key = trim(substr($line, strlen('GOOGLE_MAP_API_KEY=')));
+                break;
+            }
+        }
+    }
+    return $key ?: getenv('GOOGLE_MAP_API_KEY');
+}
+
+function haversineDistanceKm($lat1, $lng1, $lat2, $lng2) {
+    if ($lat1 === null || $lng1 === null || $lat2 === null || $lng2 === null) return null;
+    $earth_radius_km = 6371.0;
+    $dLat = deg2rad((float) $lat2 - (float) $lat1);
+    $dLng = deg2rad((float) $lng2 - (float) $lng1);
+    $a = sin($dLat / 2) * sin($dLat / 2) +
+         cos(deg2rad((float) $lat1)) * cos(deg2rad((float) $lat2)) *
+         sin($dLng / 2) * sin($dLng / 2);
+    $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+    return $earth_radius_km * $c;
+}
+
+function getAvailableRepairmenWithLocation($skill = null, $limit = 50) {
+    global $conn;
+    $sql = "
+        SELECT urp.ID, urp.User_ID, urp.Name, urp.Email, urp.Latitude, urp.Longitude,
+               urp.Formatted_Address, urp.MobileNo, urp.Availability, urp.Skills,
+               urp.Education, urp.Certifications, urp.Ratings, urp.Reviews, urp.Details,
+               u.Status AS AccountStatus,
+               (SELECT COUNT(*) FROM repairhistory rh WHERE rh.Repairman_ID = urp.ID) AS CompletedRepairs
+        FROM user_repairmanprofile urp
+        JOIN users u ON u.ID = urp.User_ID
+        WHERE u.Status = 'active'
+          AND urp.Status = 'active'
+          AND urp.Latitude IS NOT NULL
+          AND urp.Longitude IS NOT NULL
+          AND (urp.Availability IS NULL OR urp.Availability = '' OR LOWER(urp.Availability) IN ('1','available','yes'))
+    ";
+    $types = '';
+    $params = [];
+    if ($skill) {
+        $sql .= " AND FIND_IN_SET(?, urp.Skills)";
+        $types .= 's';
+        $params[] = $skill;
+    }
+    $sql .= " ORDER BY urp.Ratings DESC LIMIT ?";
+    $types .= 'i';
+    $params[] = $limit;
+
+    $stmt = $conn->prepare($sql);
+    if ($types) $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+function isRepairmanAssignable($repairman_id) {
+    global $conn;
+    $stmt = $conn->prepare("
+        SELECT urp.ID FROM user_repairmanprofile urp
+        JOIN users u ON u.ID = urp.User_ID
+        WHERE urp.ID = ? AND u.Status = 'active' AND urp.Status = 'active'
+          AND urp.Latitude IS NOT NULL AND urp.Longitude IS NOT NULL
+          AND (urp.Availability IS NULL OR urp.Availability = '' OR LOWER(urp.Availability) IN ('1','available','yes'))
+    ");
+    $stmt->bind_param("i", $repairman_id);
+    $stmt->execute();
+    return (bool) $stmt->get_result()->fetch_assoc();
+}
+
+function routeDistancesFromDistanceMatrix($origin_lat, $origin_lng, array $destinations, $key) {
+    // Origins = repairmen, destination(s) = client (one destination).
+    // Returns keyed by repairman ID: ['km' => float, 'min' => int].
+    if (!$key || !$destinations || $origin_lat === null || $origin_lng === null) return [];
+
+    $origins = [];
+    foreach ($destinations as $r) {
+        if ($r['Latitude'] !== null && $r['Longitude'] !== null) {
+            $origins[$r['ID']] = number_format((float) $r['Latitude'], 6, '.', '') . ',' . number_format((float) $r['Longitude'], 6, '.', '');
+        }
+    }
+    if (!$origins) return [];
+
+    $origins_str = implode('|', array_values($origins));
+    $dest_str = number_format((float) $origin_lat, 6, '.', '') . ',' . number_format((float) $origin_lng, 6, '.', '');
+
+    $url = 'https://maps.googleapis.com/maps/api/distancematrix/json'
+        . '?origins=' . urlencode($origins_str)
+        . '&destinations=' . urlencode($dest_str)
+        . '&mode=driving'
+        . '&units=metric'
+        . '&key=' . urlencode($key);
+
+    $ctx = stream_context_create(['http' => ['timeout' => 15]]);
+    $resp = @file_get_contents($url, false, $ctx);
+    if ($resp === false) return [];
+    $data = json_decode($resp, true);
+    if (empty($data['status']) || $data['status'] !== 'OK') return [];
+
+    $result = [];
+    $id_list = array_keys($origins);
+    foreach (($data['rows'] ?? []) as $i => $row) {
+        if (!isset($id_list[$i])) continue;
+        $id = $id_list[$i];
+        $elem = $row['elements'][0] ?? null;
+        if (!$elem || ($elem['status'] ?? '') !== 'OK') {
+            $result[$id] = null; // flag as no route found
+            continue;
+        }
+        $km = isset($elem['distance']['value']) ? round($elem['distance']['value'] / 1000.0, 2) : null;
+        $min = isset($elem['duration']['value']) ? (int) round($elem['duration']['value'] / 60.0) : null;
+        $result[$id] = ['km' => $km, 'min' => $min];
+    }
+    return $result;
+}
+
+function findNearbyRepairmen($client_lat, $client_lng, $radius_km = 10, $skill = null) {
+    if ($client_lat === null || $client_lng === null) {
+        return ['repairmen' => [], 'method' => 'none', 'error' => 'Client location is required.'];
+    }
+    $repairmen = getAvailableRepairmenWithLocation($skill);
+    if (!$repairmen) return ['repairmen' => [], 'method' => 'none'];
+
+    $key = getGoogleMapsApiKey();
+    $routes = routeDistancesFromDistanceMatrix($client_lat, $client_lng, $repairmen, $key);
+    $method = $routes ? 'route' : 'haversine';
+
+    $result = [];
+    foreach ($repairmen as $r) {
+        $rid = $r['ID'];
+        $route = $routes[$rid] ?? null;
+        if ($route === null && $routes) {
+            // Distance Matrix returned no drivable route for this repairman -> straight-line estimate
+            $distance = haversineDistanceKm($client_lat, $client_lng, $r['Latitude'], $r['Longitude']);
+            $r['distance_km'] = $distance !== null ? round($distance, 2) : null;
+            $r['duration_min'] = $distance !== null ? (int) round(($distance / 25.0) * 60.0) : null;
+            $r['route_used'] = false;
+        } elseif ($route) {
+            $r['distance_km'] = $route['km'];
+            $r['duration_min'] = $route['min'];
+            $r['route_used'] = true;
+        } else {
+            // No Google response at all -> Haversine fallback
+            $distance = haversineDistanceKm($client_lat, $client_lng, $r['Latitude'], $r['Longitude']);
+            $r['distance_km'] = $distance !== null ? round($distance, 2) : null;
+            $r['duration_min'] = $distance !== null ? (int) round(($distance / 40.0) * 60.0) : null;
+            $r['route_used'] = false;
+        }
+
+        if ($r['distance_km'] !== null && $r['distance_km'] <= (float) $radius_km) {
+            $result[] = $r;
+        }
+    }
+
+    usort($result, function ($a, $b) {
+        return ($a['distance_km'] ?? PHP_FLOAT_MAX) <=> ($b['distance_km'] ?? PHP_FLOAT_MAX);
+    });
+
+    return ['repairmen' => $result, 'method' => $method, 'radius_km' => (float) $radius_km];
+}
+
+function updateRepairmanLocation($user_id, $lat, $lng, $address) {
+    global $conn;
+    $lat = ($lat === '' || $lat === null) ? null : $lat;
+    $lng = ($lng === '' || $lng === null) ? null : $lng;
+    $address = ($address === '' || $address === null) ? null : $address;
+    $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Latitude=?, Longitude=?, Formatted_Address=? WHERE User_ID=?");
+    $stmt->bind_param("ddss", $lat, $lng, $address, $user_id);
+    return $stmt->execute();
+}
+
+function updateCustomerLocation($profile_id, $lat, $lng, $address) {
+    global $conn;
+    $lat = ($lat === '' || $lat === null) ? null : $lat;
+    $lng = ($lng === '' || $lng === null) ? null : $lng;
+    $address = ($address === '' || $address === null) ? null : $address;
+    $stmt = $conn->prepare("UPDATE user_clientprofile SET Latitude=?, Longitude=?, Formatted_Address=? WHERE ID=?");
+    $stmt->bind_param("ddsi", $lat, $lng, $address, $profile_id);
+    return $stmt->execute();
 }
