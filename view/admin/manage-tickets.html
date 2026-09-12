@@ -8,6 +8,73 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../shared.css">
+  <style>
+    .hs-combobox {
+      position: relative;
+    }
+    .hs-combobox input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--line, #e2e8f0);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      outline: none;
+      box-sizing: border-box;
+      background: var(--card-bg, #fff);
+      color: var(--text, #1a1a2e);
+    }
+    .hs-combobox input:focus {
+      border-color: var(--primary, #1b8de8);
+    }
+    .hs-combobox-list {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 4px);
+      background: var(--card-bg, #fff);
+      border: 1px solid var(--line, #e2e8f0);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 50;
+      display: none;
+    }
+    .hs-combobox-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .hs-combobox-item:hover,
+    .hs-combobox-item.selected {
+      background: rgba(27, 141, 232, 0.1);
+    }
+    .hs-combobox-item .hs-sub {
+      color: var(--muted, #6b7280);
+      font-size: 0.78rem;
+    }
+    .hs-combobox-empty {
+      padding: 12px 14px;
+      color: var(--muted, #6b7280);
+      font-size: 0.85rem;
+    }
+    .hs-reassign-selected {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(27, 141, 232, 0.1);
+      color: var(--primary, #1b8de8);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+  </style>
 </head>
 <body>
   <aside class="sidebar">
@@ -318,26 +385,24 @@
       <div class="modal-body">
         <div class="form-group">
           <label>Current Repairman</label>
-          <input type="text" value="Juan Dela Rosa" disabled style="background:var(--panel);color:var(--muted);">
+          <input type="text" id="reassignCurrent" disabled style="background:var(--panel);color:var(--muted);">
         </div>
         <div class="form-group">
           <label>Select New Repairman</label>
-          <select>
-            <option value="" disabled selected>Choose a repairman...</option>
-            <option>Ramon Cruz</option>
-            <option>Pedro Mendoza</option>
-            <option>Carlo Villanueva</option>
-            <option>Roberto Garcia</option>
-          </select>
+          <div class="hs-combobox">
+            <input type="text" id="reassignSearch" placeholder="Type to search by name or email..." autocomplete="off">
+            <div class="hs-combobox-list" id="reassignList"></div>
+          </div>
+          <div class="hs-reassign-selected" id="reassignSelected" style="display:none;"></div>
         </div>
         <div class="form-group">
           <label>Reason for Reassignment</label>
-          <textarea placeholder="Enter the reason for reassigning this ticket..."></textarea>
+          <textarea id="reassignReason" placeholder="Enter the reason for reassigning this ticket..."></textarea>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('reassignModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="doAction('reassignModal','Ticket reassigned successfully!')">Confirm Reassignment</button>
+        <button class="btn btn-primary" id="confirmReassignBtn">Confirm Reassignment</button>
       </div>
     </div>
   </div>
@@ -397,6 +462,13 @@
     var tbody = document.querySelector('#ticketsTable tbody');
     var selectedTicketId = null;
     var currentStatus = 'all';
+
+    var reassignRepairmen = [];
+    var reassignSelectedId = null;
+    var reassignSearchEl = document.getElementById('reassignSearch');
+    var reassignListEl = document.getElementById('reassignList');
+    var reassignSelectedEl = document.getElementById('reassignSelected');
+    var reassignCurrentEl = document.getElementById('reassignCurrent');
 
     function renderStatusBadge(status) {
       var s = (status || '').toLowerCase();
@@ -506,6 +578,48 @@
       });
     }
 
+    function escHtml(str) {
+      var d = document.createElement('div');
+      d.appendChild(document.createTextNode(String(str == null ? '' : str)));
+      return d.innerHTML;
+    }
+
+    function renderReassignList() {
+      if (!reassignListEl) return;
+      var term = (reassignSearchEl.value || '').toLowerCase().trim();
+      var active = reassignRepairmen.filter(function(r) {
+        return (r.Status || 'active').toLowerCase() === 'active';
+      });
+      var filtered = term
+        ? active.filter(function(r) {
+            return (r.Name || '').toLowerCase().indexOf(term) !== -1 ||
+                   (r.Email || '').toLowerCase().indexOf(term) !== -1;
+          })
+        : active;
+      filtered = filtered.slice(0, 50);
+      if (!filtered.length) {
+        reassignListEl.innerHTML = '<div class="hs-combobox-empty">No repairmen found.</div>';
+        reassignListEl.style.display = 'block';
+        return;
+      }
+      reassignListEl.innerHTML = filtered.map(function(r) {
+        return '<div class="hs-combobox-item" data-id="' + r.ID + '">' +
+          '<span>' + escHtml(r.Name) + '</span>' +
+          '<span class="hs-sub">' + escHtml(r.Email) + '</span></div>';
+      }).join('');
+      reassignListEl.style.display = 'block';
+    }
+
+    function selectReassignRepairman(id, name) {
+      reassignSelectedId = id;
+      if (reassignSearchEl) reassignSearchEl.value = name || '';
+      if (reassignSelectedEl) {
+        reassignSelectedEl.style.display = 'flex';
+        reassignSelectedEl.innerHTML = '&#10003; Selected: ' + escHtml(name || '');
+      }
+      if (reassignListEl) reassignListEl.style.display = 'none';
+    }
+
     tbody.addEventListener('click', function(e) {
       var btn = e.target.closest('[data-action]');
       if (!btn) return;
@@ -556,53 +670,79 @@
           })
           .catch(function(err) { console.error('Fetch ticket detail error:', err); });
       } else if (action === 'reassign') {
+        selectedTicketId = id;
+        reassignSelectedId = null;
+        if (reassignSearchEl) reassignSearchEl.value = '';
+        if (reassignSelectedEl) { reassignSelectedEl.style.display = 'none'; reassignSelectedEl.innerHTML = ''; }
+        if (reassignListEl) { reassignListEl.innerHTML = ''; reassignListEl.style.display = 'none'; }
+        var row = btn.closest('tr');
+        var curName = row ? (row.children[2] ? row.children[2].textContent : '') : '';
+        if (reassignCurrentEl) reassignCurrentEl.value = (curName || 'Unassigned').trim();
+        openModal('reassignModal');
         fetch(repairmenUrl)
           .then(function(r) { return r.json(); })
           .then(function(data) {
-            if (data.success && data.repairmen) {
-              var select = document.querySelector('#reassignModal select');
-              if (select) {
-                select.innerHTML = '<option value="" disabled selected>Choose a repairman...</option>';
-                data.repairmen.forEach(function(r) {
-                  if ((r.Status || 'active').toLowerCase() === 'active') {
-                    var opt = document.createElement('option');
-                    opt.value = r.User_ID || r.ID;
-                    opt.textContent = r.Name;
-                    select.appendChild(opt);
-                  }
-                });
-              }
-            }
+            if (data.success && data.repairmen) reassignRepairmen = data.repairmen;
           })
           .catch(function() {});
-        openModal('reassignModal');
+        if (reassignSearchEl) setTimeout(function() { reassignSearchEl.focus(); }, 50);
       } else if (action === 'close') {
         openModal('closeTicketModal');
       }
     });
 
-    var reassignBtn = document.querySelector('#reassignModal .btn-primary');
+    var reassignBtn = document.getElementById('confirmReassignBtn');
     if (reassignBtn) {
       reassignBtn.addEventListener('click', function() {
         if (!selectedTicketId) return;
-        var select = document.querySelector('#reassignModal select');
-        var newId = select ? select.value : '';
-        if (!newId) { showAlert('Please select a repairman', 'warning'); return; }
+        if (!reassignSelectedId) { showAlert('Please select a repairman', 'warning'); return; }
         var fd = new FormData();
         fd.append('action', 'reassign');
         fd.append('ticket_id', selectedTicketId);
-        fd.append('new_repairman_id', newId);
+        fd.append('new_repairman_id', reassignSelectedId);
         fetch(baseUrl, { method: 'POST', body: fd })
           .then(function(r) { return r.json(); })
           .then(function(data) {
             closeModal('reassignModal');
             if (data.success) {
+              showAlert(data.message || 'Ticket reassigned successfully', 'success');
               loadTickets(currentStatus);
             } else {
               showAlert(data.error || 'Failed to reassign ticket', 'error');
             }
           })
           .catch(function(err) { console.error('Reassign error:', err); });
+      });
+    }
+
+    if (reassignSearchEl) {
+      var reassignSearchTimer = null;
+      reassignSearchEl.addEventListener('input', function() {
+        clearTimeout(reassignSearchTimer);
+        reassignSearchTimer = setTimeout(function() {
+          if (reassignSelectedId) {
+            reassignSelectedId = null;
+            if (reassignSelectedEl) { reassignSelectedEl.style.display = 'none'; reassignSelectedEl.innerHTML = ''; }
+          }
+          renderReassignList();
+        }, 120);
+      });
+      reassignSearchEl.addEventListener('focus', function() {
+        renderReassignList();
+      });
+      reassignSearchEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { if (reassignListEl) reassignListEl.style.display = 'none'; }
+      });
+    }
+
+    if (reassignListEl) {
+      reassignListEl.addEventListener('mousedown', function(e) {
+        var item = e.target.closest('.hs-combobox-item');
+        if (!item) return;
+        e.preventDefault();
+        var id = item.getAttribute('data-id');
+        var found = reassignRepairmen.find(function(r) { return String(r.ID) === id; });
+        selectReassignRepairman(found ? found.ID : id, found ? found.Name : id);
       });
     }
 

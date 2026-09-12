@@ -252,7 +252,7 @@
           return;
         }
 
-        var repairmanId = ticket.Repairman_ID || ticket.repairman_id;
+        var repairmanId = ticket.repairman_user_id || ticket.Repairman_ID || ticket.repairman_id;
         if (!repairmanId) {
           showAlert('No repairman assigned to this ticket yet.', 'warning');
           return;

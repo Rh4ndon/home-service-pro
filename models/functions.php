@@ -353,7 +353,8 @@ function getCustomerTickets($client_id) {
                ca.Name as appliance_name, ca.Type as appliance_type, ca.Make as appliance_make, ca.Year as appliance_year,
                ai.Issue as issue, ai.Details as issue_details, ai.Detailed_Report as detailed_report,
                rs.Date_Time as schedule_date, rs.Status as schedule_status,
-               urp.Name as repairman_name
+               urp.Name as repairman_name,
+               urp.User_ID as repairman_user_id
         FROM repairticket
         LEFT JOIN user_clientprofile cp ON repairticket.Client_ID = cp.ID
         LEFT JOIN repairschedule rs ON repairticket.Schedule_ID = rs.ID
@@ -657,12 +658,14 @@ function getRepairmanSchedule($repairman_id) {
     $stmt = $conn->prepare("
         SELECT rs.ID as schedule_id, rs.Date_Time as schedule_date, rs.Status as schedule_status, 
                rs.Client_ID as client_id,
+               cu.ID as client_user_id,
                cp.Name as client_name, t.ID as ticket_id, t.Details as ticket_details,
                 ca.Name as appliance_name, ca.Type as appliance_type, 
                 ai.Issue as issue, ai.Details as issue_details,
                 CONCAT_WS(', ', cp.Address_Line1, cp.City_Min, cp.Province) as client_address
          FROM repairschedule rs 
          LEFT JOIN user_clientprofile cp ON rs.Client_ID = cp.ID 
+         LEFT JOIN users cu ON cu.ID = cp.User_ID
          LEFT JOIN repairticket t ON rs.ID = t.Schedule_ID
         LEFT JOIN applianceissue ai ON t.ID = ai.Ticket_ID 
         LEFT JOIN clientappliances ca ON ca.ID = COALESCE(t.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = ai.ID LIMIT 1))
