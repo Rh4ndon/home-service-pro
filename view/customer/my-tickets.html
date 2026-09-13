@@ -21,21 +21,27 @@
       <div class="sidebar-section">
         <div class="sidebar-section-label">Main Menu</div>
         <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
         </a>
         <a href="book-service.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
           Book Service
         </a>
         <a href="my-tickets.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24"><path d="M15 5v2"/><path d="M15 11v2"/><path d="M15 17v2"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
           My Tickets
         </a>
         <a href="my-appliances.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           My Appliances
         </a>
         <a href="chat.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Messages
         </a>
         <a href="profile.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Profile
         </a>
       </div>
@@ -140,6 +146,23 @@
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('cancelTicketModal')">No, Keep It</button>
         <button class="btn btn-danger" id="confirmCancelBtn">Yes, Cancel Ticket</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPLETE TICKET MODAL -->
+  <div class="modal-overlay" id="completeTicketModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Mark Ticket as Completed</h3>
+        <button class="modal-close" onclick="closeModal('completeTicketModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Confirm that the repair has been finished. This will mark your ticket as <strong>Completed</strong> and close the appointment.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('completeTicketModal')">Cancel</button>
+        <button class="btn btn-success" id="confirmCompleteBtn">Confirm Completed</button>
       </div>
     </div>
   </div>
@@ -307,6 +330,9 @@ var actions = '<div class="action-btns">';
         if (status === 'Open') {
           actions += '<button class="btn btn-secondary btn-sm" onclick="cancelTicket(\'' + id + '\')">Cancel</button>';
         }
+        if (status === 'In Progress' || status === 'in-progress') {
+          actions += '<button class="btn btn-success btn-sm" onclick="completeTicket(\'' + id + '\')">Mark Complete</button>';
+        }
         actions += '</div>';
           return '<tr data-status="' + statusLower + '">' +
             '<td><strong>#' + id + '</strong></td>' +
@@ -341,6 +367,11 @@ var actions = '<div class="action-btns">';
         openModal('cancelTicketModal');
       };
 
+      window.completeTicket = function(ticketId) {
+        window._completeTicketId = ticketId;
+        openModal('completeTicketModal');
+      };
+
       document.getElementById('confirmCancelBtn').addEventListener('click', function() {
         var ticketId = window._cancelTicketId;
         if (!ticketId) return;
@@ -361,6 +392,30 @@ var actions = '<div class="action-btns">';
           })
           .catch(function(){ 
             closeModal('cancelTicketModal'); 
+            showAlert('Network error.', 'error'); 
+          });
+      });
+
+      document.getElementById('confirmCompleteBtn').addEventListener('click', function() {
+        var ticketId = window._completeTicketId;
+        if (!ticketId) return;
+        var fd = new FormData();
+        fd.append('action', 'complete');
+        fd.append('ticket_id', ticketId);
+        fd.append('user_id', userId);
+        fetch('../../controllers/customer/tickets.php', { method: 'POST', body: fd })
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            closeModal('completeTicketModal');
+            if (data.success || data.status === 'success') { 
+              showAlert(data.message || 'Ticket marked as completed.', 'success'); 
+              loadTickets(); 
+            } else { 
+              showAlert(data.message || 'Error completing ticket.', 'error'); 
+            }
+          })
+          .catch(function(){ 
+            closeModal('completeTicketModal'); 
             showAlert('Network error.', 'error'); 
           });
       });

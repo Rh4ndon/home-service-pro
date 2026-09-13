@@ -125,60 +125,56 @@
             <p style="font-size:0.78rem;color:var(--muted);margin-top:4px;">Include things like: error codes, unusual sounds, when the problem started, troubleshooting steps already tried, etc.</p>
           </div>
 
-
           <!-- BOOKING MEDIA: 3 PHOTOS + 1 VIDEO -->
           <div class="form-group">
-            <label>Photos & Video of the Issue <span style="color:#ef4444;font-weight:700;">*</span>
+            <label>Photos &amp; Video of the Issue <span style="color:#ef4444;font-weight:700;">*</span>
               <span style="font-weight:400;color:var(--muted);font-size:0.82rem;">Required — capture 3 photos and 1 short video so the repairman can see the problem.</span>
             </label>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:10px;">
               <div class="hs-media-slot" id="imgSlot1" data-slot="img1">
                 <div class="hs-media-preview" style="border:2px dashed var(--line);border-radius:12px;height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;background:var(--panel);overflow:hidden;position:relative;">
                   <div class="hs-media-empty">&#128247;<br><span style="font-size:0.78rem;color:var(--muted);">Photo 1</span></div>
+                  <input type="file" accept="image/*" class="hs-img-input" data-slot="img1" style="display:none;">
                 </div>
                 <div style="display:flex;gap:6px;margin-top:8px;">
                   <button type="button" class="btn btn-sm btn-secondary hs-cam-btn" data-slot="img1" style="flex:1;">Camera</button>
                   <button type="button" class="btn btn-sm btn-secondary hs-file-btn" data-slot="img1" style="flex:1;">Gallery</button>
                 </div>
-                <input type="file" accept="image/*" capture="environment" class="hs-img-cam-input" data-slot="img1" style="display:none;">
-                <input type="file" accept="image/*" class="hs-img-file-input" data-slot="img1" style="display:none;">
               </div>
               <div class="hs-media-slot" id="imgSlot2" data-slot="img2">
                 <div class="hs-media-preview" style="border:2px dashed var(--line);border-radius:12px;height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;background:var(--panel);overflow:hidden;position:relative;">
                   <div class="hs-media-empty">&#128247;<br><span style="font-size:0.78rem;color:var(--muted);">Photo 2</span></div>
+                  <input type="file" accept="image/*" class="hs-img-input" data-slot="img2" style="display:none;">
                 </div>
                 <div style="display:flex;gap:6px;margin-top:8px;">
                   <button type="button" class="btn btn-sm btn-secondary hs-cam-btn" data-slot="img2" style="flex:1;">Camera</button>
                   <button type="button" class="btn btn-sm btn-secondary hs-file-btn" data-slot="img2" style="flex:1;">Gallery</button>
                 </div>
-                <input type="file" accept="image/*" capture="environment" class="hs-img-cam-input" data-slot="img2" style="display:none;">
-                <input type="file" accept="image/*" class="hs-img-file-input" data-slot="img2" style="display:none;">
               </div>
               <div class="hs-media-slot" id="imgSlot3" data-slot="img3">
                 <div class="hs-media-preview" style="border:2px dashed var(--line);border-radius:12px;height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;background:var(--panel);overflow:hidden;position:relative;">
                   <div class="hs-media-empty">&#128247;<br><span style="font-size:0.78rem;color:var(--muted);">Photo 3</span></div>
+                  <input type="file" accept="image/*" class="hs-img-input" data-slot="img3" style="display:none;">
                 </div>
                 <div style="display:flex;gap:6px;margin-top:8px;">
                   <button type="button" class="btn btn-sm btn-secondary hs-cam-btn" data-slot="img3" style="flex:1;">Camera</button>
                   <button type="button" class="btn btn-sm btn-secondary hs-file-btn" data-slot="img3" style="flex:1;">Gallery</button>
                 </div>
-                <input type="file" accept="image/*" capture="environment" class="hs-img-cam-input" data-slot="img3" style="display:none;">
-                <input type="file" accept="image/*" class="hs-img-file-input" data-slot="img3" style="display:none;">
               </div>
               <div class="hs-media-slot" id="vidSlot" data-slot="vid">
                 <div class="hs-media-preview" style="border:2px dashed var(--line);border-radius:12px;height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;background:var(--panel);overflow:hidden;position:relative;">
                   <div class="hs-media-empty">&#127909;<br><span style="font-size:0.78rem;color:var(--muted);">Video (short)</span></div>
+                  <input type="file" accept="video/*" class="hs-vid-input" data-slot="vid" style="display:none;">
                 </div>
                 <div style="display:flex;gap:6px;margin-top:8px;">
                   <button type="button" class="btn btn-sm btn-secondary hs-vid-cam-btn" data-slot="vid" style="flex:1;">Camera</button>
                   <button type="button" class="btn btn-sm btn-secondary hs-vid-file-btn" data-slot="vid" style="flex:1;">Gallery</button>
                 </div>
-                <input type="file" accept="video/*" capture="environment" class="hs-vid-cam-input" data-slot="vid" style="display:none;">
-                <input type="file" accept="video/*" class="hs-vid-file-input" data-slot="vid" style="display:none;">
               </div>
             </div>
             <p id="mediaStatus" style="font-size:0.8rem;color:var(--muted);margin-top:8px;"></p>
           </div>
+
           <div class="grid-2">
             <div class="form-group">
               <label for="preferredDate">Preferred Date</label>
@@ -715,35 +711,32 @@
 
     document.querySelectorAll('.hs-cam-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
-        var slot = btn.getAttribute('data-slot');
-        var input = document.querySelector('.hs-img-cam-input[data-slot="' + slot + '"]');
-        if (input) input.click();
+        var input = document.querySelector('.hs-img-input[data-slot="' + btn.getAttribute('data-slot') + '"]');
+        if (input) { input.setAttribute('capture', 'environment'); input.click(); }
       });
     });
     document.querySelectorAll('.hs-file-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
-        var slot = btn.getAttribute('data-slot');
-        var input = document.querySelector('.hs-img-file-input[data-slot="' + slot + '"]');
-        if (input) input.click();
+        var input = document.querySelector('.hs-img-input[data-slot="' + btn.getAttribute('data-slot') + '"]');
+        if (input) { input.removeAttribute('capture'); input.click(); }
       });
     });
-    document.querySelectorAll('.hs-img-cam-input, .hs-img-file-input').forEach(function(input) {
+    document.querySelectorAll('.hs-img-input').forEach(function(input) {
       input.addEventListener('change', function() { handleImagePicked(this.files && this.files[0], this.getAttribute('data-slot')); });
+      this.value = '';
     });
     var vidCamBtn = document.querySelector('.hs-vid-cam-btn');
     if (vidCamBtn) vidCamBtn.addEventListener('click', function() {
-      var input = document.querySelector('.hs-vid-cam-input');
-      if (input) input.click();
+      var input = document.querySelector('.hs-vid-input');
+      if (input) { input.setAttribute('capture', 'environment'); input.click(); }
     });
     var vidFileBtn = document.querySelector('.hs-vid-file-btn');
     if (vidFileBtn) vidFileBtn.addEventListener('click', function() {
-      var input = document.querySelector('.hs-vid-file-input');
-      if (input) input.click();
+      var input = document.querySelector('.hs-vid-input');
+      if (input) { input.removeAttribute('capture'); input.click(); }
     });
-    var vidInput = document.querySelectorAll('.hs-vid-cam-input, .hs-vid-file-input');
-    vidInput.forEach(function(input) {
-      input.addEventListener('change', function() { handleVideoPicked(this.files && this.files[0]); });
-    });
+    var vidInput = document.querySelector('.hs-vid-input');
+    if (vidInput) vidInput.addEventListener('change', function() { handleVideoPicked(this.files && this.files[0]); this.value = ''; });
 
     document.addEventListener('click', function(e) {
       var rm = e.target.closest('.hs-media-remove');
@@ -757,10 +750,8 @@
         if (preview) {
           preview.innerHTML = '<div class="hs-media-empty">' + (slot === 'vid' ? '&#127909;<br><span style="font-size:0.78rem;color:var(--muted);">Video (short)</span>' : '&#128247;<br><span style="font-size:0.78rem;color:var(--muted);">Photo ' + slot.slice(3) + '</span>') + '</div>';
         }
-        var camInput = slotEl.querySelector('.hs-img-cam-input, .hs-vid-cam-input');
-        var fileInput = slotEl.querySelector('.hs-img-file-input, .hs-vid-file-input');
-        if (camInput) camInput.value = '';
-        if (fileInput) fileInput.value = '';
+        var input = slotEl.querySelector('input[type="file"]');
+        if (input) input.value = '';
       }
       updateMediaStatus();
     });

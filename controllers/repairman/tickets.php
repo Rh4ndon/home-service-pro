@@ -29,6 +29,14 @@ function handle_get()
     }
 
     $tickets = getRepairmanTickets($repairman_id);
+    $media_cache = [];
+    foreach ($tickets as &$tkt) {
+        $ticket_id = $tkt['ticket_id'] ?? null;
+        if (!$ticket_id) continue;
+        if (!isset($media_cache[$ticket_id])) $media_cache[$ticket_id] = getBookingMedia($ticket_id);
+        $tkt['booking_media'] = $media_cache[$ticket_id];
+    }
+    unset($tkt);
     echo json_encode(["success" => true, "data" => $tickets]);
 }
 

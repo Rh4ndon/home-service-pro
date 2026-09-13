@@ -46,11 +46,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $route_duration_min,
                 $_POST['detailed_report'] ?? null
             );
+
+            // Store booking media (3 images + 1 video) if uploaded
+            $ticket_id = $result['ticket_id'];
+            $upload_dir = dirname(__DIR__, 2) . '/uploads/booking/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+            if (!is_writable($upload_dir)) @chmod($upload_dir, 0777);
+
+            $saved = [];
+            for ($i = 1; $i <= 3; $i++) {
+                $field = 'image_' . $i;
+                if (!empty($_FILES[$field]['name']) && $_FILES[$field]['error'] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($_FILES[$field]['name'], PATHINFO_EXTENSION));
+                    $allowed_img = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+                    if (in_array($ext, $allowed_img)) {
+                        $fname = 't' . $ticket_id . '_img' . $i . '_' . time() . '.' . $ext;
+                        if (move_uploaded_file($_FILES[$field]['tmp_name'], $upload_dir . $fname)) {
+                            saveBookingMedia($ticket_id, 'image', 'uploads/booking/' . $fname, $fname);
+                        }
+                    }
+                }
+            }
+
+            // Video - limit to common web formats
+            if (!empty($_FILES['video']['name']) && $_FILES['video']['error'] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($_FILES['video']['name'], PATHINFO_EXTENSION));
+                $allowed_vid = ['mp4', 'webm', 'ogg', 'mov', 'm4v'];
+                if (in_array($ext, $allowed_vid)) {
+                    $fname = 't' . $ticket_id . '_vid_' . time() . '.' . $ext;
+                    if (move_uploaded_file($_FILES['video']['tmp_name'], $upload_dir . $fname)) {
+                        saveBookingMedia($ticket_id, 'video', 'uploads/booking/' . $fname, $fname);
+                    }
+                }
+            }
+
             echo json_encode([
                 'status' => 'success',
                 'message' => 'Ticket created successfully.',
                 'ticket_id' => $result['ticket_id'],
-                'schedule_id' => $result['schedule_id']
+                'schedule_id' => $result['schedule_id'],
+                'media_saved' => count($saved)
             ]);
         } catch (Exception $e) {
             echo json_encode(['status' => 'error', 'message' => 'Failed to create ticket. ' . $e->getMessage()]);
@@ -64,6 +99,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         cancelCustomerTicket($id, $client_id);
         echo json_encode(['status' => 'success', 'message' => 'Ticket cancelled successfully.']);
+        exit;
+    }
+
+    if ($action === 'complete') {
+        $id = $_POST['ticket_id'] ?? $_POST['id'] ?? 0;
+        if (!$id) { echo json_encode(['status' => 'error', 'message' => 'Ticket ID is required.']); exit; }
+
+        completeCustomerTicket($id, $client_id);
+        echo json_encode(['status' => 'success', 'message' => 'Ticket marked as completed.']);
         exit;
     }
 

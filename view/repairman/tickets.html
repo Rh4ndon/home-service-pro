@@ -127,6 +127,10 @@
           <strong>Detailed Report:</strong>
           <p id="viewTicketDetailedReport" style="margin-top: 4px; color: var(--muted); white-space: pre-wrap;">—</p>
         </div>
+        <div id="viewTicketMediaWrap" style="margin-bottom: 14px; display: none;">
+          <strong>Booking Photos &amp; Video:</strong>
+          <div id="viewTicketMedia" style="margin-top: 8px;"></div>
+        </div>
         <div style="margin-bottom: 14px;">
           <strong>Client Address:</strong>
           <p id="viewTicketAddress" style="margin-top: 4px; color: var(--muted);">—</p>
@@ -372,6 +376,27 @@
         }
       }
 
+      function renderBookingMedia(mediaList) {
+        var images = mediaList.filter(function(m) { return m.Media_Type === 'image'; });
+        var videos = mediaList.filter(function(m) { return m.Media_Type === 'video'; });
+        var html = '';
+        if (images.length) {
+          html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:10px;">' +
+            images.map(function(m) {
+              var src = '../../' + m.File_Path;
+              return '<a href="' + src + '" target="_blank" style="display:block;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);">' +
+                '<img src="' + src + '" alt="' + (m.File_Name || 'photo') + '" style="width:100%;height:120px;object-fit:cover;display:block;">' +
+                '<div style="font-size:0.75rem;color:var(--muted);padding:6px 8px;text-align:center;">View photo</div></a>';
+            }).join('') + '</div>';
+        }
+        videos.forEach(function(m) {
+          var src = '../../' + m.File_Path;
+          html += '<video controls preload="metadata" style="width:100%;max-height:340px;border-radius:10px;background:#000;margin-bottom:10px;" src="' + src + '"></video>';
+        });
+        if (!html) html = '<p style="color:var(--muted);font-size:0.88rem;">No photos or video uploaded with this booking.</p>';
+        return html;
+      }
+
       window.viewTicket = function(ticketId) {
         var ticket = allTickets.find(function(t) { return (t.ticket_id || t.id) == ticketId; });
         if (!ticket) return;
@@ -402,6 +427,20 @@
             detailedReportEl.textContent = ticket.detailed_report;
           } else {
             detailedReportWrap.style.display = 'none';
+          }
+        }
+
+        // Show booking media (photos / video) if available
+        var mediaWrap = document.getElementById('viewTicketMediaWrap');
+        var mediaEl = document.getElementById('viewTicketMedia');
+        var mediaList = ticket.booking_media || [];
+        if (mediaEl) {
+          if (mediaList.length) {
+            mediaEl.innerHTML = renderBookingMedia(mediaList);
+            mediaWrap.style.display = '';
+          } else {
+            mediaEl.innerHTML = '';
+            mediaWrap.style.display = 'none';
           }
         }
 

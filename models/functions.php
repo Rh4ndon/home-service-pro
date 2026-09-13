@@ -369,6 +369,21 @@ function getCustomerTickets($client_id) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
+function saveBookingMedia($ticket_id, $media_type, $file_path, $file_name) {
+    global $conn;
+    $stmt = $conn->prepare("INSERT INTO booking_media (Ticket_ID, Media_Type, File_Path, File_Name) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("isss", $ticket_id, $media_type, $file_path, $file_name);
+    return $stmt->execute();
+}
+
+function getBookingMedia($ticket_id) {
+    global $conn;
+    $stmt = $conn->prepare("SELECT ID, Media_Type, File_Path, File_Name, Created_At FROM booking_media WHERE Ticket_ID = ? ORDER BY Media_Type, ID");
+    $stmt->bind_param("i", $ticket_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
 function createCustomerTicket($client_id, $appliance_type, $appliance_name, $make_brand, $year, $issue_desc, $date_time, $appliance_id = null, $repairman_id = null, $client_lat = null, $client_lng = null, $route_distance_km = null, $route_duration_min = null, $detailed_report = null) {
     global $conn;
     startTransaction();
@@ -439,7 +454,14 @@ function linkApplianceToIssue($appliance_id, $client_id, $issue_id, $issue_desc)
 
 function cancelCustomerTicket($ticket_id, $client_id) {
     global $conn;
-    $stmt = $conn->prepare("UPDATE repairticket SET Status = 'Cancelled' WHERE ID = ? AND Client_ID = ?");
+    $stmt = $conn->prepare("UPDATE repairticket SET Status='Cancelled' WHERE ID=? AND Client_ID=? AND Status NOT IN ('Completed','Cancelled')");
+    $stmt->bind_param("ii", $ticket_id, $client_id);
+    return $stmt->execute();
+}
+
+function completeCustomerTicket($ticket_id, $client_id) {
+    global $conn;
+    $stmt = $conn->prepare("UPDATE repairticket SET Status='Completed' WHERE ID=? AND Client_ID=? AND Status NOT IN ('Completed','Cancelled')");
     $stmt->bind_param("ii", $ticket_id, $client_id);
     return $stmt->execute();
 }
