@@ -330,7 +330,9 @@ var actions = '<div class="action-btns">';
         if (status === 'Open') {
           actions += '<button class="btn btn-secondary btn-sm" onclick="cancelTicket(\'' + id + '\')">Cancel</button>';
         }
-        if (status === 'In Progress' || status === 'in-progress') {
+        // Show Mark Complete when ticket or schedule is In Progress
+        var scheduleStatus = (t.schedule_status || '').toLowerCase().replace(/_/g, '-').replace(/\s+/g, '-');
+        if (status === 'In Progress' || status === 'in-progress' || scheduleStatus === 'in-progress' || scheduleStatus === 'in_progress') {
           actions += '<button class="btn btn-success btn-sm" onclick="completeTicket(\'' + id + '\')">Mark Complete</button>';
         }
         actions += '</div>';

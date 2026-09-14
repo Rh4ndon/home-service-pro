@@ -604,6 +604,7 @@ table tr:hover td {
   z-index: 1000;
   align-items: center;
   justify-content: center;
+  padding: 24px 16px;
 }
 
 .modal-overlay.show {
@@ -613,7 +614,10 @@ table tr:hover td {
 .modal {
   background: var(--card);
   border-radius: 16px;
-  width: min(460px, calc(100% - 32px));
+  width: min(520px, calc(100% - 32px));
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 24px 48px rgba(11,26,38,0.2);
   animation: modalIn 0.2s ease;
 }
@@ -715,7 +719,9 @@ table tr:hover td {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px 0;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -748,6 +754,8 @@ table tr:hover td {
   color: var(--muted);
   font-size: 0.94rem;
   line-height: 1.6;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-footer {
@@ -755,6 +763,7 @@ table tr:hover td {
   justify-content: flex-end;
   gap: 10px;
   padding: 0 24px 20px;
+  flex-shrink: 0;
 }
 
 .modal-footer .btn-cancel {

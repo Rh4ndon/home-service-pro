@@ -461,9 +461,51 @@ function cancelCustomerTicket($ticket_id, $client_id) {
 
 function completeCustomerTicket($ticket_id, $client_id) {
     global $conn;
-    $stmt = $conn->prepare("UPDATE repairticket SET Status='Completed' WHERE ID=? AND Client_ID=? AND Status NOT IN ('Completed','Cancelled')");
-    $stmt->bind_param("ii", $ticket_id, $client_id);
-    return $stmt->execute();
+    startTransaction();
+    try {
+        // Get ticket details first (need Repairman_ID and Schedule_ID)
+        $stmt = $conn->prepare("SELECT Repairman_ID, Schedule_ID, Appliance_ID FROM repairticket WHERE ID = ? AND Client_ID = ?");
+        $stmt->bind_param("ii", $ticket_id, $client_id);
+        $stmt->execute();
+        $ticket = $stmt->get_result()->fetch_assoc();
+        
+        if (!$ticket) {
+            throw new Exception('Ticket not found or not yours.');
+        }
+        
+        $repairman_id = $ticket['Repairman_ID'];
+        $schedule_id = $ticket['Schedule_ID'];
+        $appliance_id = $ticket['Appliance_ID'] ?? 0;
+        
+        // Update repairticket
+        $stmt = $conn->prepare("UPDATE repairticket SET Status='Completed' WHERE ID=? AND Client_ID=? AND Status NOT IN ('Completed','Cancelled')");
+        $stmt->bind_param("ii", $ticket_id, $client_id);
+        $stmt->execute();
+        
+        // Update repairschedule if exists
+        if ($schedule_id) {
+            $stmt = $conn->prepare("UPDATE repairschedule SET Status='Completed' WHERE ID=?");
+            $stmt->bind_param("i", $schedule_id);
+            $stmt->execute();
+        }
+        
+        // Add to repairhistory (same as repairman completion)
+        if ($repairman_id && $schedule_id) {
+            insertRecord('repairhistory', [
+                'Repairman_ID' => $repairman_id,
+                'Schedule_ID' => $schedule_id,
+                'Ticket_ID' => $ticket_id,
+                'ClientAppliances_ID' => $appliance_id,
+                'Status' => 'Completed'
+            ]);
+        }
+        
+        commitTransaction();
+        return true;
+    } catch (Exception $e) {
+        rollbackTransaction();
+        throw $e;
+    }
 }
 
 function getCustomerDashboardStats($client_id) {
