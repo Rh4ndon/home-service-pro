@@ -1,17 +1,1 @@
-***Customer will send video and image during booking required, resolution should be lower we can use device camera for this
-The repairman have hardtime determining the appliances issue. Customer will send video and image during booking required, resolution should be lower we can use device camera for this
-The requirement is 3 image and 1 video
-view/customer/book-service.html
-The repairman will view the video and image sent by the customer.
-view/repairman/tickets.html
-I added directory uploads/booking to store video and image
-
-Also view/customer/my-tickets.html sidebar is different from other pages it has no icons
-
-Then the customer should mark the ticket as completed when the repair is done on view/customer/my-tickets.html
-
-
-**Voice Call functionality
-1
-2
-3
+The pages are not responsive on mobile. The humburger menu is not seen

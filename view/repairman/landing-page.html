@@ -492,12 +492,82 @@
           flex-direction: column;
         }
       }
+
+      /* ===== Responsive / Mobile navigation ===== */
+      .topbar { position: relative; }
+      .hs-menu-btn {
+        display: none;
+        width: 44px;
+        height: 44px;
+        border: 1px solid rgba(29,45,59,0.14);
+        background: rgba(29,45,59,0.05);
+        border-radius: 10px;
+        color: #1d2d3b;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+      .hs-menu-btn svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .hs-mobile-menu {
+        display: none;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid rgba(29,39,54,0.12);
+        border-radius: 14px;
+        box-shadow: 0 18px 44px rgba(11,26,38,0.18);
+        padding: 10px;
+        z-index: 60;
+      }
+      .hs-mobile-menu.open { display: block; }
+      .hs-mobile-menu a {
+        display: flex;
+        align-items: center;
+        padding: 14px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        color: #1d2d3b;
+      }
+      .hs-mobile-menu a:hover,
+      .hs-mobile-menu a.active { background: rgba(27,141,232,0.09); color: var(--primary); }
+      .hs-mobile-auth {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 8px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(29,39,54,0.1);
+      }
+      .hs-mobile-auth a { justify-content: center; padding: 13px 14px; }
+      .hs-mobile-auth .btn-small { background: var(--primary); color: #fff; border-radius: 10px; text-decoration: none; text-align: center; }
+      .hs-mobile-auth .nav-link { background: rgba(29,45,59,0.06); border-radius: 10px; text-decoration: none; text-align: center; }
+      @media (max-width: 900px) {
+        .hs-menu-btn { display: flex; }
+        .nav-wrap { display: none !important; }
+        .hero-actions { flex-direction: column; align-items: stretch; }
+        .hero-actions .primary-btn,
+        .hero-actions .secondary-btn { width: 100%; text-align: center; justify-content: center; }
+        .footer-inner { grid-template-columns: 1fr; gap: 28px; }
+        .cta-band .cta-btn { min-width: 0; width: min(100%, 320px); }
+      }
+      @media (max-width: 720px) {
+        .hero-copy h1 { font-size: clamp(2.4rem, 12vw, 3.4rem); }
+        .section-header h2 { font-size: clamp(2rem, 9vw, 2.8rem); }
+        .hero-copy p { font-size: 1rem; }
+      }
     </style>
   </head>
   <body>
     <div class="page site-shell">
       <header class="topbar">
         <div class="brand">HomeService<span class="pro">Pro</span></div>
+
+        <button class="hs-menu-btn" id="hsMenuBtn" aria-label="Toggle menu" aria-expanded="false">
+          <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
 
         <div class="nav-wrap">
           <nav class="nav" aria-label="Main navigation">
@@ -512,6 +582,17 @@
             <a href="signup.html" class="btn-small" style="text-decoration:none;">Sign Up</a>
           </div>
         </div>
+
+        <nav class="hs-mobile-menu" id="hsMobileMenu" aria-label="Mobile navigation">
+          <a class="active" href="#">Home</a>
+          <a href="#benefits">Benefits</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="#join">Join</a>
+          <div class="hs-mobile-auth">
+            <a href="login.html" class="nav-link">Log In</a>
+            <a href="signup.html" class="btn-small">Sign Up</a>
+          </div>
+        </nav>
       </header>
 
       <main>
@@ -642,5 +723,23 @@
 
       <div class="footer-bottom">© 2026 HomeService Pro. All rights reserved.</div>
     </footer>
+
+    <script>
+      (function(){
+        var btn = document.getElementById('hsMenuBtn');
+        var menu = document.getElementById('hsMobileMenu');
+        if (!btn || !menu) return;
+        function closeMenu(){ menu.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
+        btn.addEventListener('click', function(e){
+          e.stopPropagation();
+          var open = menu.classList.toggle('open');
+          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        menu.addEventListener('click', function(e){ e.stopPropagation(); });
+        menu.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeMenu); });
+        document.addEventListener('click', closeMenu);
+        window.addEventListener('resize', function(){ if (window.innerWidth > 900) closeMenu(); });
+      })();
+    </script>
   </body>
 </html>

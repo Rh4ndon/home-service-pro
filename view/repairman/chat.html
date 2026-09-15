@@ -318,9 +318,175 @@
       width: 18px;
       height: 18px;
     }
+
+    .incoming-modal {
+      text-align: center;
+      padding: 32px 28px;
+      max-width: 340px;
+    }
+
+    .incoming-avatar {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.7rem;
+      color: #fff;
+      margin: 0 auto 16px;
+      position: relative;
+    }
+
+    .incoming-avatar::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 3px solid #22c55e;
+      animation: incomingPulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes incomingPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(1.1); }
+    }
+
+    .incoming-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .incoming-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .incoming-actions {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+
+    .incoming-btn {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      transition: transform 0.15s, background 0.15s;
+    }
+
+    .incoming-btn:hover {
+      transform: scale(1.08);
+    }
+
+    .incoming-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .incoming-btn-accept {
+      background: #22c55e;
+    }
+
+    .incoming-btn-accept:hover {
+      background: #16a34a;
+    }
+
+    .incoming-btn-decline {
+      background: #ef4444;
+    }
+
+    .incoming-btn-decline:hover {
+      background: #dc2626;
+    }
+
+    .incoming-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
+<!-- Mobile responsive navigation -->
+  <header class="hs-topbar" id="hsTopbar">
+    <button class="hs-hamburger" id="hsHamburger" onclick="hsToggleSidebar()" aria-label="Open menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="hs-topbar-brand">HomeService<span>Pro</span></div>
+    <div class="hs-topbar-actions">
+      <button class="hs-topbar-logout" onclick="hsCloseSidebar(); openModal('logoutModal')" aria-label="Log out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </header>
+  <div class="hs-sidebar-backdrop" id="hsBackdrop" onclick="hsCloseSidebar()"></div>
+  <div class="hs-chat-backdrop" id="hsChatBackdrop" onclick="hsCloseChatContacts()"></div>
+  <style>
+    .hs-topbar{display:none;position:fixed;top:0;left:0;right:0;height:56px;background:#0b1a26;color:#fff;align-items:center;gap:8px;padding:0 12px;z-index:300;box-shadow:0 2px 14px rgba(0,0,0,.3);}
+    .hs-hamburger{width:44px;height:44px;border:0;border-radius:10px;background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .hs-hamburger:hover{background:rgba(255,255,255,.08);}
+    .hs-hamburger svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+    .hs-hamburger svg line{transition:transform .25s ease,opacity .2s ease;}
+    .hs-topbar-brand{font-size:1.15rem;font-weight:800;letter-spacing:-.05em;color:#fff;white-space:nowrap;}
+    .hs-topbar-brand span{color:#1b8de8;}
+    .hs-topbar-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
+    .hs-topbar-logout{width:40px;height:40px;border:0;border-radius:10px;background:rgba(239,68,68,.1);color:#ef4444;align-items:center;justify-content:center;cursor:pointer;display:none;flex-shrink:0;}
+    .hs-topbar-logout svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    @media(max-width:980px){.hs-topbar-logout{display:flex;}}
+    .hs-sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(11,26,38,.5);z-index:90;}
+    .hs-chat-contacts-btn{display:none;width:40px;height:40px;border:0;border-radius:10px;background:rgba(27,141,232,.08);color:#1b8de8;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+    .hs-chat-contacts-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .hs-chat-backdrop{display:none;position:fixed;inset:0;background:rgba(11,26,38,.5);z-index:210;}
+    @media(max-width:980px){
+      .hs-topbar{display:flex;}
+      .main-content{margin-top:56px;}
+      body.hs-sidebar-open{overflow:hidden;}
+      body.hs-sidebar-open .hs-sidebar-backdrop{display:block;}
+      body.hs-sidebar-open .sidebar{transform:translateX(0)!important;box-shadow:16px 0 48px rgba(0,0,0,.35);}
+      body.hs-sidebar-open .hs-hamburger svg line:nth-child(1){transform:translateY(6px) rotate(45deg);transform-origin:center;}
+      body.hs-sidebar-open .hs-hamburger svg line:nth-child(2){opacity:0;}
+      body.hs-sidebar-open .hs-hamburger svg line:nth-child(3){transform:translateY(-6px) rotate(-45deg);transform-origin:center;}
+      .main-content .header-actions{flex-wrap:wrap;}
+      .chat-layout{height:calc(100vh - 56px)!important;}
+    }
+    .hs-chat-contacts-btn{display:none;width:40px;height:40px;border:0;border-radius:10px;background:rgba(27,141,232,.08);color:#1b8de8;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+    .hs-chat-contacts-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .hs-chat-backdrop{display:none;position:fixed;inset:0;background:rgba(11,26,38,.5);z-index:210;}
+    @media(max-width:768px){
+      .hs-chat-contacts-btn{display:flex;}
+      .chat-sidebar{position:fixed!important;top:56px;left:0;bottom:0;width:min(320px,86vw)!important;max-height:none!important;transform:translateX(-105%);transition:transform .3s ease;z-index:220;box-shadow:16px 0 48px rgba(0,0,0,.35);}
+      body.hs-chat-open .chat-sidebar{transform:translateX(0)!important;}
+      body.hs-chat-open .hs-chat-backdrop{display:block;}
+      .chat-main{width:100%;}
+    }
+  </style>
+  <script>
+    (function(){
+      function hsToggleSidebar(){var open=document.body.classList.toggle('hs-sidebar-open');var b=document.getElementById('hsHamburger');if(b)b.setAttribute('aria-expanded',String(open));}
+      function hsCloseSidebar(){document.body.classList.remove('hs-sidebar-open');var b=document.getElementById('hsHamburger');if(b)b.setAttribute('aria-expanded','false');}
+      window.hsToggleSidebar=hsToggleSidebar;window.hsCloseSidebar=hsCloseSidebar;
+      function hsToggleChatContacts(){document.body.classList.toggle('hs-chat-open');}
+      function hsCloseChatContacts(){document.body.classList.remove('hs-chat-open');}
+      window.hsToggleChatContacts=hsToggleChatContacts;window.hsCloseChatContacts=hsCloseChatContacts;
+      document.addEventListener('click',function(e){
+        if(e.target.closest('.sidebar-link')||e.target.closest('.sidebar-logout'))hsCloseSidebar();
+        if(e.target.closest('.chat-contact'))hsCloseChatContacts();
+      });
+      window.addEventListener('resize',function(){if(window.innerWidth>980)hsCloseSidebar();});
+    })();
+  </script>
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
@@ -389,6 +555,9 @@
       <div class="chat-main">
         <div class="chat-header">
           <div class="chat-header-left">
+            <button class="hs-chat-contacts-btn" id="hsChatContactsBtn" onclick="hsToggleChatContacts()" aria-label="Show contacts">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </button>
             <div class="chat-header-avatar"></div>
             <div>
               <div class="chat-header-name">Select a conversation</div>
@@ -396,7 +565,7 @@
             </div>
           </div>
           <div class="chat-header-actions">
-            <button title="Voice Call">
+            <button id="voiceCallBtn" title="Voice Call">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             </button>
           </div>
@@ -419,6 +588,31 @@
 
     </div>
   </main>
+
+  <!-- Incoming Call Modal -->
+  <div class="modal-overlay" id="incomingCallModal">
+    <div class="modal">
+      <div class="incoming-modal">
+        <div class="incoming-avatar" id="incomingCallerInitials">?</div>
+        <div class="incoming-title" id="incomingCallerName">Incoming Call...</div>
+        <div class="incoming-sub">is calling you...</div>
+        <div class="incoming-actions">
+          <div>
+            <button class="incoming-btn incoming-btn-decline" id="declineCallBtn" title="Decline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </button>
+            <div class="incoming-label">Decline</div>
+          </div>
+          <div>
+            <button class="incoming-btn incoming-btn-accept" id="acceptCallBtn" title="Accept">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </button>
+            <div class="incoming-label">Accept</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Logout Modal -->
   <div class="modal-overlay" id="logoutModal">
@@ -611,9 +805,124 @@
         eventSource.onerror = function() {};
       }
 
-      loadContacts();
-      startSSE();
-    })();
+// ===== VOICE CALL =====
+    var voiceCallBtn = document.getElementById('voiceCallBtn');
+    var incomingModalShown = false;
+    var incomingCallData = null;
+
+    function startVoiceCall() {
+      if (!currentContactId) {
+        showAlert('Select a conversation first to start a call.', 'warning');
+        return;
+      }
+      var activeEl = document.querySelector('.chat-contact.active .chat-contact-name');
+      var contactName = activeEl ? activeEl.textContent : 'Contact';
+
+      var fd = new FormData();
+      fd.append('caller_id', userId);
+      fd.append('caller_role', 'repairman');
+      fd.append('caller_name', userName);
+      fd.append('callee_id', currentContactId);
+      fd.append('callee_role', currentContactRole || 'customer');
+      fd.append('callee_name', contactName);
+
+      fetch('../../controllers/call/create-room.php', { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.success) {
+            sessionStorage.setItem('daily_call_token', d.token);
+            sessionStorage.setItem('daily_room_url', d.room_url);
+            window.location.href = 'call.html?room=' + encodeURIComponent(d.room_name) +
+              '&call_id=' + d.call_id + '&mode=caller&contact_name=' + encodeURIComponent(d.callee_name || contactName);
+          } else {
+            showAlert(d.message || 'Could not start the call.', 'error');
+          }
+        })
+        .catch(function() { showAlert('Could not start the call. Please try again.', 'error'); });
+    }
+
+    if (voiceCallBtn) voiceCallBtn.onclick = startVoiceCall;
+
+    function showIncomingCallModal(call) {
+      if (incomingModalShown) return;
+      incomingModalShown = true;
+      incomingCallData = call;
+      var name = call.caller_name || 'Unknown';
+      document.getElementById('incomingCallerName').textContent = name;
+      var initials = name.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+      document.getElementById('incomingCallerInitials').textContent = initials;
+      openModal('incomingCallModal');
+    }
+
+    function checkIncomingCall() {
+      if (!userId || incomingModalShown) return;
+      fetch('../../controllers/call/incoming.php?user_id=' + userId + '&user_role=repairman')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.success && d.has_incoming && d.call) showIncomingCallModal(d.call);
+        })
+        .catch(function() {});
+    }
+
+    function acceptIncomingCall() {
+      if (!incomingCallData) return;
+      var call = incomingCallData;
+      var fd = new FormData();
+      fd.append('call_id', call.call_id);
+      fd.append('status', 'answered');
+      fetch('../../controllers/call/update.php', { method: 'POST', body: fd }).catch(function(){});
+
+      var tfd = new FormData();
+      tfd.append('room_name', call.room_name);
+      tfd.append('user_name', userName);
+      tfd.append('user_id', userId);
+      tfd.append('role', 'repairman');
+      tfd.append('call_id', call.call_id);
+
+      fetch('../../controllers/call/token.php', { method: 'POST', body: tfd })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.success) {
+            sessionStorage.setItem('daily_call_token', d.token);
+            sessionStorage.setItem('daily_room_url', d.room_url);
+            closeModal('incomingCallModal');
+            incomingModalShown = false;
+            window.location.href = 'call.html?room=' + encodeURIComponent(call.room_name) +
+              '&call_id=' + call.call_id + '&mode=callee&contact_name=' + encodeURIComponent(call.caller_name || '');
+          } else {
+            closeModal('incomingCallModal');
+            incomingModalShown = false;
+            showAlert(d.message || 'Could not join the call.', 'error');
+          }
+        })
+        .catch(function() {
+          closeModal('incomingCallModal');
+          incomingModalShown = false;
+          showAlert('Could not join the call.', 'error');
+        });
+    }
+
+    function declineIncomingCall() {
+      if (incomingCallData) {
+        var fd = new FormData();
+        fd.append('call_id', incomingCallData.call_id);
+        fd.append('status', 'declined');
+        fetch('../../controllers/call/update.php', { method: 'POST', body: fd }).catch(function(){});
+      }
+      incomingModalShown = false;
+      incomingCallData = null;
+      closeModal('incomingCallModal');
+    }
+
+    document.getElementById('acceptCallBtn').onclick = acceptIncomingCall;
+    document.getElementById('declineCallBtn').onclick = declineIncomingCall;
+
+    setInterval(checkIncomingCall, 3000);
+    checkIncomingCall();
+
+    loadContacts();
+    startSSE();
+  })();
   </script>
 </body>
 </html>

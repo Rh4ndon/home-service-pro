@@ -1183,6 +1183,187 @@ function getChatMessageById($id) {
 }
 
 // ==========================================
+// VOICE CALL MODEL FUNCTIONS (DAILY.CO)
+// ==========================================
+
+function getDailyEnvValue($key) {
+    $env_file = __DIR__ . '/../controllers/.env';
+    if (file_exists($env_file)) {
+        $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (!$line || strpos($line, '#') === 0) continue;
+            if (strpos($line, $key . '=') === 0) {
+                return trim(substr($line, strlen($key) + 1));
+            }
+        }
+    }
+    return getenv($key);
+}
+
+function getDailyApiKey() {
+    return getDailyEnvValue('DAILY_CO_API_KEY');
+}
+
+function getDailySubdomain() {
+    $subdomain = getDailyEnvValue('DAILY_CO_SUBDOMAIN');
+    if ($subdomain && strpos($subdomain, '.daily.co') === false) {
+        $subdomain = $subdomain . '.daily.co';
+    }
+    return $subdomain;
+}
+
+function dailyApiRequest($method, $path, $payload = null) {
+    $api_key = getDailyApiKey();
+    if (!$api_key) {
+        return ['error' => 'DAILY_CO_API_KEY is not configured.'];
+    }
+    $url = 'https://api.daily.co/v1/' . ltrim($path, '/');
+    $ch = curl_init($url);
+    $headers = [
+        'Authorization: Bearer ' . $api_key,
+        'Content-Type: application/json',
+    ];
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+    if ($method === 'POST') {
+        curl_setopt($ch, CURLOPT_POST, true);
+        if ($payload !== null) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        }
+    } else {
+        curl_setopt($ch, CURLOPT_HTTPGET, true);
+    }
+
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_error = curl_error($ch);
+    curl_close($ch);
+
+    if ($response === false) {
+        return ['error' => $curl_error];
+    }
+
+    $decoded = json_decode($response, true);
+    if ($http_code >= 400) {
+        return [
+            'error' => isset($decoded['info']) ? $decoded['info'] : (isset($decoded['error']) ? $decoded['error'] : 'Daily API error'),
+            'http_code' => $http_code,
+        ];
+    }
+
+    return is_array($decoded) ? $decoded : ['error' => 'Unexpected Daily API response'];
+}
+
+function createDailyRoom($exp_hours = 2) {
+    $room_name = 'hsp-' . substr(md5(uniqid('', true)), 0, 12);
+    $payload = [
+        'name' => $room_name,
+        'privacy' => 'private',
+        'properties' => [
+            'exp' => time() + ($exp_hours * 3600),
+            'max_participants' => 2,
+            'enable_prejoin_ui' => false,
+            'enable_people_ui' => false,
+            'enable_chat' => false,
+            'enable_screenshare' => false,
+            'enable_network_ui' => false,
+            'enable_hand_raising' => false,
+            'enable_emoji_reactions' => false,
+            'start_video_off' => true,
+        ],
+    ];
+    $result = dailyApiRequest('POST', 'rooms', $payload);
+    return $result;
+}
+
+function createDailyMeetingToken($room_name, $user_name, $is_owner = false) {
+    $properties = [
+        'room_name' => $room_name,
+        'user_name' => $user_name,
+        'exp' => time() + (2 * 3600),
+        'is_owner' => $is_owner,
+        'start_video_off' => true,
+        'permissions' => [
+            'canSend' => ['audio'],
+        ],
+    ];
+    return dailyApiRequest('POST', 'meeting-tokens', ['properties' => $properties]);
+}
+
+function createCallRecord($caller_id, $caller_role, $caller_name, $callee_id, $callee_role, $callee_name, $room_name, $room_url) {
+    global $conn;
+    $stmt = $conn->prepare("INSERT INTO calls (Caller_ID, Caller_Role, Caller_Name, Callee_ID, Callee_Role, Callee_Name, Room_Name, Room_URL, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ringing')");
+    $stmt->bind_param("ississss", $caller_id, $caller_role, $caller_name, $callee_id, $callee_role, $callee_name, $room_name, $room_url);
+    if ($stmt->execute()) {
+        return $conn->insert_id;
+    }
+    return false;
+}
+
+function getIncomingCall($user_id, $user_role) {
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM calls WHERE Callee_ID = ? AND Callee_Role = ? AND Status = 'ringing' ORDER BY ID DESC LIMIT 1");
+    $stmt->bind_param("is", $user_id, $user_role);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
+function getCallById($call_id) {
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM calls WHERE ID = ?");
+    $stmt->bind_param("i", $call_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
+function getCallByRoomName($room_name) {
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM calls WHERE Room_Name = ? ORDER BY ID DESC LIMIT 1");
+    $stmt->bind_param("s", $room_name);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
+function updateCallStatus($call_id, $status) {
+    global $conn;
+    $valid = ['ringing', 'active', 'ended', 'declined', 'missed'];
+    if (!in_array($status, $valid)) return false;
+
+    if ($status === 'active') {
+        $stmt = $conn->prepare("UPDATE calls SET Status = ?, Started_At = COALESCE(Started_At, NOW()) WHERE ID = ?");
+    } else if ($status === 'ended' || $status === 'declined' || $status === 'missed') {
+        $stmt = $conn->prepare("UPDATE calls SET Status = ?, Ended_At = NOW() WHERE ID = ?");
+    } else {
+        $stmt = $conn->prepare("UPDATE calls SET Status = ? WHERE ID = ?");
+    }
+    $stmt->bind_param("si", $status, $call_id);
+    return $stmt->execute();
+}
+
+function getUserDisplayNameById($user_id, $role) {
+    global $conn;
+    if ($role === 'customer') {
+        $stmt = $conn->prepare("SELECT Name FROM user_clientprofile WHERE User_ID = ?");
+    } else if ($role === 'repairman') {
+        $stmt = $conn->prepare("SELECT Name FROM user_repairmanprofile WHERE User_ID = ?");
+    } else if ($role === 'admin') {
+        $stmt = $conn->prepare("SELECT Username FROM admin WHERE ID = ?");
+    } else {
+        return '';
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    if ($role === 'admin') {
+        return $result ? $result['Username'] : '';
+    }
+    return $result ? $result['Name'] : '';
+}
+
+// ==========================================
 // LOCATION & MATCHING MODEL FUNCTIONS
 // ==========================================
 
