@@ -1673,3 +1673,14 @@ function updateCustomerLocation($profile_id, $lat, $lng, $address)
     $stmt->bind_param("ddsi", $lat, $lng, $address, $profile_id);
     return $stmt->execute();
 }
+
+function isActive($user_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT Status FROM users WHERE ID=?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    return $row['Status'] === 'active';
+}
