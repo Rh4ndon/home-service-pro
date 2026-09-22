@@ -193,7 +193,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="addApplianceType">Appliance Type</label>
-          <select id="addApplianceType">
+          <select id="addApplianceType" required>
             <option value="">Select type...</option>
             <option value="refrigerator">Refrigerator</option>
             <option value="washing-machine">Washing Machine</option>
@@ -208,21 +208,21 @@
         </div>
         <div class="form-group">
           <label for="addApplianceName">Appliance Name</label>
-          <input type="text" id="addApplianceName" placeholder="e.g. Samsung RT38" />
+          <input type="text" id="addApplianceName" placeholder="e.g. Samsung RT38" required />
         </div>
         <div class="grid-2">
           <div class="form-group">
             <label for="addApplianceMake">Make / Brand</label>
-            <input type="text" id="addApplianceMake" placeholder="e.g. Samsung" />
+            <input type="text" id="addApplianceMake" placeholder="e.g. Samsung" required />
           </div>
           <div class="form-group">
             <label for="addApplianceYear">Year</label>
-            <input type="number" id="addApplianceYear" placeholder="e.g. 2023" min="1990" max="2026" />
+            <input type="number" id="addApplianceYear" placeholder="e.g. 2023" min="1990" max="2026" required />
           </div>
         </div>
         <div class="form-group">
           <label for="addApplianceDetails">Details</label>
-          <textarea id="addApplianceDetails" placeholder="Additional details about the appliance..." style="min-height:70px;"></textarea>
+          <textarea id="addApplianceDetails" placeholder="Additional details about the appliance..." style="min-height:70px;" required></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -416,6 +416,12 @@
     });
 
     document.getElementById('addApplianceBtn').addEventListener('click', function() {
+      //required all inputs
+      if (document.getElementById('addApplianceType').value == '') { showAlert('Please select an appliance type.', 'error'); return; }
+      if (document.getElementById('addApplianceName').value == '') { showAlert('Please enter an appliance name.', 'error'); return; }
+      if (document.getElementById('addApplianceMake').value == '') { showAlert('Please enter an appliance make.', 'error'); return; }
+      if (document.getElementById('addApplianceYear').value == '') { showAlert('Please enter an appliance year.', 'error'); return; }
+      if (document.getElementById('addApplianceDetails').value == '') { showAlert('Please enter an appliance details.', 'error'); return; }
       var fd = new FormData();
       fd.append('action', 'add');
       fd.append('user_id', userId);

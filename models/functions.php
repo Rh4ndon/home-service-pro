@@ -170,7 +170,8 @@ function hideNameGCashStyle($firstName, $lastName)
 // AUTH MODEL FUNCTIONS
 // ==========================================
 
-function findUserByEmail($email) {
+function findUserByEmail($email)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT * FROM users WHERE Email = ?");
     $stmt->bind_param("s", $email);
@@ -178,7 +179,8 @@ function findUserByEmail($email) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function findAdminByEmail($email) {
+function findAdminByEmail($email)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT * FROM admin WHERE Email = ?");
     $stmt->bind_param("s", $email);
@@ -186,7 +188,8 @@ function findAdminByEmail($email) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function createUser($name, $email, $password, $role, $status = 'active') {
+function createUser($name, $email, $password, $role, $status = 'active')
+{
     global $conn;
     $hashed = password_hash($password, PASSWORD_BCRYPT);
     $stmt = $conn->prepare("INSERT INTO users (Name, Email, Password, Role, Status) VALUES (?, ?, ?, ?, ?)");
@@ -195,7 +198,8 @@ function createUser($name, $email, $password, $role, $status = 'active') {
     return $conn->insert_id;
 }
 
-function setRepairmanActivation($profile_id, $active) {
+function setRepairmanActivation($profile_id, $active)
+{
     global $conn;
     $status = $active ? 'active' : 'inactive';
     $stmt = $conn->prepare("
@@ -208,15 +212,19 @@ function setRepairmanActivation($profile_id, $active) {
     return $stmt->execute();
 }
 
-function createRepairmanWithCerts($name, $email, $password, $mobile, $certs_json, $active = false) {
+function createRepairmanWithCerts($name, $email, $password, $mobile, $certs_json, $active = false)
+{
     global $conn;
     startTransaction();
     try {
         $user_status = $active ? 'active' : 'inactive';
         $user_id = createUser($name, $email, $password, 'repairman', $user_status);
         $profile_id = insertOrder('user_repairmanprofile', [
-            'Name' => $name, 'Email' => $email, 'MobileNo' => $mobile,
-            'User_ID' => $user_id, 'Status' => $user_status,
+            'Name' => $name,
+            'Email' => $email,
+            'MobileNo' => $mobile,
+            'User_ID' => $user_id,
+            'Status' => $user_status,
             'Certifications' => $certs_json ? $certs_json : null
         ]);
         commitTransaction();
@@ -227,13 +235,15 @@ function createRepairmanWithCerts($name, $email, $password, $mobile, $certs_json
     }
 }
 
-function certUploadDir() {
+function certUploadDir()
+{
     $dir = __DIR__ . '/../uploads/certificates';
     if (!is_dir($dir)) mkdir($dir, 0755, true);
     return $dir;
 }
 
-function saveUploadedCertFile($tmp_name, $orig_name) {
+function saveUploadedCertFile($tmp_name, $orig_name)
+{
     $ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
     $allowed = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
     if (!in_array($ext, $allowed)) return null;
@@ -243,7 +253,8 @@ function saveUploadedCertFile($tmp_name, $orig_name) {
     return null;
 }
 
-function collectCertEntriesFromUploads() {
+function collectCertEntriesFromUploads()
+{
     $entries = [];
     if (empty($_FILES['cert_files']) || !is_array($_FILES['cert_files']['name'])) return $entries;
     foreach ($_FILES['cert_files']['name'] as $i => $orig_name) {
@@ -263,18 +274,21 @@ function collectCertEntriesFromUploads() {
     return $entries;
 }
 
-function normalizePhilippineMobile($mobile) {
+function normalizePhilippineMobile($mobile)
+{
     $digits = preg_replace('/[^0-9]/', '', $mobile);
     if (preg_match('/^639\d{9}$/', $digits)) $digits = '0' . substr($digits, 2);
     return $digits;
 }
 
-function isPhilippineMobile($mobile) {
+function isPhilippineMobile($mobile)
+{
     $digits = preg_replace('/[^0-9]/', '', $mobile);
     return (bool) preg_match('/^(09\d{9}|639\d{9})$/', $digits);
 }
 
-function createAdmin($name, $email, $password) {
+function createAdmin($name, $email, $password)
+{
     global $conn;
     $hashed = password_hash($password, PASSWORD_BCRYPT);
     $stmt = $conn->prepare("INSERT INTO admin (Name, Email, Password) VALUES (?, ?, ?)");
@@ -283,19 +297,27 @@ function createAdmin($name, $email, $password) {
     return $conn->insert_id;
 }
 
-function isEmailTaken($email) {
+function isEmailTaken($email)
+{
     global $conn;
-    $stmt = $conn->prepare("SELECT ID FROM users WHERE Email = ?");
-    $stmt->bind_param("s", $email);
+    $stmt = $conn->prepare("
+        SELECT ID FROM users WHERE Email = ?
+        UNION
+        SELECT ID FROM admin WHERE Email = ?
+    ");
+    $stmt->bind_param("ss", $email, $email);
     $stmt->execute();
-    return $stmt->get_result()->num_rows > 0;
+    $taken = $stmt->get_result()->num_rows > 0;
+    $stmt->close();
+    return $taken;
 }
 
 // ==========================================
 // CUSTOMER MODEL FUNCTIONS
 // ==========================================
 
-function getCustomerProfileByUserId($user_id) {
+function getCustomerProfileByUserId($user_id)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT * FROM user_clientprofile WHERE User_ID = ?");
     $stmt->bind_param("i", $user_id);
@@ -304,14 +326,16 @@ function getCustomerProfileByUserId($user_id) {
 }
 
 
-function updateCustomerProfile($profile_id, $name, $email) {
+function updateCustomerProfile($profile_id, $name, $email)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE user_clientprofile SET Name = ?, Email = ? WHERE ID = ?");
     $stmt->bind_param("ssi", $name, $email, $profile_id);
     return $stmt->execute();
 }
 
-function getCustomerAppliances($client_id) {
+function getCustomerAppliances($client_id)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT * FROM clientappliances WHERE Client_ID = ?");
     $stmt->bind_param("i", $client_id);
@@ -319,7 +343,8 @@ function getCustomerAppliances($client_id) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function addCustomerAppliance($client_id, $type, $name, $make, $year, $details) {
+function addCustomerAppliance($client_id, $type, $name, $make, $year, $details)
+{
     global $conn;
     $stmt = $conn->prepare("INSERT INTO clientappliances (Client_ID, Type, Name, Make, Year, Details) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("isssis", $client_id, $type, $name, $make, $year, $details);
@@ -327,21 +352,24 @@ function addCustomerAppliance($client_id, $type, $name, $make, $year, $details) 
     return $conn->insert_id;
 }
 
-function updateCustomerAppliance($id, $client_id, $type, $name, $make, $year, $details) {
+function updateCustomerAppliance($id, $client_id, $type, $name, $make, $year, $details)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE clientappliances SET Type=?, Name=?, Make=?, Year=?, Details=? WHERE ID=? AND Client_ID=?");
     $stmt->bind_param("sssssii", $type, $name, $make, $year, $details, $id, $client_id);
     return $stmt->execute();
 }
 
-function deleteCustomerAppliance($id, $client_id) {
+function deleteCustomerAppliance($id, $client_id)
+{
     global $conn;
     $stmt = $conn->prepare("DELETE FROM clientappliances WHERE ID=? AND Client_ID=?");
     $stmt->bind_param("ii", $id, $client_id);
     return $stmt->execute();
 }
 
-function getCustomerTickets($client_id) {
+function getCustomerTickets($client_id)
+{
     global $conn;
     $stmt = $conn->prepare("
         SELECT repairticket.ID as ticket_id, repairticket.Status as ticket_status, repairticket.Details as ticket_details,
@@ -369,14 +397,16 @@ function getCustomerTickets($client_id) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function saveBookingMedia($ticket_id, $media_type, $file_path, $file_name) {
+function saveBookingMedia($ticket_id, $media_type, $file_path, $file_name)
+{
     global $conn;
     $stmt = $conn->prepare("INSERT INTO booking_media (Ticket_ID, Media_Type, File_Path, File_Name) VALUES (?, ?, ?, ?)");
     $stmt->bind_param("isss", $ticket_id, $media_type, $file_path, $file_name);
     return $stmt->execute();
 }
 
-function getBookingMedia($ticket_id) {
+function getBookingMedia($ticket_id)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT ID, Media_Type, File_Path, File_Name, Created_At FROM booking_media WHERE Ticket_ID = ? ORDER BY Media_Type, ID");
     $stmt->bind_param("i", $ticket_id);
@@ -384,7 +414,8 @@ function getBookingMedia($ticket_id) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function createCustomerTicket($client_id, $appliance_type, $appliance_name, $make_brand, $year, $issue_desc, $date_time, $appliance_id = null, $repairman_id = null, $client_lat = null, $client_lng = null, $route_distance_km = null, $route_duration_min = null, $detailed_report = null) {
+function createCustomerTicket($client_id, $appliance_type, $appliance_name, $make_brand, $year, $issue_desc, $date_time, $appliance_id = null, $repairman_id = null, $client_lat = null, $client_lng = null, $route_distance_km = null, $route_duration_min = null, $detailed_report = null)
+{
     global $conn;
     startTransaction();
     try {
@@ -404,13 +435,15 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
             'Route_Distance_Km' => $route_distance_km,
             'Route_Duration_Min' => $route_duration_min
         ]);
-        
+
         // 2. Insert issue linked to ticket
         $issue_id = insertOrder('applianceissue', [
-            'Issue' => $issue_desc, 'Details' => $issue_desc, 'Ticket_ID' => $ticket_id,
+            'Issue' => $issue_desc,
+            'Details' => $issue_desc,
+            'Ticket_ID' => $ticket_id,
             'Detailed_Report' => $detailed_report
         ]);
-        
+
         // 3. Link to an existing appliance, or create a new one
         $linked_appliance_id = null;
         if ($appliance_id) {
@@ -419,23 +452,30 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
             $linked_appliance_id = $appliance_id;
         } else {
             $linked_appliance_id = insertOrder('clientappliances', [
-                'Client_ID' => $client_id, 'Type' => $appliance_type, 'Name' => $appliance_name,
-                'Make' => $make_brand, 'Year' => $year, 'Details' => $issue_desc, 'Issue_ID' => $issue_id
+                'Client_ID' => $client_id,
+                'Type' => $appliance_type,
+                'Name' => $appliance_name,
+                'Make' => $make_brand,
+                'Year' => $year,
+                'Details' => $issue_desc,
+                'Issue_ID' => $issue_id
             ]);
         }
 
         // Ensure the ticket records exactly which appliance it is about
         editRecord('repairticket', ['Appliance_ID' => $linked_appliance_id], "ID = $ticket_id");
-        
+
         // 4. Insert schedule
         $schedule_id = insertOrder('repairschedule', [
-            'Client_ID' => $client_id, 'Date_Time' => $date_time, 'Status' => 'Scheduled',
+            'Client_ID' => $client_id,
+            'Date_Time' => $date_time,
+            'Status' => 'Scheduled',
             'Repairman_ID' => $repairman_id
         ]);
-        
+
         // 5. Update ticket with schedule_id
         editRecord('repairticket', ['Schedule_ID' => $schedule_id], "ID = $ticket_id");
-        
+
         commitTransaction();
         return ['ticket_id' => $ticket_id, 'schedule_id' => $schedule_id];
     } catch (Exception $e) {
@@ -444,7 +484,8 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
     }
 }
 
-function linkApplianceToIssue($appliance_id, $client_id, $issue_id, $issue_desc) {
+function linkApplianceToIssue($appliance_id, $client_id, $issue_id, $issue_desc)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE clientappliances SET Issue_ID = ?, Details = ? WHERE ID = ? AND Client_ID = ?");
     $stmt->bind_param("isii", $issue_id, $issue_desc, $appliance_id, $client_id);
@@ -452,14 +493,16 @@ function linkApplianceToIssue($appliance_id, $client_id, $issue_id, $issue_desc)
     return $ok && $stmt->affected_rows > 0;
 }
 
-function cancelCustomerTicket($ticket_id, $client_id) {
+function cancelCustomerTicket($ticket_id, $client_id)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE repairticket SET Status='Cancelled' WHERE ID=? AND Client_ID=? AND Status NOT IN ('Completed','Cancelled')");
     $stmt->bind_param("ii", $ticket_id, $client_id);
     return $stmt->execute();
 }
 
-function completeCustomerTicket($ticket_id, $client_id) {
+function completeCustomerTicket($ticket_id, $client_id)
+{
     global $conn;
     startTransaction();
     try {
@@ -468,27 +511,27 @@ function completeCustomerTicket($ticket_id, $client_id) {
         $stmt->bind_param("ii", $ticket_id, $client_id);
         $stmt->execute();
         $ticket = $stmt->get_result()->fetch_assoc();
-        
+
         if (!$ticket) {
             throw new Exception('Ticket not found or not yours.');
         }
-        
+
         $repairman_id = $ticket['Repairman_ID'];
         $schedule_id = $ticket['Schedule_ID'];
         $appliance_id = $ticket['Appliance_ID'] ?? 0;
-        
+
         // Update repairticket
         $stmt = $conn->prepare("UPDATE repairticket SET Status='Completed' WHERE ID=? AND Client_ID=? AND Status NOT IN ('Completed','Cancelled')");
         $stmt->bind_param("ii", $ticket_id, $client_id);
         $stmt->execute();
-        
+
         // Update repairschedule if exists
         if ($schedule_id) {
             $stmt = $conn->prepare("UPDATE repairschedule SET Status='Completed' WHERE ID=?");
             $stmt->bind_param("i", $schedule_id);
             $stmt->execute();
         }
-        
+
         // Add to repairhistory (same as repairman completion)
         if ($repairman_id && $schedule_id) {
             insertRecord('repairhistory', [
@@ -499,7 +542,7 @@ function completeCustomerTicket($ticket_id, $client_id) {
                 'Status' => 'Completed'
             ]);
         }
-        
+
         commitTransaction();
         return true;
     } catch (Exception $e) {
@@ -508,29 +551,30 @@ function completeCustomerTicket($ticket_id, $client_id) {
     }
 }
 
-function getCustomerDashboardStats($client_id) {
+function getCustomerDashboardStats($client_id)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("SELECT COUNT(*) as total FROM repairticket WHERE Client_ID = ? AND Status IN ('Open', 'In Progress')");
     $stmt->bind_param("i", $client_id);
     $stmt->execute();
     $active_tickets = $stmt->get_result()->fetch_assoc()['total'];
-    
+
     $stmt = $conn->prepare("SELECT COUNT(*) as total FROM repairschedule WHERE Client_ID = ? AND Status = 'Scheduled' AND Date_Time >= NOW()");
     $stmt->bind_param("i", $client_id);
     $stmt->execute();
     $scheduled_repairs = $stmt->get_result()->fetch_assoc()['total'];
-    
+
     $stmt = $conn->prepare("SELECT COUNT(*) as total FROM clientappliances WHERE Client_ID = ?");
     $stmt->bind_param("i", $client_id);
     $stmt->execute();
     $total_appliances = $stmt->get_result()->fetch_assoc()['total'];
-    
+
     $stmt = $conn->prepare("SELECT COUNT(*) as total FROM repairticket WHERE Client_ID = ? AND Status = 'Completed'");
     $stmt->bind_param("i", $client_id);
     $stmt->execute();
     $completed_repairs = $stmt->get_result()->fetch_assoc()['total'];
-    
+
     // Recent tickets
     $stmt = $conn->prepare("
         SELECT repairticket.*, applianceissue.Issue, clientappliances.Name AS ApplianceName 
@@ -543,7 +587,7 @@ function getCustomerDashboardStats($client_id) {
     $stmt->bind_param("i", $client_id);
     $stmt->execute();
     $recent_tickets = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    
+
     // Upcoming schedule
     $stmt = $conn->prepare("
         SELECT repairschedule.*, user_repairmanprofile.Name AS RepairmanName 
@@ -556,11 +600,12 @@ function getCustomerDashboardStats($client_id) {
     $stmt->bind_param("i", $client_id);
     $stmt->execute();
     $upcoming_schedule = $stmt->get_result()->fetch_assoc();
-    
+
     return compact('active_tickets', 'scheduled_repairs', 'total_appliances', 'completed_repairs', 'recent_tickets', 'upcoming_schedule');
 }
 
-function getCustomerSchedule($client_id) {
+function getCustomerSchedule($client_id)
+{
     global $conn;
     $stmt = $conn->prepare("
         SELECT repairschedule.*, user_repairmanprofile.Name AS RepairmanName 
@@ -574,7 +619,8 @@ function getCustomerSchedule($client_id) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function getCustomerIdFromUser($user_id) {
+function getCustomerIdFromUser($user_id)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT ID AS Client_ID FROM user_clientprofile WHERE User_ID = ?");
     $stmt->bind_param("i", $user_id);
@@ -586,7 +632,8 @@ function getCustomerIdFromUser($user_id) {
 // REPAIRMAN MODEL FUNCTIONS
 // ==========================================
 
-function getRepairmanIdFromUser($user_id) {
+function getRepairmanIdFromUser($user_id)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT ID FROM user_repairmanprofile WHERE User_ID = ?");
     $stmt->bind_param("i", $user_id);
@@ -595,7 +642,8 @@ function getRepairmanIdFromUser($user_id) {
     return $result ? $result['ID'] : null;
 }
 
-function getRepairmanProfile($user_id) {
+function getRepairmanProfile($user_id)
+{
     global $conn;
     $stmt = $conn->prepare("
         SELECT rp.*, u.Status AS UserStatus
@@ -608,42 +656,48 @@ function getRepairmanProfile($user_id) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function updateRepairmanProfile($user_id, $name, $email, $address, $mobile, $facebook_page) {
+function updateRepairmanProfile($user_id, $name, $email, $address, $mobile, $facebook_page)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Name=?, Email=?, Address=?, MobileNo=?, FacebookPage=? WHERE User_ID=?");
     $stmt->bind_param("sssssi", $name, $email, $address, $mobile, $facebook_page, $user_id);
     return $stmt->execute();
 }
 
-function updateRepairmanAvailability($user_id, $availability) {
+function updateRepairmanAvailability($user_id, $availability)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Availability=? WHERE User_ID=?");
     $stmt->bind_param("si", $availability, $user_id);
     return $stmt->execute();
 }
 
-function updateRepairmanSkills($profile_id, $skills) {
+function updateRepairmanSkills($profile_id, $skills)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Skills=? WHERE ID=?");
     $stmt->bind_param("si", $skills, $profile_id);
     return $stmt->execute();
 }
 
-function updateRepairmanEducation($profile_id, $education) {
+function updateRepairmanEducation($profile_id, $education)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Education=? WHERE ID=?");
     $stmt->bind_param("si", $education, $profile_id);
     return $stmt->execute();
 }
 
-function updateRepairmanCerts($profile_id, $certs) {
+function updateRepairmanCerts($profile_id, $certs)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Certifications=? WHERE ID=?");
     $stmt->bind_param("si", $certs, $profile_id);
     return $stmt->execute();
 }
 
-function getRepairmanTickets($repairman_id) {
+function getRepairmanTickets($repairman_id)
+{
     global $conn;
     $stmt = $conn->prepare("
         SELECT t.ID as ticket_id, t.Status as ticket_status, t.Details as ticket_details, 
@@ -668,27 +722,29 @@ function getRepairmanTickets($repairman_id) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function acceptRepairmanTicket($ticket_id, $repairman_id) {
+function acceptRepairmanTicket($ticket_id, $repairman_id)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE repairticket SET Status = 'In Progress', Repairman_ID = ? WHERE ID = ?");
     $stmt->bind_param("ii", $repairman_id, $ticket_id);
     return $stmt->execute();
 }
 
-function completeRepairmanTicket($ticket_id, $repairman_id) {
+function completeRepairmanTicket($ticket_id, $repairman_id)
+{
     global $conn;
     startTransaction();
     try {
         $stmt = $conn->prepare("UPDATE repairticket SET Status = 'Completed' WHERE ID = ? AND Repairman_ID = ?");
         $stmt->bind_param("ii", $ticket_id, $repairman_id);
         $stmt->execute();
-        
+
         // Get ticket details for history
         $stmt = $conn->prepare("SELECT Client_ID, Schedule_ID, Appliance_ID FROM repairticket WHERE ID = ?");
         $stmt->bind_param("i", $ticket_id);
         $stmt->execute();
         $ticket = $stmt->get_result()->fetch_assoc();
-        
+
         if ($ticket) {
             // Get the appliance ID for this ticket (recorded on the ticket itself)
             $appliance_id = $ticket['Appliance_ID'] ? $ticket['Appliance_ID'] : 0;
@@ -699,7 +755,7 @@ function completeRepairmanTicket($ticket_id, $repairman_id) {
                 $appliance = $stmt->get_result()->fetch_assoc();
                 $appliance_id = $appliance ? $appliance['ID'] : 0;
             }
-            
+
             insertRecord('repairhistory', [
                 'Repairman_ID' => $repairman_id,
                 'Schedule_ID' => $ticket['Schedule_ID'],
@@ -708,7 +764,7 @@ function completeRepairmanTicket($ticket_id, $repairman_id) {
                 'Status' => 'Completed'
             ]);
         }
-        
+
         commitTransaction();
         return true;
     } catch (Exception $e) {
@@ -717,7 +773,8 @@ function completeRepairmanTicket($ticket_id, $repairman_id) {
     }
 }
 
-function getRepairmanSchedule($repairman_id) {
+function getRepairmanSchedule($repairman_id)
+{
     global $conn;
     $stmt = $conn->prepare("
         SELECT rs.ID as schedule_id, rs.Date_Time as schedule_date, rs.Status as schedule_status, 
@@ -741,39 +798,41 @@ function getRepairmanSchedule($repairman_id) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function updateRepairmanScheduleStatus($schedule_id, $repairman_id, $status) {
+function updateRepairmanScheduleStatus($schedule_id, $repairman_id, $status)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE repairschedule SET Status = ? WHERE ID = ? AND Repairman_ID = ?");
     $stmt->bind_param("sii", $status, $schedule_id, $repairman_id);
     return $stmt->execute();
 }
 
-function getRepairmanDashboardStats($repairman_id) {
+function getRepairmanDashboardStats($repairman_id)
+{
     global $conn;
     $today = date('Y-m-d');
-    
+
     $stmt = $conn->prepare("SELECT COUNT(*) as count FROM repairschedule WHERE Repairman_ID = ? AND DATE(Date_Time) = ? AND Status != 'Declined'");
     $stmt->bind_param("is", $repairman_id, $today);
     $stmt->execute();
     $todays_jobs = $stmt->get_result()->fetch_assoc()['count'];
-    
+
     $stmt = $conn->prepare("SELECT COUNT(*) as count FROM repairticket WHERE Repairman_ID = ? AND Status = 'Open'");
     $stmt->bind_param("i", $repairman_id);
     $stmt->execute();
     $pending_tickets = $stmt->get_result()->fetch_assoc()['count'];
-    
+
     $stmt = $conn->prepare("SELECT COUNT(*) as count FROM repairticket WHERE Repairman_ID = ? AND Status = 'Completed'");
     $stmt->bind_param("i", $repairman_id);
     $stmt->execute();
     $completed_week = $stmt->get_result()->fetch_assoc()['count'];
-    
+
     // Get rating
     $stmt = $conn->prepare("SELECT Ratings FROM user_repairmanprofile WHERE User_ID = ?");
     $stmt->bind_param("i", $repairman_id);
     $stmt->execute();
     $rating_row = $stmt->get_result()->fetch_assoc();
     $avg_rating = $rating_row ? $rating_row['Ratings'] : 0;
-    
+
     // Today's schedule
     $stmt = $conn->prepare("
         SELECT rs.ID as schedule_id, rs.Date_Time as schedule_date, rs.Status as schedule_status, 
@@ -789,20 +848,33 @@ function getRepairmanDashboardStats($repairman_id) {
     $stmt->bind_param("is", $repairman_id, $today);
     $stmt->execute();
     $schedules = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    
+
     return compact('todays_jobs', 'pending_tickets', 'completed_week', 'avg_rating', 'schedules');
 }
 
-function getRepairmanHistory($repairman_id, $date_from = null, $date_to = null, $status = null) {
+function getRepairmanHistory($repairman_id, $date_from = null, $date_to = null, $status = null)
+{
     global $conn;
     $where = "rh.Repairman_ID = ?";
     $types = "i";
     $params = [$repairman_id];
-    
-    if ($date_from) { $where .= " AND rh.Date >= ?"; $types .= "s"; $params[] = $date_from; }
-    if ($date_to) { $where .= " AND rh.Date <= ?"; $types .= "s"; $params[] = $date_to; }
-    if ($status) { $where .= " AND rh.Status = ?"; $types .= "s"; $params[] = $status; }
-    
+
+    if ($date_from) {
+        $where .= " AND rh.Date >= ?";
+        $types .= "s";
+        $params[] = $date_from;
+    }
+    if ($date_to) {
+        $where .= " AND rh.Date <= ?";
+        $types .= "s";
+        $params[] = $date_to;
+    }
+    if ($status) {
+        $where .= " AND rh.Status = ?";
+        $types .= "s";
+        $params[] = $status;
+    }
+
     $sql = "SELECT rh.ID as history_id, rh.Date as repair_date, rh.Status as repair_status, 
                    rs.Date_Time as schedule_date, t.ID as ticket_id, t.Details as ticket_details,
                    ca.Name as appliance_name, ca.Type as appliance_type, 
@@ -815,7 +887,7 @@ function getRepairmanHistory($repairman_id, $date_from = null, $date_to = null, 
             LEFT JOIN applianceissue ai ON t.ID = ai.Ticket_ID 
             LEFT JOIN user_clientprofile cp ON rs.Client_ID = cp.ID 
             WHERE $where ORDER BY rh.Date DESC";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->bind_param($types, ...$params);
     $stmt->execute();
@@ -826,7 +898,8 @@ function getRepairmanHistory($repairman_id, $date_from = null, $date_to = null, 
 // ADMIN MODEL FUNCTIONS
 // ==========================================
 
-function getAdminDashboardStats() {
+function getAdminDashboardStats()
+{
     global $conn;
     $total_customers = countAllRecords('user_clientprofile', '1');
     $total_repairmen = countAllRecords('user_repairmanprofile', '1');
@@ -854,7 +927,7 @@ function getAdminDashboardStats() {
     $stmt->bind_param("s", $week_start);
     $stmt->execute();
     $reports_this_week = $stmt->get_result()->fetch_assoc()['total'];
-    
+
     // Top repairmen
     $stmt = $conn->prepare("
         SELECT urp.*, 
@@ -864,7 +937,7 @@ function getAdminDashboardStats() {
     ");
     $stmt->execute();
     $top_repairmen = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    
+
     // Recent tickets
     $stmt = $conn->prepare("
         SELECT repairticket.*, user_clientprofile.Name AS ClientName 
@@ -874,7 +947,7 @@ function getAdminDashboardStats() {
     ");
     $stmt->execute();
     $recent_tickets = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    
+
     // Recent completions
     $stmt = $conn->prepare("
         SELECT repairhistory.*, user_repairmanprofile.Name AS RepairmanName 
@@ -884,11 +957,12 @@ function getAdminDashboardStats() {
     ");
     $stmt->execute();
     $recent_completions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    
+
     return compact('total_customers', 'total_repairmen', 'active_tickets', 'completed_repairs', 'pending_approvals', 'flagged_issues', 'schedules_today', 'reports_this_week', 'top_repairmen', 'recent_tickets', 'recent_completions');
 }
 
-function getAdminCustomers($search = null) {
+function getAdminCustomers($search = null)
+{
     global $conn;
     if ($search) {
         $search = "%$search%";
@@ -917,7 +991,8 @@ function getAdminCustomers($search = null) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function getAdminCustomerById($id) {
+function getAdminCustomerById($id)
+{
     global $conn;
     $stmt = $conn->prepare("
         SELECT users.*, user_clientprofile.ID AS ProfileID, user_clientprofile.Name AS ProfileName, 
@@ -933,14 +1008,16 @@ function getAdminCustomerById($id) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function updateAdminCustomer($id, $name, $email) {
+function updateAdminCustomer($id, $name, $email)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE user_clientprofile SET Name=?, Email=? WHERE ID=?");
     $stmt->bind_param("ssi", $name, $email, $id);
     return $stmt->execute();
 }
 
-function deactivateAdminCustomer($id) {
+function deactivateAdminCustomer($id)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE user_clientprofile SET Status='inactive' WHERE ID=?");
     $stmt->bind_param("i", $id);
@@ -951,7 +1028,8 @@ function deactivateAdminCustomer($id) {
     return $stmt2->execute();
 }
 
-function activateAdminCustomer($id) {
+function activateAdminCustomer($id)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE user_clientprofile SET Status='active' WHERE ID=?");
     $stmt->bind_param("i", $id);
@@ -962,7 +1040,8 @@ function activateAdminCustomer($id) {
     return $stmt2->execute();
 }
 
-function getAdminRepairmen($search = null) {
+function getAdminRepairmen($search = null)
+{
     global $conn;
     if ($search) {
         $search = "%$search%";
@@ -984,7 +1063,8 @@ function getAdminRepairmen($search = null) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function getAdminRepairmanById($id) {
+function getAdminRepairmanById($id)
+{
     global $conn;
     $stmt = $conn->prepare("
         SELECT urp.* 
@@ -996,15 +1076,20 @@ function getAdminRepairmanById($id) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function addAdminRepairman($name, $email, $password, $address, $mobile, $certs_json = null, $skills = null, $education = null, $facebook_page = null) {
+function addAdminRepairman($name, $email, $password, $address, $mobile, $certs_json = null, $skills = null, $education = null, $facebook_page = null)
+{
     global $conn;
     startTransaction();
     try {
         $user_id = createUser($name, $email, $password, 'repairman');
         $profile_id = insertOrder('user_repairmanprofile', [
-            'Name' => $name, 'Email' => $email, 'Address' => $address,
-            'MobileNo' => $mobile, 'User_ID' => $user_id,
-            'Skills' => $skills, 'Education' => $education,
+            'Name' => $name,
+            'Email' => $email,
+            'Address' => $address,
+            'MobileNo' => $mobile,
+            'User_ID' => $user_id,
+            'Skills' => $skills,
+            'Education' => $education,
             'Certifications' => $certs_json ? $certs_json : null,
             'FacebookPage' => $facebook_page
         ]);
@@ -1016,30 +1101,34 @@ function addAdminRepairman($name, $email, $password, $address, $mobile, $certs_j
     }
 }
 
-function activateAdminRepairman($id) {
+function activateAdminRepairman($id)
+{
     return setRepairmanActivation($id, true);
 }
 
-function updateAdminRepairman($id, $name, $email, $address, $mobile, $availability, $education = null, $facebook_page = null) {
+function updateAdminRepairman($id, $name, $email, $address, $mobile, $availability, $education = null, $facebook_page = null)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Name=?, Email=?, Address=?, MobileNo=?, Availability=?, Education=?, FacebookPage=? WHERE ID=?");
     $stmt->bind_param("sssssssi", $name, $email, $address, $mobile, $availability, $education, $facebook_page, $id);
     return $stmt->execute();
 }
 
-function deactivateAdminRepairman($id) {
+function deactivateAdminRepairman($id)
+{
     return setRepairmanActivation($id, false);
 }
 
-function deleteAdminRepairman($id) {
+function deleteAdminRepairman($id)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT User_ID FROM user_repairmanprofile WHERE ID=?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $profile = $stmt->get_result()->fetch_assoc();
-    
+
     if (!$profile) return false;
-    
+
     startTransaction();
     try {
         deleteRecord('user_repairmanprofile', "ID = $id");
@@ -1052,7 +1141,8 @@ function deleteAdminRepairman($id) {
     }
 }
 
-function getAdminTickets($status = null) {
+function getAdminTickets($status = null)
+{
     global $conn;
     $with = "repairticket.*, user_clientprofile.Name AS ClientName, 
                    user_repairmanprofile.Name AS RepairmanName, repairschedule.Date_Time,
@@ -1073,7 +1163,8 @@ function getAdminTickets($status = null) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function getAdminTicketById($id) {
+function getAdminTicketById($id)
+{
     global $conn;
     $stmt = $conn->prepare("
         SELECT repairticket.*, user_clientprofile.Name AS ClientName, user_clientprofile.Email AS ClientEmail,
@@ -1090,14 +1181,16 @@ function getAdminTicketById($id) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function reassignAdminTicket($ticket_id, $new_repairman_id) {
+function reassignAdminTicket($ticket_id, $new_repairman_id)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE repairticket SET Repairman_ID=? WHERE ID=?");
     $stmt->bind_param("ii", $new_repairman_id, $ticket_id);
     return $stmt->execute();
 }
 
-function closeAdminTicket($ticket_id) {
+function closeAdminTicket($ticket_id)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE repairticket SET Status='Completed' WHERE ID=?");
     $stmt->bind_param("i", $ticket_id);
@@ -1108,7 +1201,8 @@ function closeAdminTicket($ticket_id) {
 // CHAT MODEL FUNCTIONS
 // ==========================================
 
-function getChatContacts($user_id, $user_role) {
+function getChatContacts($user_id, $user_role)
+{
     global $conn;
     $stmt = $conn->prepare("
         SELECT 
@@ -1125,7 +1219,8 @@ function getChatContacts($user_id, $user_role) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function getChatContactName($contact_id, $contact_role) {
+function getChatContactName($contact_id, $contact_role)
+{
     global $conn;
     if ($contact_role === 'customer') {
         $stmt = $conn->prepare("SELECT Name FROM user_clientprofile WHERE User_ID = ?");
@@ -1138,7 +1233,8 @@ function getChatContactName($contact_id, $contact_role) {
     return $result ? $result['Name'] : 'Unknown';
 }
 
-function getChatMessages($user_id, $user_role, $contact_id, $contact_role) {
+function getChatMessages($user_id, $user_role, $contact_id, $contact_role)
+{
     global $conn;
     $stmt = $conn->prepare("
         SELECT * FROM chat_messages 
@@ -1151,14 +1247,16 @@ function getChatMessages($user_id, $user_role, $contact_id, $contact_role) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function markChatMessagesRead($user_id, $user_role, $contact_id, $contact_role) {
+function markChatMessagesRead($user_id, $user_role, $contact_id, $contact_role)
+{
     global $conn;
     $stmt = $conn->prepare("UPDATE chat_messages SET Is_Read=1 WHERE Sender_ID=? AND Sender_Role=? AND Receiver_ID=? AND Receiver_Role=? AND Is_Read=0");
     $stmt->bind_param("isss", $contact_id, $contact_role, $user_id, $user_role);
     return $stmt->execute();
 }
 
-function sendChatMessage($sender_id, $sender_role, $receiver_id, $receiver_role, $message) {
+function sendChatMessage($sender_id, $sender_role, $receiver_id, $receiver_role, $message)
+{
     global $conn;
     $stmt = $conn->prepare("INSERT INTO chat_messages (Sender_ID, Sender_Role, Receiver_ID, Receiver_Role, Message) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("issss", $sender_id, $sender_role, $receiver_id, $receiver_role, $message);
@@ -1166,7 +1264,8 @@ function sendChatMessage($sender_id, $sender_role, $receiver_id, $receiver_role,
     return $conn->insert_id;
 }
 
-function getNewChatMessages($user_id, $user_role, $contact_id, $contact_role, $last_id) {
+function getNewChatMessages($user_id, $user_role, $contact_id, $contact_role, $last_id)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT * FROM chat_messages WHERE ID > ? AND Sender_ID = ? AND Sender_Role = ? AND Receiver_ID = ? AND Receiver_Role = ? ORDER BY Created_At ASC");
     $stmt->bind_param("iisss", $last_id, $contact_id, $contact_role, $user_id, $user_role);
@@ -1174,7 +1273,8 @@ function getNewChatMessages($user_id, $user_role, $contact_id, $contact_role, $l
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function getChatMessageById($id) {
+function getChatMessageById($id)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT Message, Created_At FROM chat_messages WHERE ID = ?");
     $stmt->bind_param("i", $id);
@@ -1186,7 +1286,8 @@ function getChatMessageById($id) {
 // VOICE CALL MODEL FUNCTIONS (DAILY.CO)
 // ==========================================
 
-function getDailyEnvValue($key) {
+function getDailyEnvValue($key)
+{
     $env_file = __DIR__ . '/../controllers/.env';
     if (file_exists($env_file)) {
         $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -1201,11 +1302,13 @@ function getDailyEnvValue($key) {
     return getenv($key);
 }
 
-function getDailyApiKey() {
+function getDailyApiKey()
+{
     return getDailyEnvValue('DAILY_CO_API_KEY');
 }
 
-function getDailySubdomain() {
+function getDailySubdomain()
+{
     $subdomain = getDailyEnvValue('DAILY_CO_SUBDOMAIN');
     if ($subdomain && strpos($subdomain, '.daily.co') === false) {
         $subdomain = $subdomain . '.daily.co';
@@ -1213,7 +1316,8 @@ function getDailySubdomain() {
     return $subdomain;
 }
 
-function dailyApiRequest($method, $path, $payload = null) {
+function dailyApiRequest($method, $path, $payload = null)
+{
     $api_key = getDailyApiKey();
     if (!$api_key) {
         return ['error' => 'DAILY_CO_API_KEY is not configured.'];
@@ -1257,7 +1361,8 @@ function dailyApiRequest($method, $path, $payload = null) {
     return is_array($decoded) ? $decoded : ['error' => 'Unexpected Daily API response'];
 }
 
-function createDailyRoom($exp_hours = 2) {
+function createDailyRoom($exp_hours = 2)
+{
     $room_name = 'hsp-' . substr(md5(uniqid('', true)), 0, 12);
     $payload = [
         'name' => $room_name,
@@ -1279,7 +1384,8 @@ function createDailyRoom($exp_hours = 2) {
     return $result;
 }
 
-function createDailyMeetingToken($room_name, $user_name, $is_owner = false) {
+function createDailyMeetingToken($room_name, $user_name, $is_owner = false)
+{
     $properties = [
         'room_name' => $room_name,
         'user_name' => $user_name,
@@ -1293,7 +1399,8 @@ function createDailyMeetingToken($room_name, $user_name, $is_owner = false) {
     return dailyApiRequest('POST', 'meeting-tokens', ['properties' => $properties]);
 }
 
-function createCallRecord($caller_id, $caller_role, $caller_name, $callee_id, $callee_role, $callee_name, $room_name, $room_url) {
+function createCallRecord($caller_id, $caller_role, $caller_name, $callee_id, $callee_role, $callee_name, $room_name, $room_url)
+{
     global $conn;
     $stmt = $conn->prepare("INSERT INTO calls (Caller_ID, Caller_Role, Caller_Name, Callee_ID, Callee_Role, Callee_Name, Room_Name, Room_URL, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ringing')");
     $stmt->bind_param("ississss", $caller_id, $caller_role, $caller_name, $callee_id, $callee_role, $callee_name, $room_name, $room_url);
@@ -1303,7 +1410,8 @@ function createCallRecord($caller_id, $caller_role, $caller_name, $callee_id, $c
     return false;
 }
 
-function getIncomingCall($user_id, $user_role) {
+function getIncomingCall($user_id, $user_role)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT * FROM calls WHERE Callee_ID = ? AND Callee_Role = ? AND Status = 'ringing' ORDER BY ID DESC LIMIT 1");
     $stmt->bind_param("is", $user_id, $user_role);
@@ -1311,7 +1419,8 @@ function getIncomingCall($user_id, $user_role) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function getCallById($call_id) {
+function getCallById($call_id)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT * FROM calls WHERE ID = ?");
     $stmt->bind_param("i", $call_id);
@@ -1319,7 +1428,8 @@ function getCallById($call_id) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function getCallByRoomName($room_name) {
+function getCallByRoomName($room_name)
+{
     global $conn;
     $stmt = $conn->prepare("SELECT * FROM calls WHERE Room_Name = ? ORDER BY ID DESC LIMIT 1");
     $stmt->bind_param("s", $room_name);
@@ -1327,7 +1437,8 @@ function getCallByRoomName($room_name) {
     return $stmt->get_result()->fetch_assoc();
 }
 
-function updateCallStatus($call_id, $status) {
+function updateCallStatus($call_id, $status)
+{
     global $conn;
     $valid = ['ringing', 'active', 'ended', 'declined', 'missed'];
     if (!in_array($status, $valid)) return false;
@@ -1343,7 +1454,8 @@ function updateCallStatus($call_id, $status) {
     return $stmt->execute();
 }
 
-function getUserDisplayNameById($user_id, $role) {
+function getUserDisplayNameById($user_id, $role)
+{
     global $conn;
     if ($role === 'customer') {
         $stmt = $conn->prepare("SELECT Name FROM user_clientprofile WHERE User_ID = ?");
@@ -1367,7 +1479,8 @@ function getUserDisplayNameById($user_id, $role) {
 // LOCATION & MATCHING MODEL FUNCTIONS
 // ==========================================
 
-function getGoogleMapsApiKey() {
+function getGoogleMapsApiKey()
+{
     $env_file = __DIR__ . '/../controllers/.env';
     $key = '';
     if (file_exists($env_file)) {
@@ -1384,19 +1497,21 @@ function getGoogleMapsApiKey() {
     return $key ?: getenv('GOOGLE_MAP_API_KEY');
 }
 
-function haversineDistanceKm($lat1, $lng1, $lat2, $lng2) {
+function haversineDistanceKm($lat1, $lng1, $lat2, $lng2)
+{
     if ($lat1 === null || $lng1 === null || $lat2 === null || $lng2 === null) return null;
     $earth_radius_km = 6371.0;
     $dLat = deg2rad((float) $lat2 - (float) $lat1);
     $dLng = deg2rad((float) $lng2 - (float) $lng1);
     $a = sin($dLat / 2) * sin($dLat / 2) +
-         cos(deg2rad((float) $lat1)) * cos(deg2rad((float) $lat2)) *
-         sin($dLng / 2) * sin($dLng / 2);
+        cos(deg2rad((float) $lat1)) * cos(deg2rad((float) $lat2)) *
+        sin($dLng / 2) * sin($dLng / 2);
     $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
     return $earth_radius_km * $c;
 }
 
-function getAvailableRepairmenWithLocation($skill = null, $limit = 50) {
+function getAvailableRepairmenWithLocation($skill = null, $limit = 50)
+{
     global $conn;
     $sql = "
         SELECT urp.ID, urp.User_ID, urp.Name, urp.Email, urp.Latitude, urp.Longitude,
@@ -1429,7 +1544,8 @@ function getAvailableRepairmenWithLocation($skill = null, $limit = 50) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function isRepairmanAssignable($repairman_id) {
+function isRepairmanAssignable($repairman_id)
+{
     global $conn;
     $stmt = $conn->prepare("
         SELECT urp.ID FROM user_repairmanprofile urp
@@ -1443,7 +1559,8 @@ function isRepairmanAssignable($repairman_id) {
     return (bool) $stmt->get_result()->fetch_assoc();
 }
 
-function routeDistancesFromDistanceMatrix($origin_lat, $origin_lng, array $destinations, $key) {
+function routeDistancesFromDistanceMatrix($origin_lat, $origin_lng, array $destinations, $key)
+{
     // Origins = repairmen, destination(s) = client (one destination).
     // Returns keyed by repairman ID: ['km' => float, 'min' => int].
     if (!$key || !$destinations || $origin_lat === null || $origin_lng === null) return [];
@@ -1489,7 +1606,8 @@ function routeDistancesFromDistanceMatrix($origin_lat, $origin_lng, array $desti
     return $result;
 }
 
-function findNearbyRepairmen($client_lat, $client_lng, $radius_km = 10, $skill = null) {
+function findNearbyRepairmen($client_lat, $client_lng, $radius_km = 10, $skill = null)
+{
     if ($client_lat === null || $client_lng === null) {
         return ['repairmen' => [], 'method' => 'none', 'error' => 'Client location is required.'];
     }
@@ -1534,7 +1652,8 @@ function findNearbyRepairmen($client_lat, $client_lng, $radius_km = 10, $skill =
     return ['repairmen' => $result, 'method' => $method, 'radius_km' => (float) $radius_km];
 }
 
-function updateRepairmanLocation($user_id, $lat, $lng, $address) {
+function updateRepairmanLocation($user_id, $lat, $lng, $address)
+{
     global $conn;
     $lat = ($lat === '' || $lat === null) ? null : $lat;
     $lng = ($lng === '' || $lng === null) ? null : $lng;
@@ -1544,7 +1663,8 @@ function updateRepairmanLocation($user_id, $lat, $lng, $address) {
     return $stmt->execute();
 }
 
-function updateCustomerLocation($profile_id, $lat, $lng, $address) {
+function updateCustomerLocation($profile_id, $lat, $lng, $address)
+{
     global $conn;
     $lat = ($lat === '' || $lat === null) ? null : $lat;
     $lng = ($lng === '' || $lng === null) ? null : $lng;

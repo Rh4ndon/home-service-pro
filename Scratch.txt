@@ -1,1 +1,0 @@
-The pages are not responsive on mobile. The humburger menu is not seen
