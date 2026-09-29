@@ -2,6 +2,8 @@
 session_start();
 header('Content-Type: application/json');
 include '../models/functions.php';
+include 'mailer.php';
+
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -18,6 +20,8 @@ if (empty($email) || empty($password) || empty($role)) {
     echo json_encode(['error' => 'All fields are required']);
     exit;
 }
+
+$otp = generateOtp();
 
 if ($role === 'admin') {
     $user = findAdminByEmail($email);
@@ -41,7 +45,6 @@ if ($role === 'admin') {
         'role' => 'admin'
     ]);
     exit;
-
 } else {
     if (!in_array($role, ['customer', 'repairman'])) {
         http_response_code(400);
@@ -67,6 +70,8 @@ if ($role === 'admin') {
         exit;
     }
 
+    send_otp_email($user['Email'], $user['Name'], $otp, 'login');
+
     $_SESSION['user_id'] = $user['ID'];
     $_SESSION['user_name'] = $user['Name'];
     $_SESSION['user_email'] = $user['Email'];
@@ -77,6 +82,7 @@ if ($role === 'admin') {
         'id' => $user['ID'],
         'name' => $user['Name'],
         'email' => $user['Email'],
+        'otp' => $otp,
         'role' => $user['Role']
     ]);
     exit;

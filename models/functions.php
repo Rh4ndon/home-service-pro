@@ -1286,7 +1286,7 @@ function getChatMessageById($id)
 // VOICE CALL MODEL FUNCTIONS (DAILY.CO)
 // ==========================================
 
-function getDailyEnvValue($key)
+function envValue($key)
 {
     $env_file = __DIR__ . '/../controllers/.env';
     if (file_exists($env_file)) {
@@ -1300,6 +1300,11 @@ function getDailyEnvValue($key)
         }
     }
     return getenv($key);
+}
+
+function getDailyEnvValue($key)
+{
+    return envValue($key);
 }
 
 function getDailyApiKey()
@@ -1481,19 +1486,7 @@ function getUserDisplayNameById($user_id, $role)
 
 function getGoogleMapsApiKey()
 {
-    $env_file = __DIR__ . '/../controllers/.env';
-    $key = '';
-    if (file_exists($env_file)) {
-        $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (!$line || strpos($line, '#') === 0) continue;
-            if (strpos($line, 'GOOGLE_MAP_API_KEY=') === 0) {
-                $key = trim(substr($line, strlen('GOOGLE_MAP_API_KEY=')));
-                break;
-            }
-        }
-    }
+    $key = envValue('GOOGLE_MAP_API_KEY');
     return $key ?: getenv('GOOGLE_MAP_API_KEY');
 }
 

@@ -526,6 +526,98 @@ table tr:hover td {
   stroke-width: 2;
 }
 
+/* OTP Verification */
+.otp-intro {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.otp-intro strong {
+  color: var(--text);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.otp-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.otp-inputs input {
+  width: 46px;
+  height: 56px;
+  padding: 0;
+  text-align: center;
+  font-family: inherit;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  -moz-appearance: textfield;
+}
+
+.otp-inputs input::-webkit-outer-spin-button,
+.otp-inputs input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.otp-inputs input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(27, 141, 232, 0.1);
+}
+
+.otp-inputs.invalid input {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.otp-error {
+  min-height: 20px;
+  margin-bottom: 4px;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--danger);
+}
+
+.otp-error:empty {
+  margin-bottom: 0;
+}
+
+.otp-hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.otp-inputs.shake {
+  animation: otpShake 0.32s ease;
+}
+
+@keyframes otpShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(7px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@media (max-width: 420px) {
+  .otp-inputs { gap: 6px; }
+  .otp-inputs input { width: 40px; height: 50px; font-size: 1.2rem; }
+}
+
 .list-item {
   display: flex;
   align-items: center;

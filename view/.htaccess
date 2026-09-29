@@ -1,0 +1,11 @@
+# Auth pages must never be served from a stale cache copy.
+# The login/signup OTP step lives in the inline <script> of these documents, so a
+# cached copy can run the pre-OTP code path and log the user in without ever
+# showing the verification modal.
+<FilesMatch "^(login|signup|activation)\.html$">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </IfModule>
+</FilesMatch>

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../shared.css?v=3" />
+    <link rel="stylesheet" href="../shared.css?v=4" />
   </head>
   <body>
     <div class="auth-page">
@@ -42,7 +42,7 @@
         </div>
       </div>
     </div>
-    <script src="../shared.js"></script>
+    <script src="../shared.js?v=4"></script>
     <script>
     document.getElementById('loginBtn').addEventListener('click', function() {
       var email = document.getElementById('email').value.trim();
@@ -56,12 +56,22 @@
         .then(function(r){ return r.json(); })
         .then(function(data){
           if(data.success){
-            localStorage.setItem('id', data.id);
-            localStorage.setItem('name', data.name);
-            localStorage.setItem('email', data.email);
-            localStorage.setItem('role', data.role);
-            localStorage.setItem('is_logged_in', 'true');
-            window.location.href = 'dashboard.html';
+            btn.innerHTML = 'Check your email...';
+            startOtpChallenge({
+              otp: data.otp,
+              email: data.email,
+              title: 'Verify your email',
+              message: 'Enter the 6-digit code we sent to',
+              onSuccess: function(){
+                localStorage.setItem('id', data.id);
+                localStorage.setItem('name', data.name);
+                localStorage.setItem('email', data.email);
+                localStorage.setItem('role', data.role);
+                localStorage.setItem('is_logged_in', 'true');
+                window.location.href = 'dashboard.html';
+              },
+              onCancel: function(){ btn.innerHTML = orig; btn.disabled = false; }
+            });
           } else { showAlert(data.error || 'Login failed', 'error'); btn.innerHTML = orig; btn.disabled = false; }
         })
         .catch(function(){ showAlert('Network error', 'error'); btn.innerHTML = orig; btn.disabled = false; });

@@ -246,16 +246,6 @@
   <script src="../shared.js"></script>
   <script src="../is-active.js"></script>
   <script>
-    function filterTickets(status, btn) {
-      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
-      btn.classList.add('active');
-      if (status === 'all') { renderTickets(allTickets); return; }
-      renderTickets(allTickets.filter(function(t) { 
-        var s = (t.ticket_status || t.status || '').toLowerCase().replace(/_/g, '-');
-        return s === status;
-      }));
-    }
-
     (function() {
       if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
 
@@ -405,6 +395,16 @@ var actions = '<div class="action-btns">';
             '<td data-label="Actions">' + actions + '</td></tr>';
         }).join('');
       }
+
+      window.filterTickets = function(status, btn) {
+        document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+        btn.classList.add('active');
+        if (status === 'all') { renderTickets(allTickets); return; }
+        renderTickets(allTickets.filter(function(t) { 
+          var s = (t.ticket_status || t.status || '').toLowerCase().replace(/_/g, '-');
+          return s === status;
+        }));
+      };
 
       window.viewTicket = function(ticketId) {
         var ticket = allTickets.find(function(t) { 

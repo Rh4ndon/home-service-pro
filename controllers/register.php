@@ -2,6 +2,7 @@
 session_start();
 header('Content-Type: application/json');
 include '../models/functions.php';
+include 'mailer.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -26,9 +27,38 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit;
 }
 
+$nameParts = preg_split('/\s+/', $name);
+if (count($nameParts) < 2) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Please enter your full name (first and last name).']);
+    exit;
+}
+foreach ($nameParts as $namePart) {
+    if (!preg_match('/^[A-Za-z][A-Za-z.\'-]{1,}$/', $namePart)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Please enter a valid full name using letters only.']);
+        exit;
+    }
+}
+
+if (preg_match('/^\s*$/', $password)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Password cannot be blank or whitespace only.']);
+    exit;
+}
 if (strlen($password) < 6) {
     http_response_code(400);
     echo json_encode(['error' => 'Password must be at least 6 characters']);
+    exit;
+}
+if (!preg_match('/[0-9]/', $password)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Password must contain at least one number.']);
+    exit;
+}
+if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Password must contain at least one symbol (e.g. !@#$).']);
     exit;
 }
 
@@ -103,11 +133,16 @@ if ($role === 'repairman') {
     ]);
 }
 
+$otp = generateOtp();
+$sent = send_otp_email($email, $name, $otp, 'register');
+
 echo json_encode([
     'success' => true,
     'id' => $userId,
     'name' => $name,
     'email' => $email,
     'role' => $role,
+    'otp' => $otp,
+    'otp_sent' => $sent,
     'pending_activation' => $role === 'repairman'
 ]);

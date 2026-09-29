@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../shared.css?v=3" />
+    <link rel="stylesheet" href="../shared.css?v=4" />
   </head>
   <body>
     <div class="auth-page">
@@ -91,11 +91,23 @@
       </div>
     </div>
 
-    <script src="../shared.js"></script>
+    <script src="../shared.js?v=4"></script>
     <script src="../location-picker.js"></script>
     <script>
     var signupLocationStatusEl = document.getElementById('signupLocationStatus');
 
+    function isValidFullName(n) {
+      var parts = n.trim().split(/\s+/);
+      if (parts.length < 2) return false;
+      for (var i = 0; i < parts.length; i++) {
+        if (!/^[A-Za-z][A-Za-z.'-]{1,}$/.test(parts[i])) return false;
+      }
+      return true;
+    }
+    function isValidPassword(p) {
+      if (!p || p.length < 6 || /^\s*$/.test(p)) return false;
+      return /[0-9]/.test(p) && /[^A-Za-z0-9]/.test(p);
+    }
     function signupLocationReady() {
       return !!document.getElementById('signupLat').value && !!document.getElementById('signupLng').value;
     }
@@ -123,6 +135,8 @@
       var password = document.getElementById('password').value;
       var confirmPassword = document.getElementById('confirmPassword').value;
       if (!name || !email || !password || !confirmPassword) { showAlert('Please fill in all fields', 'warning'); return; }
+      if (!isValidFullName(name)) { showAlert('Please enter your full name (first and last name, letters only).', 'warning'); return; }
+      if (!isValidPassword(password)) { showAlert('Password must be at least 6 characters and include at least one number and one symbol (e.g. !@#$).', 'warning'); return; }
       if (password !== confirmPassword) { showAlert('Passwords do not match', 'warning'); return; }
       if (!signupLocationReady()) {
         showAlert('Please set your location on the map before continuing.', 'warning');
@@ -145,8 +159,25 @@
         .then(function(r){ return r.json(); })
         .then(function(data){
           if(data.success){
-            showAlert('Account created successfully!', 'success');
-            window.location.href = 'login.html';
+            closeModal('confirmSignup');
+            if(data.otp_sent === false){
+              showAlert('Account created, but we could not email your code. You can request a new one when you log in.', 'warning');
+              window.location.href = 'login.html';
+              return;
+            }
+            startOtpChallenge({
+              otp: data.otp,
+              email: data.email,
+              title: 'Confirm your email',
+              message: 'Enter the 6-digit code we sent to',
+              hint: 'This confirms your email address belongs to you.',
+              verifyLabel: 'Confirm',
+              onSuccess: function(){
+                showAlert('Account created successfully!', 'success');
+                window.location.href = 'login.html';
+              },
+              onCancel: function(){ btn.innerHTML = orig; btn.disabled = false; }
+            });
           } else { showAlert(data.error || 'Registration failed', 'error'); btn.innerHTML = orig; btn.disabled = false; }
         })
         .catch(function(){ showAlert('Network error', 'error'); btn.innerHTML = orig; btn.disabled = false; });

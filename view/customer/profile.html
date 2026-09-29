@@ -144,7 +144,7 @@
     <div class="sidebar-user">
       <div class="sidebar-avatar">JD</div>
       <div class="sidebar-user-info">
-        <div class="sidebar-user-name">Juan Dela Cruz</div>
+        <div class="sidebar-user-name"></div>
         <div class="sidebar-user-role">Customer</div>
       </div>
       <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">
@@ -165,10 +165,10 @@
     <div class="card" style="margin-bottom:24px;">
       <!-- Profile Header -->
       <div class="profile-header">
-        <div class="profile-avatar">JD</div>
+        <div class="profile-avatar" id="profile-avatar"></div>
         <div>
-          <div class="profile-name">Juan Dela Cruz</div>
-          <div class="profile-email">juan.delacruz@email.com</div>
+          <div class="profile-name" id="profile-name"></div>
+          <div class="profile-email" id="profile-email"></div>
         </div>
       </div>
 
@@ -299,6 +299,10 @@
         document.getElementById('profileName').value = d.name || d.full_name || userName || '';
         document.getElementById('profileEmail').value = d.email || '';
         document.getElementById('prlMobile').value = d.primary_mobile || con.primary_mobile || '';
+
+        document.getElementById('profile-avatar').textContent = getInitials(d.name || d.full_name || userName || '');
+        document.getElementById('profile-name').textContent = d.name || d.full_name || userName || '';
+        document.getElementById('profile-email').textContent = d.email || '';
 
         var initLat = parseFloat(d.latitude) || '';
         var initLng = parseFloat(d.longitude) || '';
