@@ -601,6 +601,35 @@ table tr:hover td {
   line-height: 1.5;
 }
 
+.otp-spam {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.otp-spam svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  stroke: var(--warning);
+  stroke-width: 2;
+}
+
+.otp-spam span {
+  flex: 1;
+}
+
 .otp-inputs.shake {
   animation: otpShake 0.32s ease;
 }

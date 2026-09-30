@@ -143,6 +143,10 @@ function buildOtpModal() {
         '<div class="otp-inputs" id="otpModalInputs"></div>' +
         '<div class="otp-error" id="otpModalError" role="alert"></div>' +
         '<p class="otp-hint" id="otpModalHint"></p>' +
+        '<p class="otp-spam" id="otpModalSpam">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 6l8 6 8-6"/></svg>' +
+          '<span>No code yet? It may have landed in your spam or junk folder.</span>' +
+        '</p>' +
       '</div>' +
       '<div class="modal-footer">' +
         '<button class="btn btn-secondary btn-cancel" id="otpModalCancel">Cancel</button>' +
