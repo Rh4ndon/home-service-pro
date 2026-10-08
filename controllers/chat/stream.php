@@ -1,16 +1,23 @@
 <?php
 include '../../models/functions.php';
 
-$contact_id   = isset($_GET['contact_id'])   ? (int)$_GET['contact_id']     : 0;
-$contact_role = isset($_GET['contact_role']) ? $_GET['contact_role']        : '';
-$user_id      = isset($_GET['user_id'])      ? (int)$_GET['user_id']        : 0;
-$user_role    = isset($_GET['user_role'])     ? $_GET['user_role']            : '';
-$last_id      = isset($_GET['last_id'])      ? (int)$_GET['last_id']        : 0;
+$user_id   = isset($_GET['user_id'])   ? (int)$_GET['user_id']          : 0;
+$user_role = isset($_GET['user_role']) ? $_GET['user_role']             : '';
+$last_id   = isset($_GET['last_id'])   ? (int)$_GET['last_id']          : 0;
+$contact_id   = isset($_GET['contact_id'])   ? (int)$_GET['contact_id']   : 0;
+$contact_role = isset($_GET['contact_role']) ? $_GET['contact_role']      : '';
 
-if (!$user_id || !$user_role || !$contact_id || !$contact_role) {
+if (!$user_id || !$user_role) {
     http_response_code(400);
+    header('Content-Type: text/event-stream');
     echo "event: error\ndata: {\"message\":\"Missing required parameters\"}\n\n";
     exit;
+}
+
+// Resume support: browser reconnects and sends the last seen event id
+if (isset($_SERVER['HTTP_LAST_EVENT_ID'])) {
+    $hdr = (int)$_SERVER['HTTP_LAST_EVENT_ID'];
+    if ($hdr > $last_id) $last_id = $hdr;
 }
 
 // SSE headers
@@ -29,7 +36,8 @@ while (ob_get_level() > 0) {
 }
 @ini_set('implicit_flush', '1');
 
-// Send initial connection event
+// Send initial connection event (with reconnect hint)
+echo "retry: 2000\n";
 echo "event: connected\ndata: {\"message\":\"Connected to chat stream\"}\n\n";
 flush();
 
@@ -37,31 +45,34 @@ $timeout = 30;
 $elapsed = 0;
 
 while ($elapsed < $timeout) {
-    $new_messages = getNewChatMessages($user_id, $user_role, $contact_id, $contact_role, $last_id);
+    // If a specific conversation is given, only stream that one; otherwise stream all contacts.
+    if ($contact_id && $contact_role) {
+        $new_messages = getNewChatMessages($user_id, $user_role, $contact_id, $contact_role, $last_id);
+    } else {
+        $new_messages = getNewChatMessagesAnyContact($user_id, $user_role, $last_id);
+    }
 
-    if (!empty($new_messages)) {
-        foreach ($new_messages as $row) {
-            $payload = json_encode([
-                'id'            => (int)$row['ID'],
-                'sender_id'     => (int)$row['Sender_ID'],
-                'sender_role'   => $row['Sender_Role'],
-                'receiver_id'   => (int)$row['Receiver_ID'],
-                'receiver_role' => $row['Receiver_Role'],
-                'message'       => $row['Message'],
-                'created_at'    => $row['Created_At'],
-            ]);
-            echo "id: " . $row['ID'] . "\n";
-            echo "event: message\n";
-            echo "data: " . $payload . "\n\n";
-            flush();
+    foreach ($new_messages as $row) {
+        $payload = json_encode([
+            'type'          => 'new_message',
+            'id'            => (int)$row['ID'],
+            'sender_id'     => (int)$row['Sender_ID'],
+            'sender_role'   => $row['Sender_Role'],
+            'receiver_id'   => (int)$row['Receiver_ID'],
+            'receiver_role' => $row['Receiver_Role'],
+            'message'       => $row['Message'],
+            'created_at'    => $row['Created_At'],
+        ]);
+        echo "id: " . $row['ID'] . "\n";
+        echo "event: message\n";
+        echo "data: " . $payload . "\n\n";
+        flush();
 
-            if ((int)$row['ID'] > $last_id) {
-                $last_id = (int)$row['ID'];
-            }
+        if ((int)$row['ID'] > $last_id) {
+            $last_id = (int)$row['ID'];
         }
     }
 
-    // Send a keep-alive comment to prevent connection timeout
     echo ": keep-alive\n\n";
     flush();
 
@@ -69,6 +80,5 @@ while ($elapsed < $timeout) {
     $elapsed += 2;
 }
 
-// Loop ended, client should reconnect
 echo "event: timeout\ndata: {\"message\":\"Stream timed out, please reconnect\"}\n\n";
 flush();

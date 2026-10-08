@@ -35,9 +35,28 @@ if ($method === 'GET') {
 
     markChatMessagesRead($user_id, $user_role, $contact_id, $contact_role);
 
+    // Call log entries for the same conversation (both directions), so the chat
+    // thread can render Messenger-style missed calls and call durations.
+    $raw_calls = getChatCallLogs($user_id, $user_role, $contact_id, $contact_role);
+    $calls = [];
+    foreach ($raw_calls as $row) {
+        $calls[] = [
+            'id'          => (int)$row['ID'],
+            'caller_id'   => (int)$row['Caller_ID'],
+            'caller_role' => $row['Caller_Role'],
+            'callee_id'   => (int)$row['Callee_ID'],
+            'callee_role' => $row['Callee_Role'],
+            'status'      => $row['Status'],
+            'created_at'  => $row['Created_At'],
+            'started_at'  => $row['Started_At'],
+            'ended_at'    => $row['Ended_At'],
+        ];
+    }
+
     echo json_encode([
         'success'  => true,
         'messages' => $messages,
+        'calls'    => $calls,
     ]);
 
 } elseif ($method === 'POST') {

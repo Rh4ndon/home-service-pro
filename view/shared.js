@@ -352,3 +352,166 @@ function openOtpModal(opts) {
 // leftover from an abandoned attempt is dead on a fresh page load.
 otpClearStored();
 
+// ==========================================
+// GLOBAL INCOMING CALL WATCHER
+// Works on every logged-in customer/repairman page, so the callee receives the
+// ring even when they are not on the chat page. Chat pages carry their own modal
+// markup and logic, so this skips any page that already has #incomingCallModal.
+// ==========================================
+(function() {
+  if (!localStorage.getItem('is_logged_in')) return;
+  var role = localStorage.getItem('role');
+  if (role !== 'customer' && role !== 'repairman') return;
+  var userId = localStorage.getItem('id');
+  if (!userId) return;
+  var path = window.location.pathname || '';
+  if (/call\.html/.test(path)) return;
+  if (/chat\.html/.test(path)) return;
+  if (document.getElementById('incomingCallModal')) return;
+
+  var modalShown = false;
+  var callData = null;
+  var overlay = null;
+
+  function ensureModal() {
+    if (overlay) return overlay;
+    var ov = document.createElement('div');
+    ov.className = 'modal-overlay';
+    ov.id = 'incomingCallModal';
+    ov.setAttribute('data-modal-sticky', '1');
+    ov.innerHTML =
+      '<div class="modal">' +
+        '<div class="incoming-modal">' +
+          '<div class="incoming-avatar" id="incomingCallerInitials">?</div>' +
+          '<div class="incoming-title" id="incomingCallerName">Incoming Call...</div>' +
+          '<div class="incoming-sub">is calling you...</div>' +
+          '<div class="incoming-actions">' +
+            '<div>' +
+              '<button type="button" class="incoming-btn incoming-btn-decline" id="declineCallBtn" title="Decline">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
+              '</button>' +
+              '<div class="incoming-label">Decline</div>' +
+            '</div>' +
+            '<div>' +
+              '<button type="button" class="incoming-btn incoming-btn-accept" id="acceptCallBtn" title="Accept">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
+              '</button>' +
+              '<div class="incoming-label">Accept</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+    document.getElementById('acceptCallBtn').onclick = acceptCall;
+    document.getElementById('declineCallBtn').onclick = declineCall;
+    overlay = ov;
+    return ov;
+  }
+
+  function hideModal() {
+    modalShown = false;
+    callData = null;
+    if (overlay) closeModal('incomingCallModal');
+  }
+
+  function showIncomingCall(call) {
+    if (modalShown) return;
+    modalShown = true;
+    callData = call;
+    ensureModal();
+    var name = call.caller_name || 'Unknown';
+    document.getElementById('incomingCallerName').textContent = name;
+    var initials = name.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+    document.getElementById('incomingCallerInitials').textContent = initials;
+    openModal('incomingCallModal');
+  }
+
+  function declineCall() {
+    if (callData) {
+      var fd = new FormData();
+      fd.append('call_id', callData.call_id);
+      fd.append('status', 'declined');
+      fetch('../../controllers/call/update.php', { method: 'POST', body: fd }).catch(function(){});
+    }
+    hideModal();
+  }
+
+  function acceptCall() {
+    if (!callData) return;
+    var call = callData;
+    var fd = new FormData();
+    fd.append('call_id', call.call_id);
+    fd.append('status', 'answered');
+    fetch('../../controllers/call/update.php', { method: 'POST', body: fd }).catch(function(){});
+
+    var tfd = new FormData();
+    tfd.append('room_name', call.room_name);
+    tfd.append('user_name', localStorage.getItem('name') || '');
+    tfd.append('user_id', userId);
+    tfd.append('role', role);
+    tfd.append('call_id', call.call_id);
+
+    fetch('../../controllers/call/token.php', { method: 'POST', body: tfd })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.success) {
+          sessionStorage.setItem('daily_call_token', d.token);
+          sessionStorage.setItem('daily_room_url', d.room_url);
+          hideModal();
+          window.location.href = 'call.html?room=' + encodeURIComponent(call.room_name) +
+            '&call_id=' + call.call_id + '&mode=callee&contact_name=' + encodeURIComponent(call.caller_name || '');
+        } else {
+          hideModal();
+          showAlert(d.message || 'Could not join the call.', 'error');
+        }
+      })
+      .catch(function() {
+        hideModal();
+        showAlert('Could not join the call.', 'error');
+      });
+  }
+
+  function pollIncoming() {
+    if (modalShown) return;
+    fetch('../../controllers/call/incoming.php?user_id=' + userId + '&user_role=' + role)
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.success && d.has_incoming && d.call) showIncomingCall(d.call);
+      })
+      .catch(function(){});
+  }
+
+  setInterval(pollIncoming, 3000);
+})();
+
+// ==========================================
+// CHAT LAYOUT VIEWPORT FITTING
+// On iOS Safari 100vh is the "large" viewport height: it ignores the URL bar and
+// the on-screen keyboard, so a fixed-height chat layout can extend below the
+// visible area (bottom input / last messages become unreachable). The visual
+// viewport reflects what is actually on screen, so keep the chat sized to it.
+// Applies to any page that renders the .chat-layout container.
+// ==========================================
+(function() {
+  var layout = document.querySelector('.chat-layout');
+  if (!layout) return;
+
+  function fitChatHeight() {
+    var vv = window.visualViewport;
+    if (!vv || !vv.height) return;
+    var h = (vv.offsetTop + vv.height) - layout.getBoundingClientRect().top;
+    if (h < 200) h = 200;
+    if (Math.abs(layout.offsetHeight - h) > 1) {
+      layout.style.height = Math.round(h) + 'px';
+    }
+  }
+
+  window.addEventListener('resize', fitChatHeight);
+  window.addEventListener('orientationchange', function() { setTimeout(fitChatHeight, 250); });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', fitChatHeight);
+    window.visualViewport.addEventListener('scroll', fitChatHeight);
+  }
+  fitChatHeight();
+})();
+

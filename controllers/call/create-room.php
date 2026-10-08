@@ -27,11 +27,16 @@ if (!in_array($caller_role, $valid_roles) || !in_array($callee_role, $valid_role
     exit;
 }
 
-if (!$caller_name) {
-    $caller_name = getUserDisplayNameById($caller_id, $caller_role);
+// Always resolve the real names from the database. The client's posted names
+// can be stale placeholders like "Contact" when no chat contact is active, so
+// the DB lookup is authoritative and the posted value is only a last resort.
+$db_caller_name = getUserDisplayNameById($caller_id, $caller_role);
+$db_callee_name = getUserDisplayNameById($callee_id, $callee_role);
+if ($db_caller_name !== null && $db_caller_name !== '') {
+    $caller_name = $db_caller_name;
 }
-if (!$callee_name) {
-    $callee_name = getUserDisplayNameById($callee_id, $callee_role);
+if ($db_callee_name !== null && $db_callee_name !== '') {
+    $callee_name = $db_callee_name;
 }
 
 // Create the Daily.co room

@@ -111,6 +111,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    if ($action === 'review') {
+        $id = $_POST['ticket_id'] ?? $_POST['id'] ?? 0;
+        $rating = (int) ($_POST['rating'] ?? 0);
+        $comments = trim($_POST['comments'] ?? '');
+
+        if (!$id) { echo json_encode(['status' => 'error', 'message' => 'Ticket ID is required.']); exit; }
+        if ($rating < 1 || $rating > 5) { echo json_encode(['status' => 'error', 'message' => 'Please select a rating between 1 and 5 stars.']); exit; }
+        if (mb_strlen($comments) > 1000) { echo json_encode(['status' => 'error', 'message' => 'Review is too long (max 1000 characters).']); exit; }
+
+        try {
+            $result = submitCustomerReview($id, $client_id, $rating, $comments);
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Thank you! Your review was submitted.',
+                'repairman_id' => $result['repairman_id']
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+
     echo json_encode(['status' => 'error', 'message' => 'Invalid action.']);
     exit;
 }

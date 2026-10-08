@@ -226,6 +226,29 @@
     </div>
   </div>
 
+  <!-- RATE REPAIRMAN MODAL -->
+  <div class="modal-overlay" id="rateRepairmanModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Rate Your Repairman</h3>
+        <button class="modal-close" onclick="closeModal('rateRepairmanModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="rateRepairmanName" style="font-weight:600;">—</p>
+        <p style="margin-bottom:14px;">How was your experience? Your rating helps others choose a reliable repairman.</p>
+        <div id="starSelector" style="font-size:2.2rem; cursor:pointer; letter-spacing:6px; line-height:1;"></div>
+        <div style="margin-top:14px;">
+          <label style="font-size:0.85rem; font-weight:600; color:var(--muted);">Add a comment (optional)</label>
+          <textarea id="rateComments" maxlength="1000" rows="3" placeholder="Share details about the service…" style="width:100%; margin-top:6px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; resize:vertical; box-sizing:border-box;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('rateRepairmanModal')">Cancel</button>
+        <button class="btn btn-primary" id="confirmRateBtn">Submit Review</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Logout Modal -->
   <div class="modal-overlay" id="logoutModal">
     <div class="modal">
@@ -385,6 +408,14 @@ var actions = '<div class="action-btns">';
         if (status === 'In Progress' || status === 'in-progress' || scheduleStatus === 'in-progress' || scheduleStatus === 'in_progress') {
           actions += '<button class="btn btn-success btn-sm" onclick="completeTicket(\'' + id + '\')">Mark Complete</button>';
         }
+        // Show Rate once completed (hide the button if already reviewed)
+        if (status === 'Completed' || status === 'completed') {
+          if (t.review_id) {
+            actions += '<button class="btn btn-secondary btn-sm" onclick="viewRatings(\'' + id + '\')" title="Already reviewed">Rated &#9733;</button>';
+          } else if (t.repairman_id) {
+            actions += '<button class="btn btn-primary btn-sm" onclick="rateRepairman(\'' + id + '\')">Rate</button>';
+          }
+        }
         actions += '</div>';
           return '<tr data-status="' + statusLower + '">' +
             '<td data-label="Ticket ID"><strong>#' + id + '</strong></td>' +
@@ -478,6 +509,85 @@ var actions = '<div class="action-btns">';
           })
           .catch(function(){ 
             closeModal('completeTicketModal'); 
+            showAlert('Network error.', 'error'); 
+          });
+      });
+
+      var _rateTicketId = null;
+      var _selectedRating = 0;
+
+      window.rateRepairman = function(ticketId) {
+        var ticket = allTickets.find(function(t) { return String(t.ticket_id || t.id || t.ID) === String(ticketId); });
+        if (!ticket) return;
+        _rateTicketId = ticketId;
+        _selectedRating = 0;
+        document.getElementById('rateRepairmanName').textContent = 'Repairman: ' + (ticket.repairman_name || '—');
+        document.getElementById('rateComments').value = '';
+        renderStars(0);
+        openModal('rateRepairmanModal');
+      };
+
+      window.viewRatings = function(ticketId) {
+        var ticket = allTickets.find(function(t) { return String(t.ticket_id || t.id || t.ID) === String(ticketId); });
+        if (!ticket) return;
+        var stars = '';
+        for (var s = 1; s <= 5; s++) stars += s <= Math.round(parseFloat(ticket.review_rating) || 0) ? '&#9733;' : '&#9734;';
+        showAlert('Your review: ' + stars + ' ' + (ticket.review_comments || ''), 'info');
+      };
+
+      var _starEls = [];
+      function renderStars(rating) {
+        var el = document.getElementById('starSelector');
+        if (!_starEls.length) {
+          el.innerHTML = '';
+          for (var s = 1; s <= 5; s++) {
+            var span = document.createElement('span');
+            span.setAttribute('data-val', String(s));
+            span.style.cssText = 'cursor:pointer;font-size:inherit;transition:color .1s linear;';
+            span.textContent = '\u2605';
+            el.appendChild(span);
+            _starEls.push(span);
+          }
+        }
+        for (var i = 0; i < _starEls.length; i++) {
+          _starEls[i].style.color = i < rating ? '#f59e0b' : '#cbd5e1';
+        }
+      }
+      var starWrap = document.getElementById('starSelector');
+      starWrap.addEventListener('mouseover', function(e) {
+        var sp = e.target.getAttribute && e.target.getAttribute('data-val');
+        if (sp) renderStars(parseInt(sp, 10));
+      });
+      starWrap.addEventListener('mouseleave', function() { renderStars(_selectedRating); });
+      starWrap.addEventListener('mousedown', function(e) {
+        var sp = e.target.getAttribute && e.target.getAttribute('data-val');
+        if (!sp) return;
+        _selectedRating = parseInt(sp, 10);
+        renderStars(_selectedRating);
+      });
+
+      document.getElementById('confirmRateBtn').addEventListener('click', function() {
+        if (!_rateTicketId) return;
+        if (!_selectedRating) { showAlert('Please select a star rating.', 'warning'); return; }
+        var fd = new FormData();
+        fd.append('action', 'review');
+        fd.append('ticket_id', _rateTicketId);
+        fd.append('rating', _selectedRating);
+        fd.append('comments', document.getElementById('rateComments').value);
+        fd.append('user_id', userId);
+        fetch('../../controllers/customer/tickets.php', { method: 'POST', body: fd })
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            closeModal('rateRepairmanModal');
+            if (data.success || data.status === 'success') { 
+              showAlert(data.message || 'Review submitted.', 'success'); 
+              loadTickets(); 
+            } else { 
+              showAlert(data.message || 'Error submitting review.', 'error'); 
+            }
+          })
+          .catch(function(){ 
+            closeModal('rateRepairmanModal'); 
             showAlert('Network error.', 'error'); 
           });
       });

@@ -545,6 +545,24 @@
         iframeStyle: { display: 'none' }
       });
 
+      var joinStarted = false;
+      function safeJoin() {
+        if (joinStarted) return;
+        joinStarted = true;
+        acquireMicrophoneAccess(function() {
+          try { frame.join(); }
+          catch (e) {
+            setStatus('Connection error', 'Could not start the call. Please press Retry.', true);
+          }
+        });
+      }
+      // The Daily iframe (a large script) may not be ready on the very first
+      // call of a session. Wait for 'loaded' so join() does not fire early,
+      // with a safety fallback in case the event already passed.
+      frame.on('loaded', safeJoin);
+      setTimeout(safeJoin, 1500);
+      frame._safeJoin = safeJoin;
+
       frame.on('joined-meeting', function() {
         joined = true;
         var remoteCount = 0;
@@ -579,10 +597,6 @@
         showMicError(e && e.errorMsg ? e.errorMsg : null);
       });
       frame.on('network-connection', function() {});
-
-      acquireMicrophoneAccess(function() {
-        frame.join();
-      });
     }
 
     function startCall() {

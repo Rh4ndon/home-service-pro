@@ -12,6 +12,7 @@
     .chat-layout {
       display: flex;
       height: calc(100vh - 0px);
+      height: 100dvh;
       overflow: hidden;
     }
 
@@ -149,6 +150,7 @@
       display: flex;
       flex-direction: column;
       min-width: 0;
+      min-height: 0;
     }
 
     .chat-header {
@@ -232,6 +234,7 @@
     .chat-messages {
       flex: 1;
       overflow-y: auto;
+      min-height: 0;
       padding: 24px;
       display: flex;
       flex-direction: column;
@@ -271,6 +274,75 @@
     .chat-bubble.sent .chat-bubble-time {
       text-align: right;
       color: #fff;
+    }
+
+    .chat-call {
+      max-width: 70%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 0.88rem;
+      line-height: 1.4;
+      background: var(--card-bg, #fff);
+      border: 1px solid var(--border);
+    }
+
+    .chat-call.incoming {
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-call.outgoing {
+      align-self: flex-end;
+      background: var(--primary);
+      border-color: transparent;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-call.missed {
+      border-color: rgba(239, 68, 68, 0.45);
+    }
+
+    .chat-call.missed .chat-call-icon {
+      color: #ef4444;
+    }
+
+    .chat-call.outgoing.missed {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: var(--text);
+    }
+
+    .chat-call.outgoing.missed .chat-call-icon {
+      color: #ef4444;
+    }
+
+    .chat-call-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      color: var(--primary);
+    }
+
+    .chat-call-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .chat-call-label {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-call-time {
+      font-size: 0.7rem;
+      opacity: 0.6;
+      margin-top: 2px;
     }
 
     .chat-input-bar {
@@ -451,7 +523,8 @@
     .hs-chat-backdrop{display:none;position:fixed;inset:0;background:rgba(11,26,38,.5);z-index:210;}
     @media(max-width:980px){
       .hs-topbar{display:flex;}
-      .main-content{margin-top:56px;}
+      html,body{height:100vh;height:100dvh;overflow:hidden;}
+      .main-content{margin-top:56px;margin-left:0;min-height:0;height:calc(100vh - 56px);height:calc(100dvh - 56px);overflow:hidden;padding:0;}
       body.hs-sidebar-open{overflow:hidden;}
       body.hs-sidebar-open .hs-sidebar-backdrop{display:block;}
       body.hs-sidebar-open .sidebar{transform:translateX(0)!important;box-shadow:16px 0 48px rgba(0,0,0,.35);}
@@ -459,7 +532,7 @@
       body.hs-sidebar-open .hs-hamburger svg line:nth-child(2){opacity:0;}
       body.hs-sidebar-open .hs-hamburger svg line:nth-child(3){transform:translateY(-6px) rotate(-45deg);transform-origin:center;}
       .main-content .header-actions{flex-wrap:wrap;}
-      .chat-layout{height:calc(100vh - 56px)!important;}
+      .chat-layout{height:100%;min-height:0;}
     }
     .hs-chat-contacts-btn{display:none;width:40px;height:40px;border:0;border-radius:10px;background:rgba(27,141,232,.08);color:#1b8de8;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
     .hs-chat-contacts-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
@@ -661,7 +734,7 @@
     var currentContactId = null;
     var currentContactRole = 'repairman';
     var eventSource = null;
-    var initialMessageSent = false;
+    var lastMessageId = 0;
 
     var gradients = [
       'linear-gradient(135deg, #1b8de8, #0d71c7)',
@@ -728,7 +801,6 @@
       console.log('Chat: URL params detected - ticket:', ticketIdFromUrl, 'repairman:', repairmanIdFromUrl);
       currentContactId = repairmanIdFromUrl;
       currentContactRole = 'repairman';
-      initialMessageSent = false;
       
       // Set header info immediately
       if (chatHeaderName) chatHeaderName.textContent = 'Repairman (Ticket #' + ticketIdFromUrl + ')';
@@ -810,34 +882,98 @@ function loadContacts() {
         .catch(function() {});
     }
 
+    function formatCallDuration(seconds) {
+      seconds = Math.max(0, Math.floor(seconds || 0));
+      var h = Math.floor(seconds / 3600);
+      var m = Math.floor((seconds % 3600) / 60);
+      var s = seconds % 60;
+      var mm = m < 10 ? '0' + m : '' + m;
+      var ss = s < 10 ? '0' + s : '' + s;
+      return h > 0 ? (h + ':' + mm + ':' + ss) : (mm + ':' + ss);
+    }
+
+    function renderCallEntry(call) {
+      var isOutgoing = String(call.caller_id) === String(userId);
+      var status = call.status || '';
+      var connected = call.started_at && call.started_at.length > 5;
+      var label, cls = 'chat-call';
+      if (status === 'missed' || status === 'declined' || status === 'ringing' || (status === 'ended' && !connected)) {
+        cls += ' missed';
+        label = 'Missed call';
+      } else if (status === 'active') {
+        var st = new Date(call.started_at || call.created_at).getTime();
+        var durSec = st ? Math.max(0, Math.floor((Date.now() - st) / 1000)) : 0;
+        label = (isOutgoing ? 'You called' : 'Incoming call') + ' \u00b7 ' + formatCallDuration(durSec);
+      } else {
+        var secDiff = 0;
+        if (call.started_at && call.ended_at) {
+          secDiff = Math.max(0, Math.floor((new Date(call.ended_at) - new Date(call.started_at)) / 1000));
+        }
+        label = (isOutgoing ? 'You called' : 'Incoming call') + ' \u00b7 ' + formatCallDuration(secDiff);
+      }
+      cls += isOutgoing ? ' outgoing' : ' incoming';
+
+      var raw = call.started_at || call.created_at || '';
+      var t = raw;
+      if (t && t.length > 5) {
+        var d = new Date(t);
+        var hh = d.getHours(), mi = String(d.getMinutes()).padStart(2, '0');
+        var ap = hh >= 12 ? 'PM' : 'AM'; hh = hh % 12 || 12;
+        t = hh + ':' + mi + ' ' + ap;
+      }
+
+      var div = document.createElement('div');
+      div.className = cls;
+      div.innerHTML =
+        '<svg class="chat-call-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
+        '<div class="chat-call-body">' +
+          '<div class="chat-call-label">' + label + '</div>' +
+          '<div class="chat-call-time">' + t + '</div>' +
+        '</div>';
+      return div;
+    }
+
     function loadMessages(contactId, contactRole) {
       if (!userId || !messagesContainer) return;
       fetch('../../controllers/chat/messages.php?user_id=' + userId + '&user_role=customer&contact_id=' + contactId + '&contact_role=' + (contactRole || 'repairman'))
         .then(function(r) { return r.json(); })
         .then(function(data) {
-messagesContainer.innerHTML = '';
-            if (!data.messages || !data.messages.length) {
+          messagesContainer.innerHTML = '';
+          var msgs = data.messages || [];
+          var calls = data.calls || [];
+          if (!msgs.length && !calls.length) {
               messagesContainer.innerHTML = '<div class="empty-state" style="text-align:center;padding:60px 20px;color:var(--muted);font-size:0.9rem;">' +
                 '<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--soft);fill:none;stroke-width:1.5;margin-bottom:16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
                 '<p>No messages yet. Start the conversation!</p></div>';
               return;
             }
-            data.messages.forEach(function(m) {
-            var isSent = String(m.sender_id) === String(userId);
-            var time = m.time || m.created_at || '';
-            if (time && time.length > 5) {
-              var d = new Date(time);
-              var h = d.getHours();
-              var min = String(d.getMinutes()).padStart(2, '0');
-              var ampm = h >= 12 ? 'PM' : 'AM';
-              h = h % 12 || 12;
-              time = h + ':' + min + ' ' + ampm;
-            }
-            var div = document.createElement('div');
-            div.className = 'chat-bubble ' + (isSent ? 'sent' : 'received');
-            div.innerHTML = (m.message || m.content || '') + '<div class="chat-bubble-time">' + time + '</div>';
-            messagesContainer.appendChild(div);
-          });
+            var entries = [];
+            msgs.forEach(function(m) { entries.push({ ts: m.created_at || '', kind: 'msg', data: m }); });
+            calls.forEach(function(c) { entries.push({ ts: c.created_at || '', kind: 'call', data: c }); });
+            entries.sort(function(a, b) { return (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0); });
+
+            entries.forEach(function(e) {
+              if (e.kind === 'call') {
+                messagesContainer.appendChild(renderCallEntry(e.data));
+                return;
+              }
+              var m = e.data;
+              var isSent = String(m.sender_id) === String(userId);
+              var time = m.time || m.created_at || '';
+              if (m.id && Number(m.id) > lastMessageId) lastMessageId = Number(m.id);
+              if (time && time.length > 5) {
+                var d = new Date(time);
+                var h = d.getHours();
+                var min = String(d.getMinutes()).padStart(2, '0');
+                var ampm = h >= 12 ? 'PM' : 'AM';
+                h = h % 12 || 12;
+                time = h + ':' + min + ' ' + ampm;
+              }
+              var div = document.createElement('div');
+              div.className = 'chat-bubble ' + (isSent ? 'sent' : 'received');
+              div.innerHTML = (m.message || m.content || '') + '<div class="chat-bubble-time">' + time + '</div>';
+              messagesContainer.appendChild(div);
+            });
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
         })
         .catch(function() {});
@@ -861,6 +997,7 @@ messagesContainer.innerHTML = '';
         body: formData
       }).then(function() {
         loadMessages(currentContactId, currentContactRole);
+        loadContactsSilent();
       }).catch(function() {});
     }
 
@@ -871,21 +1008,77 @@ messagesContainer.innerHTML = '';
       });
     }
 
-function startSSE() {
-        if (!userId || !currentContactId) return;
+var lastLoadedContactId = null;
+    function startSSE() {
+        if (!userId) return;
         if (eventSource) eventSource.close();
-        eventSource = new EventSource('../../controllers/chat/stream.php?user_id=' + userId + '&user_role=customer&contact_id=' + currentContactId + '&contact_role=' + currentContactRole);
+        eventSource = new EventSource('../../controllers/chat/stream.php?user_id=' + userId + '&user_role=customer&last_id=' + lastMessageId);
       eventSource.onmessage = function(e) {
         try {
           var d = JSON.parse(e.data);
-          if (d.type === 'new_message' && String(d.sender_id) === String(currentContactId)) {
-            loadMessages(currentContactId, currentContactRole);
-          } else if (d.type === 'new_message') {
-            loadContacts();
+          if (d.type === 'new_message') {
+            if (d.id && Number(d.id) > lastMessageId) lastMessageId = Number(d.id);
+            // Refresh the active conversation if this message belongs to it
+            if (currentContactId && (String(d.sender_id) === String(currentContactId) || String(d.receiver_id) === String(currentContactId))) {
+              loadMessages(currentContactId, currentContactRole);
+            }
+            // Always refresh the sidebar (previews + unread badges), but
+            // skip the auto-click of the first contact so we don't steal focus.
+            loadContactsSilent();
           }
         } catch(err) {}
       };
-      eventSource.onerror = function() {};
+      eventSource.onerror = function(e) {
+        // Browser auto-reconnects; if it's permanently closed, retry after a delay.
+        if (eventSource && eventSource.readyState === EventSource.CLOSED) {
+          setTimeout(function() { startSSE(); }, 3000);
+        }
+      };
+    }
+
+    function loadContactsSilent() {
+      if (!userId || !contactsContainer) return;
+      fetch('../../controllers/chat/contacts.php?user_id=' + userId + '&user_role=customer')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.contacts) return;
+          var activeId = currentContactId;
+          var activeRole = currentContactRole;
+          var activeEl = document.querySelector('.chat-contact.active');
+          var keepScroll = contactsContainer.scrollTop;
+          contactsContainer.innerHTML = '';
+          if (!data.contacts.length) {
+            contactsContainer.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.9rem;">No conversations yet.</div>';
+            return;
+          }
+          data.contacts.forEach(function(c, i) {
+            var contactInitials = (c.name || 'U').split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+            var div = document.createElement('div');
+            div.className = 'chat-contact';
+            div.setAttribute('data-contact-id', c.id);
+            div.setAttribute('data-contact-role', c.role || 'repairman');
+            div.innerHTML = '<div class="chat-contact-avatar" style="background: ' + (gradients[i % gradients.length]) + ';">' + contactInitials + '</div>' +
+              '<div class="chat-contact-info"><div class="chat-contact-name">' + (c.name || '') + '</div>' +
+              '<div class="chat-contact-preview">' + (c.last_message || '') + '</div></div>' +
+              '<div class="chat-contact-meta"><div class="chat-contact-time">' + (c.last_time || '') + '</div>' +
+              (c.unread ? '<div class="chat-contact-unread">' + c.unread + '</div>' : '') + '</div>';
+            div.onclick = function() {
+              document.querySelectorAll('.chat-contact').forEach(function(el) { el.classList.remove('active'); });
+              div.classList.add('active');
+              currentContactId = c.id;
+              currentContactRole = c.role || 'repairman';
+              if (chatHeaderName) chatHeaderName.textContent = c.name || '';
+              if (chatHeaderAvatar) chatHeaderAvatar.textContent = contactInitials;
+              loadMessages(c.id, currentContactRole);
+            };
+            if (activeEl && String(c.id) === String(activeId) && (c.role || 'repairman') === activeRole) {
+              div.classList.add('active');
+            }
+            contactsContainer.appendChild(div);
+          });
+          contactsContainer.scrollTop = keepScroll;
+        })
+        .catch(function() {});
     }
 
     // ===== VOICE CALL =====
@@ -1000,11 +1193,20 @@ function startSSE() {
     document.getElementById('acceptCallBtn').onclick = acceptIncomingCall;
     document.getElementById('declineCallBtn').onclick = declineIncomingCall;
 
+    loadContacts();
+    startSSE();
+
     setInterval(checkIncomingCall, 3000);
     checkIncomingCall();
 
-    loadContacts();
-    startSSE();
+    // Fallback: if SSE is ever disconnected, poll the active conversation.
+    setInterval(function() {
+      if (currentContactId) {
+        if (!eventSource || eventSource.readyState !== EventSource.OPEN) {
+          loadMessages(currentContactId, currentContactRole);
+        }
+      }
+    }, 5000);
   })();
   </script>
 </body>

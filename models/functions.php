@@ -380,15 +380,17 @@ function getCustomerTickets($client_id)
                cp.Address_Line1, cp.Address_Line2, cp.Brgy, cp.City_Min, cp.Province,
                ca.Name as appliance_name, ca.Type as appliance_type, ca.Make as appliance_make, ca.Year as appliance_year,
                ai.Issue as issue, ai.Details as issue_details, ai.Detailed_Report as detailed_report,
-               rs.Date_Time as schedule_date, rs.Status as schedule_status,
-               urp.Name as repairman_name,
-               urp.User_ID as repairman_user_id
+rs.Date_Time as schedule_date, rs.Status as schedule_status,
+                urp.Name as repairman_name,
+                urp.User_ID as repairman_user_id,
+                cr.ID as review_id, cr.Rating as review_rating, cr.Comments as review_comments
         FROM repairticket
         LEFT JOIN user_clientprofile cp ON repairticket.Client_ID = cp.ID
         LEFT JOIN repairschedule rs ON repairticket.Schedule_ID = rs.ID
         LEFT JOIN user_repairmanprofile urp ON repairticket.Repairman_ID = urp.ID
         LEFT JOIN applianceissue ai ON repairticket.ID = ai.Ticket_ID
         LEFT JOIN clientappliances ca ON ca.ID = COALESCE(repairticket.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = ai.ID LIMIT 1))
+        LEFT JOIN customer_reviews cr ON cr.Ticket_ID = repairticket.ID
         WHERE repairticket.Client_ID = ?
         ORDER BY repairticket.ID DESC
     ");
@@ -545,6 +547,89 @@ function completeCustomerTicket($ticket_id, $client_id)
 
         commitTransaction();
         return true;
+    } catch (Exception $e) {
+        rollbackTransaction();
+        throw $e;
+    }
+}
+
+function hasCustomerReview($ticket_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT ID, Rating, Comments FROM customer_reviews WHERE Ticket_ID = ?");
+    $stmt->bind_param("i", $ticket_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
+function getCustomerReviews($repairman_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("
+        SELECT cr.ID, cr.Ticket_ID, cr.Rating, cr.Comments, cr.Created_At,
+               cp.Name AS customer_name, cp.Formatted_Address AS customer_address,
+               urp.Name AS repairman_name
+        FROM customer_reviews cr
+        LEFT JOIN user_clientprofile cp ON cr.Customer_ID = cp.ID
+        LEFT JOIN user_repairmanprofile urp ON cr.Repairman_ID = urp.ID
+        WHERE cr.Repairman_ID = ?
+        ORDER BY cr.Created_At DESC
+    ");
+    $stmt->bind_param("i", $repairman_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+function recalculateRepairmanRating($repairman_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT COALESCE(AVG(Rating), 0) AS avg_rating, COUNT(*) AS review_count FROM customer_reviews WHERE Repairman_ID = ?");
+    $stmt->bind_param("i", $repairman_id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+
+    $avg = round((float) $row['avg_rating'], 2);
+    $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Ratings = ? WHERE ID = ?");
+    $stmt->bind_param("di", $avg, $repairman_id);
+    $stmt->execute();
+
+    return ['avg_rating' => $avg, 'review_count' => (int) $row['review_count']];
+}
+
+function submitCustomerReview($ticket_id, $client_id, $rating, $comments)
+{
+    global $conn;
+    startTransaction();
+    try {
+        // Ticket must exist, belong to the client, be completed, and have a repairman
+        $stmt = $conn->prepare("
+            SELECT Repairman_ID FROM repairticket
+            WHERE ID = ? AND Client_ID = ? AND Status = 'Completed' AND Repairman_ID IS NOT NULL
+        ");
+        $stmt->bind_param("ii", $ticket_id, $client_id);
+        $stmt->execute();
+        $ticket = $stmt->get_result()->fetch_assoc();
+        if (!$ticket) {
+            throw new Exception('Ticket not found, not yours, or not yet completed.');
+        }
+
+        // One review per ticket
+        $existing = hasCustomerReview($ticket_id);
+        if ($existing) {
+            throw new Exception('You already reviewed this job.');
+        }
+
+        $repairman_id = (int) $ticket['Repairman_ID'];
+        $stmt = $conn->prepare("INSERT INTO customer_reviews (Ticket_ID, Customer_ID, Repairman_ID, Rating, Comments) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("iiiss", $ticket_id, $client_id, $repairman_id, $rating, $comments);
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to save review.');
+        }
+
+        recalculateRepairmanRating($repairman_id);
+
+        commitTransaction();
+        return ['repairman_id' => $repairman_id];
     } catch (Exception $e) {
         rollbackTransaction();
         throw $e;
@@ -827,7 +912,7 @@ function getRepairmanDashboardStats($repairman_id)
     $completed_week = $stmt->get_result()->fetch_assoc()['count'];
 
     // Get rating
-    $stmt = $conn->prepare("SELECT Ratings FROM user_repairmanprofile WHERE User_ID = ?");
+    $stmt = $conn->prepare("SELECT Ratings FROM user_repairmanprofile WHERE ID = ?");
     $stmt->bind_param("i", $repairman_id);
     $stmt->execute();
     $rating_row = $stmt->get_result()->fetch_assoc();
@@ -1273,6 +1358,19 @@ function getNewChatMessages($user_id, $user_role, $contact_id, $contact_role, $l
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
+function getNewChatMessagesAnyContact($user_id, $user_role, $last_id)
+{
+    global $conn;
+    $sql = "SELECT * FROM chat_messages
+            WHERE ID > ?
+              AND (Receiver_ID = ? AND Receiver_Role = ?)
+            ORDER BY Created_At ASC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("iis", $last_id, $user_id, $user_role);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
 function getChatMessageById($id)
 {
     global $conn;
@@ -1280,6 +1378,29 @@ function getChatMessageById($id)
     $stmt->bind_param("i", $id);
     $stmt->execute();
     return $stmt->get_result()->fetch_assoc();
+}
+
+function getChatCallLogs($user_id, $user_role, $contact_id, $contact_role)
+{
+    global $conn;
+    $stmt = $conn->prepare("
+        SELECT * FROM calls
+        WHERE (Caller_ID = ? AND Caller_Role = ? AND Callee_ID = ? AND Callee_Role = ?)
+           OR (Caller_ID = ? AND Caller_Role = ? AND Callee_ID = ? AND Callee_Role = ?)
+        ORDER BY Created_At ASC, ID ASC
+    ");
+    $stmt->bind_param("isssisss", $user_id, $user_role, $contact_id, $contact_role, $contact_id, $contact_role, $user_id, $user_role);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+function getNewChatMessagesForUser($user_id, $user_role, $last_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM chat_messages WHERE ID > ? AND ((Sender_ID = ? AND Sender_Role = ?) OR (Receiver_ID = ? AND Receiver_Role = ?)) ORDER BY Created_At ASC");
+    $stmt->bind_param("iisis", $last_id, $user_id, $user_role, $user_id, $user_role);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
 // ==========================================

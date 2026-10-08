@@ -897,6 +897,105 @@ table tr:hover td {
   background: var(--soft);
 }
 
+/* Incoming Call (global watcher injects this modal on any page) */
+.incoming-modal {
+  text-align: center;
+  padding: 32px 28px;
+  max-width: 340px;
+}
+
+.incoming-avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.7rem;
+  color: #fff;
+  margin: 0 auto 16px;
+  position: relative;
+}
+
+.incoming-avatar::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 3px solid #22c55e;
+  animation: incomingPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes incomingPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(1.1); }
+}
+
+.incoming-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.incoming-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.incoming-actions {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.incoming-btn {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.incoming-btn:hover {
+  transform: scale(1.08);
+}
+
+.incoming-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.incoming-btn-accept {
+  background: #22c55e;
+}
+
+.incoming-btn-accept:hover {
+  background: #16a34a;
+}
+
+.incoming-btn-decline {
+  background: #ef4444;
+}
+
+.incoming-btn-decline:hover {
+  background: #dc2626;
+}
+
+.incoming-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 8px;
+}
+
 /* Toggle Switch */
 .toggle {
   position: relative;
