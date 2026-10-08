@@ -14,6 +14,9 @@ if (!$user_id || !$user_role) {
     exit;
 }
 
+// Locked repairmen (subscription expired) receive no chat stream
+blockIfRepairmanLocked($user_id);
+
 // Resume support: browser reconnects and sends the last seen event id
 if (isset($_SERVER['HTTP_LAST_EVENT_ID'])) {
     $hdr = (int)$_SERVER['HTTP_LAST_EVENT_ID'];

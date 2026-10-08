@@ -367,6 +367,8 @@ otpClearStored();
   var path = window.location.pathname || '';
   if (/call\.html/.test(path)) return;
   if (/chat\.html/.test(path)) return;
+  // Pages that opt out (e.g. the repairman subscription page) never poll for calls
+  if (document.body && document.body.hasAttribute('data-no-call-poll')) return;
   if (document.getElementById('incomingCallModal')) return;
 
   var modalShown = false;

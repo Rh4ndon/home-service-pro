@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscriptions - HomeService Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared.css">
+  <style>
+    .hs-topbar{display:none;position:fixed;top:0;left:0;right:0;height:56px;background:#0b1a26;color:#fff;align-items:center;gap:8px;padding:0 12px;z-index:300;box-shadow:0 2px 14px rgba(0,0,0,.3);}
+    .hs-hamburger{width:44px;height:44px;border:0;border-radius:10px;background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .hs-hamburger svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+    .hs-topbar-brand{font-size:1.15rem;font-weight:800;letter-spacing:-.05em;color:#fff;white-space:nowrap;}
+    .hs-topbar-brand span{color:#1b8de8;}
+    .hs-sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(11,26,38,.5);z-index:90;}
+    @media(max-width:980px){
+      .hs-topbar{display:flex;}
+      .main-content{margin-top:56px;}
+      body.hs-sidebar-open{overflow:hidden;}
+      body.hs-sidebar-open .hs-sidebar-backdrop{display:block;}
+      body.hs-sidebar-open .sidebar{transform:translateX(0)!important;box-shadow:16px 0 48px rgba(0,0,0,.35);}
+    }
+
+    .sub-muted{color:var(--muted);font-size:0.86rem;}
+    .qr-admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;}
+    .qr-admin-card{border:1px solid var(--line);border-radius:14px;padding:18px;background:var(--card);}
+    .qr-admin-card h3{margin:0 0 10px;font-size:1rem;}
+    .qr-preview{width:100%;max-width:220px;height:220px;border:2px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff;margin-bottom:12px;}
+    .qr-preview img{width:100%;height:100%;object-fit:contain;}
+    .qr-preview span{color:var(--muted);font-size:0.86rem;padding:10px;text-align:center;}
+    .price-input{width:140px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:0.9rem;}
+    .pay-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+    .pay-filter button{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:0.84rem;cursor:pointer;}
+    .pay-filter button.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+    .proof-link{color:var(--primary);font-weight:600;}
+    .review-note{width:100%;min-height:80px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:0.9rem;resize:vertical;margin-top:10px;}
+  </style>
+</head>
+<body>
+  <!-- Mobile topbar -->
+  <header class="hs-topbar" id="hsTopbar">
+    <button class="hs-hamburger" id="hsHamburger" onclick="hsToggleSidebar()" aria-label="Open menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="hs-topbar-brand">HomeService<span>Pro</span></div>
+  </header>
+  <div class="hs-sidebar-backdrop" id="hsBackdrop" onclick="hsCloseSidebar()"></div>
+  <script>
+    (function(){
+      function hsToggleSidebar(){var open=document.body.classList.toggle('hs-sidebar-open');var b=document.getElementById('hsHamburger');if(b)b.setAttribute('aria-expanded',String(open));}
+      function hsCloseSidebar(){document.body.classList.remove('hs-sidebar-open');var b=document.getElementById('hsHamburger');if(b)b.setAttribute('aria-expanded','false');}
+      window.hsToggleSidebar=hsToggleSidebar;window.hsCloseSidebar=hsCloseSidebar;
+      document.addEventListener('click',function(e){if(e.target.closest('.sidebar-link')||e.target.closest('.sidebar-logout'))hsCloseSidebar();});
+      window.addEventListener('resize',function(){if(window.innerWidth>980)hsCloseSidebar();});
+    })();
+  </script>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-text">HomeService<span>Pro</span></div>
+      <div class="brand-sub">Admin Portal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Main</div>
+        <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a href="manage-repairmen.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Manage Repairmen
+        </a>
+        <a href="subscriptions.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Subscriptions
+        </a>
+        <a href="manage-customers.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+          Manage Customers
+        </a>
+        <a href="manage-tickets.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>
+          Manage Tickets
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">AU</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">Admin User</div>
+        <div class="sidebar-user-role">Administrator</div>
+      </div>
+      <button class="sidebar-logout" onclick="openModal('logoutModal')" title="Log Out">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Subscriptions</h1>
+        <p>Set plan prices, manage payment QR codes, and verify repairman payments.</p>
+      </div>
+    </div>
+
+    <!-- Plans -->
+    <div class="card">
+      <div class="card-header"><h2>Subscription plans</h2></div>
+      <div class="card-body-flush">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Plan</th>
+                <th>Duration</th>
+                <th>Price (PHP)</th>
+                <th>Last updated</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="planRows">
+              <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR codes -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Payment QR codes</h2>
+        <span class="sub-muted">Repairmen see these when they pay. Uploading a new image replaces the old one.</span>
+      </div>
+      <div class="card-body">
+        <div class="qr-admin-grid" id="qrGrid"></div>
+      </div>
+    </div>
+
+    <!-- Payment proofs -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Proof of payment</h2>
+        <span class="sub-muted" id="paymentCount"></span>
+      </div>
+      <div class="card-body">
+        <div class="pay-filter" id="payFilter">
+          <button type="button" data-status="pending" class="active">Pending</button>
+          <button type="button" data-status="approved">Approved</button>
+          <button type="button" data-status="rejected">Rejected</button>
+          <button type="button" data-status="">All</button>
+        </div>
+      </div>
+      <div class="card-body-flush">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Submitted</th>
+                <th>Repairman</th>
+                <th>Plan</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Reference</th>
+                <th>Proof</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="paymentRows">
+              <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Review modal (approve / reject) -->
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="reviewTitle">Review payment</h3>
+        <button class="modal-close" onclick="closeModal('reviewModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="reviewMessage"></p>
+        <textarea class="review-note" id="reviewNote" maxlength="255" placeholder="Reason (shown to the repairman)" style="display:none;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('reviewModal')">Cancel</button>
+        <button class="btn btn-primary" id="reviewConfirmBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Log Out</h3>
+        <button class="modal-close" onclick="closeModal('logoutModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
+        <button class="btn btn-danger" id="logoutBtn">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared.js"></script>
+  <script>
+  (function() {
+    if (!localStorage.getItem('is_logged_in') || localStorage.getItem('role') !== 'admin') {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    var API = '../../controllers/admin/subscriptions.php';
+    var storedName = localStorage.getItem('name') || 'Admin User';
+    var nameEl = document.querySelector('.sidebar-user-name');
+    if (nameEl) nameEl.textContent = storedName;
+    var avatarEl = document.querySelector('.sidebar-avatar');
+    if (avatarEl) avatarEl.textContent = storedName.split(' ').map(function(w){ return w.charAt(0); }).join('').substring(0,2).toUpperCase();
+
+    function escHtml(str) {
+      var d = document.createElement('div');
+      d.appendChild(document.createTextNode(str == null ? '' : String(str)));
+      return d.innerHTML;
+    }
+    function peso(n) {
+      return '\u20B1' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function fmtDateTime(s) {
+      if (!s) return '-';
+      var d = new Date(String(s).replace(' ', 'T'));
+      return isNaN(d.getTime()) ? s : d.toLocaleString('en-PH', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    var currentFilter = 'pending';
+    var pendingReview = null;
+
+    function postForm(fields) {
+      var fd = new FormData();
+      Object.keys(fields).forEach(function(k){ fd.append(k, fields[k]); });
+      return fetch(API, { method: 'POST', body: fd }).then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); });
+    }
+
+    function renderPlans(plans) {
+      var tbody = document.getElementById('planRows');
+      if (!plans.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);">No plans found</td></tr>'; return; }
+      tbody.innerHTML = plans.map(function(p) {
+        return '<tr>' +
+          '<td data-label="Plan"><strong>' + escHtml(p.Name) + '</strong></td>' +
+          '<td data-label="Duration">' + escHtml(p.Duration_Months) + (p.Duration_Months == 1 ? ' month' : ' months') + '</td>' +
+          '<td data-label="Price"><input type="number" class="price-input" min="0" step="0.01" value="' + escHtml(Number(p.Price).toFixed(2)) + '" data-plan-id="' + escHtml(p.ID) + '" /></td>' +
+          '<td data-label="Updated" class="sub-muted">' + fmtDateTime(p.Updated_At) + '</td>' +
+          '<td data-label="Action"><button class="btn btn-sm btn-primary" data-save-plan="' + escHtml(p.ID) + '">Save price</button></td>' +
+          '</tr>';
+      }).join('');
+
+      tbody.querySelectorAll('[data-save-plan]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var id = btn.getAttribute('data-save-plan');
+          var input = tbody.querySelector('input[data-plan-id="' + id + '"]');
+          var price = input.value.trim();
+          if (price === '' || isNaN(Number(price)) || Number(price) < 0) { showAlert('Enter a valid price (0 or more).', 'warning'); return; }
+          btn.disabled = true;
+          postForm({ action: 'update_price', plan_id: id, price: price }).then(function(res) {
+            btn.disabled = false;
+            if (res.ok && res.d.success) { showAlert(res.d.message, 'success'); load(); }
+            else showAlert((res.d && res.d.message) || 'Could not update the price.', 'error');
+          }).catch(function(){ btn.disabled = false; showAlert('Network error.', 'error'); });
+        });
+      });
+    }
+
+    var QR_LABELS = { gcash: 'GCash', maya: 'Maya' };
+
+    function renderQr(qrCodes) {
+      var grid = document.getElementById('qrGrid');
+      grid.innerHTML = ['gcash', 'maya'].map(function(provider) {
+        var qr = qrCodes[provider];
+        var preview = qr
+          ? '<img src="../../' + escHtml(qr.path) + '?v=' + encodeURIComponent(qr.updated_at || '') + '" alt="' + QR_LABELS[provider] + ' QR code" />'
+          : '<span>No ' + QR_LABELS[provider] + ' QR code uploaded yet.</span>';
+        return '<div class="qr-admin-card">' +
+          '<h3>' + QR_LABELS[provider] + '</h3>' +
+          '<div class="qr-preview">' + preview + '</div>' +
+          '<div class="sub-muted" style="margin-bottom:10px;">' + (qr ? 'Last updated ' + fmtDateTime(qr.updated_at) : '') + '</div>' +
+          '<input type="file" accept="image/jpeg,image/png,image/webp" data-qr-provider="' + provider + '" style="margin-bottom:10px;" />' +
+          '<div><button class="btn btn-sm btn-primary" data-upload-qr="' + provider + '">' + (qr ? 'Replace QR code' : 'Upload QR code') + '</button></div>' +
+          '</div>';
+      }).join('');
+
+      grid.querySelectorAll('[data-upload-qr]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var provider = btn.getAttribute('data-upload-qr');
+          var input = grid.querySelector('input[data-qr-provider="' + provider + '"]');
+          var file = input.files[0];
+          if (!file) { showAlert('Choose an image first.', 'warning'); return; }
+          if (file.size > 5 * 1024 * 1024) { showAlert('The image is too large. The maximum size is 5 MB.', 'warning'); return; }
+          var fd = new FormData();
+          fd.append('action', 'upload_qr');
+          fd.append('provider', provider);
+          fd.append('qr', file);
+          btn.disabled = true;
+          fetch(API, { method: 'POST', body: fd }).then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); })
+            .then(function(res) {
+              btn.disabled = false;
+              if (res.ok && res.d.success) { showAlert(res.d.message, 'success'); load(); }
+              else showAlert((res.d && res.d.message) || 'Upload failed.', 'error');
+            })
+            .catch(function(){ btn.disabled = false; showAlert('Network error.', 'error'); });
+        });
+      });
+    }
+
+    function statusBadge(status) {
+      if (status === 'approved') return '<span class="badge badge-success">Approved</span>';
+      if (status === 'rejected') return '<span class="badge badge-danger">Rejected</span>';
+      return '<span class="badge badge-warning">Pending</span>';
+    }
+
+    function renderPayments(list) {
+      var tbody = document.getElementById('paymentRows');
+      document.getElementById('paymentCount').textContent = list.length + ' record' + (list.length === 1 ? '' : 's');
+      if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">No payments here</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(function(p) {
+        var actions = p.Status === 'pending'
+          ? '<div class="action-btns">' +
+              '<button class="btn btn-sm btn-success" data-review="approve" data-id="' + escHtml(p.ID) + '" data-name="' + escHtml(p.Repairman_Name) + '">Approve</button>' +
+              '<button class="btn btn-sm btn-danger" data-review="reject" data-id="' + escHtml(p.ID) + '" data-name="' + escHtml(p.Repairman_Name) + '">Reject</button>' +
+            '</div>'
+          : (p.Admin_Note ? '<span class="sub-muted">' + escHtml(p.Admin_Note) + '</span>' : '<span class="sub-muted">Reviewed ' + fmtDateTime(p.Reviewed_At) + '</span>');
+        return '<tr>' +
+          '<td data-label="Submitted">' + fmtDateTime(p.Submitted_At) + '</td>' +
+          '<td data-label="Repairman"><strong>' + escHtml(p.Repairman_Name) + '</strong><div class="sub-muted">' + escHtml(p.Repairman_Email) + '</div></td>' +
+          '<td data-label="Plan">' + escHtml(p.Plan_Name) + '</td>' +
+          '<td data-label="Amount">' + peso(p.Amount) + '</td>' +
+          '<td data-label="Method">' + escHtml(String(p.Payment_Method).toUpperCase()) + '</td>' +
+          '<td data-label="Reference">' + escHtml(p.Reference_No || '-') + '</td>' +
+          '<td data-label="Proof"><a class="proof-link" href="../../' + escHtml(p.Proof_Path) + '" target="_blank" rel="noopener">View proof</a></td>' +
+          '<td data-label="Status">' + statusBadge(p.Status) + '</td>' +
+          '<td data-label="Action">' + actions + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    function openReview(kind, id, name) {
+      pendingReview = { kind: kind, id: id };
+      var title = document.getElementById('reviewTitle');
+      var msg = document.getElementById('reviewMessage');
+      var note = document.getElementById('reviewNote');
+      var confirm = document.getElementById('reviewConfirmBtn');
+      note.value = '';
+      if (kind === 'approve') {
+        title.textContent = 'Approve payment';
+        msg.textContent = 'Approve the proof of payment from ' + name + '? The account will be subscribed for the selected plan period.';
+        note.style.display = 'none';
+        confirm.className = 'btn btn-success';
+        confirm.textContent = 'Approve';
+      } else {
+        title.textContent = 'Reject payment';
+        msg.textContent = 'Reject the proof of payment from ' + name + '? Give a short reason so they know what to fix.';
+        note.style.display = '';
+        confirm.className = 'btn btn-danger';
+        confirm.textContent = 'Reject';
+      }
+      openModal('reviewModal');
+    }
+
+    document.getElementById('reviewConfirmBtn').addEventListener('click', function() {
+      if (!pendingReview) return;
+      var btn = this;
+      var fields = pendingReview.kind === 'approve'
+        ? { action: 'approve_payment', payment_id: pendingReview.id }
+        : { action: 'reject_payment', payment_id: pendingReview.id, note: document.getElementById('reviewNote').value.trim() };
+      btn.disabled = true;
+      postForm(fields).then(function(res) {
+        btn.disabled = false;
+        closeModal('reviewModal');
+        if (res.ok && res.d.success) { showAlert(res.d.message, 'success'); load(); }
+        else showAlert((res.d && res.d.message) || 'Could not save the review.', 'error');
+      }).catch(function(){ btn.disabled = false; showAlert('Network error.', 'error'); });
+    });
+
+    document.getElementById('paymentRows').addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-review]');
+      if (!btn) return;
+      openReview(btn.getAttribute('data-review'), btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+    });
+
+    document.querySelectorAll('#payFilter button').forEach(function(b) {
+      b.addEventListener('click', function() {
+        document.querySelectorAll('#payFilter button').forEach(function(x){ x.classList.remove('active'); });
+        b.classList.add('active');
+        currentFilter = b.getAttribute('data-status');
+        load();
+      });
+    });
+
+    function load() {
+      var url = API + (currentFilter ? '?status=' + encodeURIComponent(currentFilter) : '');
+      return fetch(url)
+        .then(function(r){ return r.json(); })
+        .then(function(d) {
+          if (!d.success) { showAlert(d.message || 'Could not load subscriptions.', 'error'); return; }
+          renderPlans(d.plans || []);
+          renderQr(d.qr_codes || {});
+          renderPayments(d.payments || []);
+        })
+        .catch(function(){ showAlert('Network error while loading subscriptions.', 'error'); });
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      fetch('../../controllers/logout.php', { method: 'POST' })
+        .then(function(){ localStorage.clear(); window.location.href = 'login.html'; })
+        .catch(function(){ localStorage.clear(); window.location.href = 'login.html'; });
+    });
+
+    load();
+  })();
+  </script>
+</body>
+</html>

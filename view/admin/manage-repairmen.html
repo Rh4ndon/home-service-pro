@@ -86,6 +86,10 @@
           <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Manage Repairmen
         </a>
+        <a href="subscriptions.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Subscriptions
+        </a>
         <a href="manage-customers.html" class="sidebar-link">
           <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
           Manage Customers
@@ -136,6 +140,7 @@
                 <th>Rating</th>
                 <th>Availability</th>
                 <th>Status</th>
+                <th>Subscription</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -357,6 +362,22 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="unsubscribeModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>End Subscription</h3>
+        <button class="modal-close" onclick="closeModal('unsubscribeModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Mark this repairman as unsubscribed? Their account will be locked to the Subscription page until a new payment is approved.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('unsubscribeModal')">Cancel</button>
+        <button class="btn btn-danger" id="unsubscribeBtn">Unsubscribe</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Delete Confirmation Modal -->
   <div class="modal-overlay" id="deleteRepairmanModal">
     <div class="modal">
@@ -441,10 +462,33 @@
       return '<span class="badge badge-success">Active</span>';
     }
 
+    function fmtShortDate(v) {
+      if (!v) return '';
+      var d = new Date(String(v).replace(' ', 'T'));
+      return isNaN(d.getTime()) ? v : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function renderSubscription(r) {
+      var sub = (r.Subscription_Status || 'unsubscribed').toLowerCase();
+      var now = Date.now();
+      var trialEnd = r.Trial_Ends_At ? new Date(String(r.Trial_Ends_At).replace(' ', 'T')).getTime() : 0;
+      var subEnd = r.Subscription_Ends_At ? new Date(String(r.Subscription_Ends_At).replace(' ', 'T')).getTime() : 0;
+      if (sub === 'trial' && trialEnd > now) {
+        return '<span class="badge badge-info">Trial</span><div style="font-size:0.75rem;color:var(--muted);">until ' + fmtShortDate(r.Trial_Ends_At) + '</div>';
+      }
+      if (sub === 'subscribed' && subEnd > now) {
+        return '<span class="badge badge-success">Subscribed</span><div style="font-size:0.75rem;color:var(--muted);">until ' + fmtShortDate(r.Subscription_Ends_At) + '</div>';
+      }
+      if ((r.Status || '').toLowerCase() === 'inactive' && !r.Trial_Ends_At) {
+        return '<span class="badge badge-neutral">Trial starts on approval</span>';
+      }
+      return '<span class="badge badge-danger">Unsubscribed</span>';
+    }
+
     function renderRows(repairmen) {
       if (!tbody) return;
       if (!repairmen || repairmen.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);">No repairmen found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">No repairmen found</td></tr>';
         return;
       }
       var html = '';
@@ -475,6 +519,10 @@
         var deactivateBtn = status === 'active'
           ? '<button class="btn btn-sm btn-warning" data-action="deactivate" data-id="' + profileId + '">Deactivate</button>'
           : '';
+        var subStatus = (r.Subscription_Status || '').toLowerCase();
+        var unsubscribeBtn = (subStatus === 'subscribed' || subStatus === 'trial')
+          ? '<button class="btn btn-sm btn-secondary" data-action="unsubscribe" data-id="' + profileId + '" title="End this repairman\'s subscription or trial">Unsubscribe</button>'
+          : '';
         html += '<tr data-id="' + profileId + '">' +
           '<td data-label="ID">' + profileId + '</td>' +
           '<td data-label="Name">' + name + '</td>' +
@@ -483,6 +531,7 @@
           '<td data-label="Rating"><span class="stars">' + renderStars(rating) + '</span></td>' +
           '<td data-label="Availability">' + renderAvailability(avail) + '</td>' +
           '<td data-label="Status">' + renderStatus(status) + '</td>' +
+          '<td data-label="Subscription">' + renderSubscription(r) + '</td>' +
           '<td data-label="Actions"><div class="action-btns">' +
           '<button class="btn btn-sm btn-secondary" data-action="view" data-id="' + profileId + '">' +
             '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
@@ -490,6 +539,7 @@
             '<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
           activateBtn +
           deactivateBtn +
+          unsubscribeBtn +
           '<button class="btn btn-sm btn-danger" data-action="delete" data-id="' + profileId + '">' +
             '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
           '</div></td></tr>';
@@ -646,6 +696,8 @@
         openModal('activateModal');
       } else if (action === 'deactivate') {
         openModal('deactivateModal');
+      } else if (action === 'unsubscribe') {
+        openModal('unsubscribeModal');
       } else if (action === 'delete') {
         openModal('deleteRepairmanModal');
       }
@@ -702,6 +754,28 @@ var editSaveBtn = document.querySelector('#editRepairmanModal .btn-primary');
             }
           })
           .catch(function(err) { console.error('Activate error:', err); });
+      });
+    }
+
+    var unsubscribeBtn = document.getElementById('unsubscribeBtn');
+    if (unsubscribeBtn) {
+      unsubscribeBtn.addEventListener('click', function() {
+        if (!selectedRepairmanId) return;
+        var fd = new FormData();
+        fd.append('action', 'revoke_subscription');
+        fd.append('profile_id', selectedRepairmanId);
+        fetch('../../controllers/admin/subscriptions.php', { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            closeModal('unsubscribeModal');
+            if (data.success) {
+              showAlert(data.message || 'Repairman unsubscribed.', 'success');
+              loadRepairmen(searchInput ? searchInput.value : '');
+            } else {
+              showAlert(data.message || 'Failed to unsubscribe repairman', 'error');
+            }
+          })
+          .catch(function(err) { console.error('Unsubscribe error:', err); });
       });
     }
 

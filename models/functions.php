@@ -1,6 +1,9 @@
 <?php
 include 'dbconn.php';
 
+if (!defined('REPAIRMAN_TRIAL_DAYS')) define('REPAIRMAN_TRIAL_DAYS', 3);
+if (!defined('SUBSCRIPTION_PROOF_MAX_BYTES')) define('SUBSCRIPTION_PROOF_MAX_BYTES', 5 * 1024 * 1024);
+
 function insertRecord($table, $data)
 {
     global $conn;
@@ -209,7 +212,21 @@ function setRepairmanActivation($profile_id, $active)
         WHERE urp.ID = ?
     ");
     $stmt->bind_param("ssi", $status, $status, $profile_id);
-    return $stmt->execute();
+    $ok = $stmt->execute();
+
+    // The 3-day trial starts on the first approval only. Re-activating an
+    // account whose trial already began does not grant a new trial.
+    if ($ok && $active) {
+        $stmt = $conn->prepare("
+            UPDATE user_repairmanprofile
+               SET Subscription_Status = 'trial',
+                   Trial_Ends_At = DATE_ADD(NOW(), INTERVAL " . REPAIRMAN_TRIAL_DAYS . " DAY)
+             WHERE ID = ? AND Trial_Ends_At IS NULL
+        ");
+        $stmt->bind_param("i", $profile_id);
+        $stmt->execute();
+    }
+    return $ok;
 }
 
 function createRepairmanWithCerts($name, $email, $password, $mobile, $certs_json, $active = false)
@@ -1128,6 +1145,7 @@ function activateAdminCustomer($id)
 function getAdminRepairmen($search = null)
 {
     global $conn;
+    expireRepairmanSubscriptions();
     if ($search) {
         $search = "%$search%";
         $stmt = $conn->prepare("
@@ -1178,6 +1196,16 @@ function addAdminRepairman($name, $email, $password, $address, $mobile, $certs_j
             'Certifications' => $certs_json ? $certs_json : null,
             'FacebookPage' => $facebook_page
         ]);
+        // Admin-created accounts are approved at creation, so they start the trial now.
+        global $conn;
+        $stmt = $conn->prepare("
+            UPDATE user_repairmanprofile
+               SET Subscription_Status = 'trial',
+                   Trial_Ends_At = DATE_ADD(NOW(), INTERVAL " . REPAIRMAN_TRIAL_DAYS . " DAY)
+             WHERE ID = ?
+        ");
+        $stmt->bind_param("i", $profile_id);
+        $stmt->execute();
         commitTransaction();
         return $profile_id;
     } catch (Exception $e) {
@@ -1637,6 +1665,7 @@ function getAvailableRepairmenWithLocation($skill = null, $limit = 50)
         JOIN users u ON u.ID = urp.User_ID
         WHERE u.Status = 'active'
           AND urp.Status = 'active'
+          AND " . repairmanSubscriptionActiveSql('urp') . "
           AND urp.Latitude IS NOT NULL
           AND urp.Longitude IS NOT NULL
           AND (urp.Availability IS NULL OR urp.Availability = '' OR LOWER(urp.Availability) IN ('1','available','yes'))
@@ -1665,6 +1694,7 @@ function isRepairmanAssignable($repairman_id)
         SELECT urp.ID FROM user_repairmanprofile urp
         JOIN users u ON u.ID = urp.User_ID
         WHERE urp.ID = ? AND u.Status = 'active' AND urp.Status = 'active'
+          AND " . repairmanSubscriptionActiveSql('urp') . "
           AND urp.Latitude IS NOT NULL AND urp.Longitude IS NOT NULL
           AND (urp.Availability IS NULL OR urp.Availability = '' OR LOWER(urp.Availability) IN ('1','available','yes'))
     ");
@@ -1797,4 +1827,396 @@ function isActive($user_id)
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
     return $row['Status'] === 'active';
+}
+
+// ==========================================
+// TERMS & CONDITIONS
+// ==========================================
+
+function saveTermsAcceptance($user_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("UPDATE users SET Terms_Accepted_At = NOW() WHERE ID = ?");
+    $stmt->bind_param("i", $user_id);
+    return $stmt->execute();
+}
+
+// ==========================================
+// REPAIRMAN SUBSCRIPTION
+// ==========================================
+
+/**
+ * SQL fragment: the repairman is currently entitled to work
+ * (inside the trial window, or inside a paid subscription period).
+ */
+function repairmanSubscriptionActiveSql($alias)
+{
+    return "((" . $alias . ".Subscription_Status = 'trial' AND " . $alias . ".Trial_Ends_At > NOW())"
+        . " OR (" . $alias . ".Subscription_Status = 'subscribed' AND " . $alias . ".Subscription_Ends_At > NOW()))";
+}
+
+/**
+ * Persists expiry: trials and paid periods that ran out become 'unsubscribed'.
+ */
+function expireRepairmanSubscriptions()
+{
+    global $conn;
+    $conn->query("UPDATE user_repairmanprofile SET Subscription_Status = 'unsubscribed'
+                  WHERE Subscription_Status = 'trial' AND Trial_Ends_At <= NOW()");
+    $conn->query("UPDATE user_repairmanprofile SET Subscription_Status = 'unsubscribed'
+                  WHERE Subscription_Status = 'subscribed' AND Subscription_Ends_At <= NOW()");
+}
+
+/**
+ * Current subscription state for a repairman profile.
+ * locked = true means the repairman may only use the subscription page.
+ */
+function getRepairmanSubscriptionState($profile_id)
+{
+    global $conn;
+    expireRepairmanSubscriptions();
+
+    $stmt = $conn->prepare("
+        SELECT Subscription_Status, Trial_Ends_At, Subscription_Ends_At,
+               TIMESTAMPDIFF(SECOND, NOW(), Trial_Ends_At) AS trial_seconds_left,
+               TIMESTAMPDIFF(SECOND, NOW(), Subscription_Ends_At) AS sub_seconds_left
+        FROM user_repairmanprofile
+        WHERE ID = ?
+    ");
+    $stmt->bind_param("i", $profile_id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    if (!$row) return null;
+
+    $status = $row['Subscription_Status'];
+    $trial_ok = $status === 'trial' && (int) $row['trial_seconds_left'] > 0;
+    $sub_ok = $status === 'subscribed' && (int) $row['sub_seconds_left'] > 0;
+
+    $state = [
+        'status' => $trial_ok ? 'trial' : ($sub_ok ? 'subscribed' : 'unsubscribed'),
+        'locked' => !($trial_ok || $sub_ok),
+        'trial_ends_at' => $row['Trial_Ends_At'],
+        'subscription_ends_at' => $row['Subscription_Ends_At'],
+        'seconds_left' => 0,
+    ];
+    if ($trial_ok) $state['seconds_left'] = (int) $row['trial_seconds_left'];
+    if ($sub_ok) $state['seconds_left'] = (int) $row['sub_seconds_left'];
+    return $state;
+}
+
+function getRepairmanProfileIdByUserId($user_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT ID FROM user_repairmanprofile WHERE User_ID = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    return $row ? (int) $row['ID'] : null;
+}
+
+/**
+ * User ID of the current request (session first, then request params).
+ */
+function currentRequestUserId()
+{
+    if (!empty($_SESSION['user_id'])) return (int) $_SESSION['user_id'];
+    if (!empty($_GET['user_id'])) return (int) $_GET['user_id'];
+    if (!empty($_POST['user_id'])) return (int) $_POST['user_id'];
+    return null;
+}
+
+/**
+ * Stops an API request with 403 when the caller is a repairman whose
+ * subscription is locked. Non-repairman callers are not affected.
+ */
+function blockIfRepairmanLocked($user_id = null)
+{
+    $user_id = $user_id ?? currentRequestUserId();
+    if (!$user_id) return;
+    $profile_id = getRepairmanProfileIdByUserId($user_id);
+    if (!$profile_id) return;
+    $state = getRepairmanSubscriptionState($profile_id);
+    if ($state && $state['locked']) {
+        http_response_code(403);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'status' => 'error',
+            'code' => 'subscription_required',
+            'message' => 'Your subscription has expired. Please subscribe to continue.'
+        ]);
+        exit;
+    }
+}
+
+function revokeRepairmanSubscription($profile_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("
+        UPDATE user_repairmanprofile
+           SET Subscription_Status = 'unsubscribed', Subscription_Ends_At = NOW()
+         WHERE ID = ?
+    ");
+    $stmt->bind_param("i", $profile_id);
+    return $stmt->execute();
+}
+
+// ----- Plans -----
+
+function getSubscriptionPlans()
+{
+    global $conn;
+    $result = $conn->query("SELECT * FROM subscription_plans ORDER BY Duration_Months ASC");
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+function getSubscriptionPlanById($id)
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM subscription_plans WHERE ID = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
+function updateSubscriptionPlanPrice($id, $price)
+{
+    global $conn;
+    $stmt = $conn->prepare("UPDATE subscription_plans SET Price = ? WHERE ID = ?");
+    $stmt->bind_param("di", $price, $id);
+    return $stmt->execute();
+}
+
+// ----- Payment QR codes -----
+
+/**
+ * @return array keyed by provider ('gcash', 'maya') => row
+ */
+function getPaymentQrCodes()
+{
+    global $conn;
+    $result = $conn->query("SELECT * FROM payment_qr_codes");
+    $out = [];
+    foreach ($result->fetch_all(MYSQLI_ASSOC) as $row) {
+        $out[$row['Provider']] = $row;
+    }
+    return $out;
+}
+
+function savePaymentQrCode($provider, $file_path)
+{
+    global $conn;
+    $stmt = $conn->prepare("
+        INSERT INTO payment_qr_codes (Provider, File_Path) VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE File_Path = VALUES(File_Path)
+    ");
+    $stmt->bind_param("ss", $provider, $file_path);
+    return $stmt->execute();
+}
+
+// ----- Repairman payments -----
+
+function createSubscriptionPayment($profile_id, $plan, $method, $reference_no, $proof_path, $amount)
+{
+    global $conn;
+    $stmt = $conn->prepare("
+        INSERT INTO repairman_subscription_payments
+            (Repairman_ID, Plan_ID, Plan_Name, Duration_Months, Amount, Payment_Method, Reference_No, Proof_Path, Status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+    ");
+    $plan_id = (int) $plan['ID'];
+    $plan_name = $plan['Name'];
+    $months = (int) $plan['Duration_Months'];
+    $stmt->bind_param("iisidsss", $profile_id, $plan_id, $plan_name, $months, $amount, $method, $reference_no, $proof_path);
+    $stmt->execute();
+    return $conn->insert_id;
+}
+
+function getRepairmanPendingPayment($profile_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT ID FROM repairman_subscription_payments WHERE Repairman_ID = ? AND Status = 'pending' LIMIT 1");
+    $stmt->bind_param("i", $profile_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
+function getRepairmanSubscriptionPayments($profile_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("
+        SELECT ID, Plan_Name, Duration_Months, Amount, Payment_Method, Reference_No, Proof_Path,
+               Status, Admin_Note, Submitted_At, Reviewed_At
+        FROM repairman_subscription_payments
+        WHERE Repairman_ID = ?
+        ORDER BY Submitted_At DESC, ID DESC
+    ");
+    $stmt->bind_param("i", $profile_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+function getAdminSubscriptionPayments($status = null)
+{
+    global $conn;
+    $sql = "
+        SELECT p.*, urp.Name AS Repairman_Name, urp.Email AS Repairman_Email,
+               urp.Subscription_Status, urp.Subscription_Ends_At
+        FROM repairman_subscription_payments p
+        JOIN user_repairmanprofile urp ON urp.ID = p.Repairman_ID
+    ";
+    if ($status) {
+        $stmt = $conn->prepare($sql . " WHERE p.Status = ? ORDER BY p.Submitted_At DESC, p.ID DESC");
+        $stmt->bind_param("s", $status);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+    $result = $conn->query($sql . " ORDER BY p.Submitted_At DESC, p.ID DESC");
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+function getSubscriptionPaymentById($id)
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM repairman_subscription_payments WHERE ID = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
+/**
+ * Approves a pending payment and grants the plan period.
+ * A repairman with a running paid period is extended from its current end date.
+ * Otherwise the period starts now.
+ * @throws Exception when the payment is missing or not pending
+ */
+function approveSubscriptionPayment($payment_id, $admin_id)
+{
+    global $conn;
+    startTransaction();
+    try {
+        $stmt = $conn->prepare("SELECT * FROM repairman_subscription_payments WHERE ID = ? FOR UPDATE");
+        $stmt->bind_param("i", $payment_id);
+        $stmt->execute();
+        $payment = $stmt->get_result()->fetch_assoc();
+        if (!$payment) throw new Exception('Payment not found.');
+        if ($payment['Status'] !== 'pending') throw new Exception('This payment has already been reviewed.');
+
+        $stmt = $conn->prepare("UPDATE repairman_subscription_payments
+                                   SET Status = 'approved', Reviewed_At = NOW(), Reviewed_By = ?
+                                 WHERE ID = ?");
+        $stmt->bind_param("ii", $admin_id, $payment_id);
+        $stmt->execute();
+
+        // Expression order matters: Subscription_Ends_At is assigned first so the
+        // IF() reads the old Subscription_Status value.
+        $months = (int) $payment['Duration_Months'];
+        $stmt = $conn->prepare("
+            UPDATE user_repairmanprofile
+               SET Subscription_Ends_At = DATE_ADD(
+                       IF(Subscription_Status = 'subscribed' AND Subscription_Ends_At > NOW(), Subscription_Ends_At, NOW()),
+                       INTERVAL $months MONTH),
+                   Subscription_Status = 'subscribed'
+             WHERE ID = ?
+        ");
+        $profile_id = (int) $payment['Repairman_ID'];
+        $stmt->bind_param("i", $profile_id);
+        $stmt->execute();
+
+        commitTransaction();
+        return $payment;
+    } catch (Exception $e) {
+        rollbackTransaction();
+        throw $e;
+    }
+}
+
+function rejectSubscriptionPayment($payment_id, $admin_id, $note)
+{
+    global $conn;
+    $stmt = $conn->prepare("UPDATE repairman_subscription_payments
+                               SET Status = 'rejected', Admin_Note = ?, Reviewed_At = NOW(), Reviewed_By = ?
+                             WHERE ID = ? AND Status = 'pending'");
+    $stmt->bind_param("sii", $note, $admin_id, $payment_id);
+    $stmt->execute();
+    return $stmt->affected_rows > 0;
+}
+
+// ----- Uploads -----
+
+/**
+ * Saves an uploaded file under the project's uploads folder.
+ * Returns the relative path (e.g. "uploads/payments/x.jpg").
+ * @throws Exception with a user-facing message
+ */
+function saveUploadedFileTo($tmp_name, $orig_name, $rel_dir, $prefix, array $allowed_mimes, $max_bytes)
+{
+    if (!is_uploaded_file($tmp_name)) throw new Exception('No file was uploaded.');
+    if (filesize($tmp_name) > $max_bytes) {
+        throw new Exception('File is too large. The maximum size is ' . round($max_bytes / 1048576) . ' MB.');
+    }
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime = finfo_file($finfo, $tmp_name);
+    finfo_close($finfo);
+    if (!isset($allowed_mimes[$mime])) {
+        throw new Exception('Unsupported file type. Allowed: ' . implode(', ', array_unique(array_values($allowed_mimes))) . '.');
+    }
+    $ext = $allowed_mimes[$mime];
+    $abs_dir = __DIR__ . '/../' . $rel_dir;
+    if (!is_dir($abs_dir)) mkdir($abs_dir, 0755, true);
+    $name = $prefix . '_' . uniqid('', true) . '.' . $ext;
+    $dest = $abs_dir . '/' . $name;
+    if (!move_uploaded_file($tmp_name, $dest)) throw new Exception('Could not save the uploaded file.');
+    return $rel_dir . '/' . $name;
+}
+
+/**
+ * Deletes a file previously stored by saveUploadedFileTo().
+ * Only paths inside uploads/ are touched.
+ */
+function deleteUploadedProjectFile($rel_path)
+{
+    if (!$rel_path || strpos($rel_path, 'uploads/') !== 0 || strpos($rel_path, '..') !== false) return;
+    $abs = __DIR__ . '/../' . $rel_path;
+    if (is_file($abs)) @unlink($abs);
+}
+
+// ----- Customer-facing repairman profile -----
+
+function getRepairmanPublicProfile($profile_id = null, $user_id = null)
+{
+    global $conn;
+    $where = $profile_id !== null ? "urp.ID = ?" : "urp.User_ID = ?";
+    $key = $profile_id !== null ? $profile_id : $user_id;
+    $stmt = $conn->prepare("
+        SELECT urp.ID, urp.User_ID, urp.Name, urp.Ratings, urp.Skills, urp.Education,
+               urp.Certifications, urp.Availability, urp.FacebookPage, urp.Status,
+               u.Created_At AS Member_Since,
+               (SELECT COUNT(*) FROM repairhistory rh WHERE rh.Repairman_ID = urp.ID) AS CompletedRepairs,
+               (SELECT COUNT(*) FROM customer_reviews cr WHERE cr.Repairman_ID = urp.ID) AS ReviewCount
+        FROM user_repairmanprofile urp
+        LEFT JOIN users u ON u.ID = urp.User_ID
+        WHERE $where
+        LIMIT 1
+    ");
+    $stmt->bind_param("i", $key);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
+function getRepairmanRecentReviews($profile_id, $limit = 5)
+{
+    global $conn;
+    $limit = max(1, (int) $limit);
+    $stmt = $conn->prepare("
+        SELECT cr.Rating, cr.Comments, cr.Created_At, cp.Name AS customer_name
+        FROM customer_reviews cr
+        LEFT JOIN user_clientprofile cp ON cp.ID = cr.Customer_ID
+        WHERE cr.Repairman_ID = ?
+        ORDER BY cr.Created_At DESC
+        LIMIT $limit
+    ");
+    $stmt->bind_param("i", $profile_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }

@@ -1,6 +1,7 @@
 <?php
 session_start();
 include '../../models/functions.php';
+blockIfRepairmanLocked(); // locked repairmen may only use the subscription page
 header('Content-Type: application/json');
 
 $method = $_SERVER['REQUEST_METHOD'];

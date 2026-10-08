@@ -372,6 +372,7 @@
   <script src="../shared.js"></script>
   <script src="../is-active.js"></script>
   <script src="../location-picker.js"></script>
+  <script src="repairman-profile-modal.js"></script>
   <script>
   (function() {
     if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
@@ -626,7 +627,10 @@
           '<div style="color:#6b7280;margin-bottom:3px;">Completed repairs: ' + (r.CompletedRepairs || 0) + '</div>' +
           (skills ? '<div style="color:#6b7280;margin-bottom:3px;">Skills: ' + escHtml(skills) + '</div>' : '') +
           (certs ? '<div style="color:#6b7280;margin-bottom:3px;">Certificates: ' + certs + '</div>' : '') +
-          '<div style="margin-top:8px;"><button onclick="window._selectRepairmanFromMap(' + idx + ');" style="padding:6px 14px;background:#2563eb;color:#fff;border:0;border-radius:6px;font-size:0.85rem;font-weight:600;cursor:pointer;">Select</button></div>' +
+          '<div style="margin-top:8px;display:flex;gap:6px;">' +
+            '<button onclick="window._viewRepairmanFromMap(' + idx + ');" style="padding:6px 12px;background:#fff;color:#1f2937;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;font-weight:600;cursor:pointer;">View Profile</button>' +
+            '<button onclick="window._selectRepairmanFromMap(' + idx + ');" style="padding:6px 14px;background:#2563eb;color:#fff;border:0;border-radius:6px;font-size:0.85rem;font-weight:600;cursor:pointer;">Select</button>' +
+          '</div>' +
           '</div>';
 
         var infoWindow = new google.maps.InfoWindow({ content: infoHtml });
@@ -647,12 +651,16 @@
           (certs ? '<div style="color:#6b7280;font-size:0.82rem;">Certificates: ' + certs + '</div>' : '') +
           '</div>' +
           '<div style="text-align:right;"><div style="font-size:0.82rem;color:#6b7280;margin-bottom:6px;">' + (r.route_used ? 'Road distance' : 'Est. distance') + '</div>' +
+          '<div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">' +
+          '<button class="view-repairman-btn" style="padding:6px 10px;background:#fff;color:#1f2937;border:1px solid #d1d5db;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer;">View Profile</button>' +
           '<button class="select-repairman-btn" style="padding:6px 12px;background:#2563eb;color:#fff;border:0;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer;">Select</button>' +
+          '</div>' +
           '</div></div>';
 
         (function(idx, marker){
           card.addEventListener('click', function(){ selectRepairman(idx); });
           card.querySelector('.select-repairman-btn').addEventListener('click', function(e){ e.stopPropagation(); selectRepairman(idx); });
+          card.querySelector('.view-repairman-btn').addEventListener('click', function(e){ e.stopPropagation(); openRepairmanProfile({ profileId: r.ID }); });
           card.addEventListener('mouseenter', function(){ marker.setAnimation(google.maps.Animation.BOUNCE); });
           card.addEventListener('mouseleave', function(){ marker.setAnimation(null); });
         })(idx, marker);
@@ -662,6 +670,7 @@
       });
 
       window._selectRepairmanFromMap = function(idx){ selectRepairman(idx); };
+      window._viewRepairmanFromMap = function(idx){ var r = repairmanDataArr[idx]; if (r) openRepairmanProfile({ profileId: r.ID }); };
     }
 
     function selectRepairman(idx) {

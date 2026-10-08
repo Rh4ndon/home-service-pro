@@ -1,6 +1,7 @@
 <?php
 session_start();
 include '../../models/functions.php';
+blockIfRepairmanLocked(); // locked repairmen may only use the subscription page
 header('Content-Type: application/json');
 
 $call_id = isset($_GET['call_id']) ? (int)$_GET['call_id'] : 0;

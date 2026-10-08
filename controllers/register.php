@@ -68,6 +68,12 @@ if (!in_array($role, ['customer', 'repairman'])) {
     exit;
 }
 
+if (($_POST['agree_terms'] ?? '') !== '1') {
+    http_response_code(400);
+    echo json_encode(['error' => 'You must read and agree to the Terms and Conditions to register.']);
+    exit;
+}
+
 $latitude = trim($_POST['latitude'] ?? '');
 $longitude = trim($_POST['longitude'] ?? '');
 $formatted_address = trim($_POST['formatted_address'] ?? '');
@@ -100,6 +106,7 @@ if (isEmailTaken($email)) {
 }
 
 $userId = createUser($name, $email, $password, $role, ($role === 'repairman' ? 'inactive' : 'active'));
+saveTermsAcceptance($userId);
 
 if ($role === 'customer') {
     insertRecord('user_clientprofile', [

@@ -106,6 +106,12 @@
                 <div class="hs-location-status" id="signupLocationStatus">Set your location using the map, search, or device location.</div>
               </div>
             </div>
+            <div class="form-group terms-agree-group" style="display:flex;align-items:flex-start;gap:10px;">
+              <input type="checkbox" id="agreeTerms" style="margin-top:4px;width:18px;height:18px;flex-shrink:0;" />
+              <label for="agreeTerms" style="font-weight:400;font-size:0.88rem;line-height:1.5;">
+                I have read and agree to the <a style="color:var(--primary);" href="terms.html?role=repairman" target="_blank" rel="noopener">Terms and Conditions</a>.
+              </label>
+            </div>
             <button class="btn btn-primary" type="button" id="signupBtn">Create Account</button>
           </form>
         </div>
@@ -231,6 +237,10 @@
         showAlert('Please set your service location on the map before continuing.', 'warning');
         return;
       }
+      if (!document.getElementById('agreeTerms').checked) {
+        showAlert('Please read and agree to the Terms and Conditions to create an account.', 'warning');
+        return;
+      }
       openModal('confirmSignup');
     });
     document.getElementById('confirmSignupBtn').addEventListener('click', function() {
@@ -248,6 +258,7 @@
       var fd = new FormData();
       fd.append('name', name); fd.append('email', email); fd.append('mobile', mobile);
       fd.append('password', password); fd.append('role', 'repairman'); fd.append('education', education);
+      fd.append('agree_terms', document.getElementById('agreeTerms').checked ? '1' : '0');
       fd.append('skills', skills.join(','));
       fd.append('latitude', document.getElementById('signupLat').value);
       fd.append('longitude', document.getElementById('signupLng').value);
