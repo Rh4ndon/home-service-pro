@@ -207,6 +207,7 @@
                 <th>Client</th>
                 <th>Assigned Repairman</th>
                 <th>Appliance</th>
+                <th>Type</th>
                 <th>Issue</th>
                 <th>Date Opened</th>
                 <th>Status</th>
@@ -559,7 +560,7 @@
     function renderRows(tickets) {
       if (!tbody) return;
       if (!tickets || tickets.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);">No tickets found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">No tickets found</td></tr>';
         return;
       }
       var html = '';
@@ -568,6 +569,9 @@
         var client = t.ClientName || 'Client';
         var repairman = t.RepairmanName || 'Unassigned';
         var appliance = t.Appliance_Type || '-';
+        var typeOfService = t.Type_Of_Service || 'Repair';
+        var typeBadgeClass = typeOfService === 'Maintenance' ? 'badge-info' : 'badge-warning';
+        var typeBadge = '<span class="badge ' + typeBadgeClass + '">' + typeOfService + '</span>';
         var issue = t.Issue_Description || '-';
         var date = formatDate(t.Date_Time || t.Created_At);
         var status = t.Status || 'Open';
@@ -578,6 +582,7 @@
           '<td data-label="Client">' + client + '</td>' +
           '<td data-label="Repairman">' + repairman + '</td>' +
           '<td data-label="Appliance">' + appliance + '</td>' +
+          '<td data-label="Type">' + typeBadge + '</td>' +
           '<td data-label="Issue">' + issue + '</td>' +
           '<td data-label="Date">' + date + '</td>' +
           '<td data-label="Status">' + renderStatusBadge(status) + '</td>' +
@@ -702,6 +707,9 @@
                 var issues = t.appliance_issues || [];
                 var issueList = issues.map(function(i){ return i.Issue_Description || i.Description || ''; }).filter(Boolean).join(', ') || t.Issue_Description || 'N/A';
                 var schedule = t.ScheduleDate ? formatDate(t.ScheduleDate) : 'Not scheduled';
+                var typeOfService = t.Type_Of_Service || 'Repair';
+                var typeBadgeClass = typeOfService === 'Maintenance' ? 'badge-info' : 'badge-warning';
+                var typeBadge = '<span class="badge ' + typeBadgeClass + '">' + typeOfService + '</span>';
                 var timeline = '<div style="padding:14px 16px;background:var(--panel);border-radius:10px;">' +
                   '<div style="display:flex;gap:14px;margin-bottom:12px;"><div style="width:10px;height:10px;border-radius:50%;background:var(--primary);margin-top:5px;flex-shrink:0;"></div><div><div style="font-size:0.88rem;font-weight:600;">Ticket Created</div><div style="font-size:0.82rem;color:var(--muted);">' + formatDate(t.Created_At) + '</div></div></div>';
                 if (t.RepairmanName) {
@@ -717,10 +725,11 @@
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Client Name</div><div style="font-size:0.92rem;font-weight:500;">' + (t.ClientName || 'N/A') + '</div></div>' +
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Client Email</div><div style="font-size:0.92rem;font-weight:500;">' + (t.ClientEmail || 'N/A') + '</div></div>' +
                   '</div>' +
-                  '<h4 style="font-size:0.92rem;font-weight:700;margin-bottom:12px;color:var(--text);">Appliance &amp; Issue</h4>' +
+                  '<h4 style="font-size:0.92rem;font-weight:700;margin-bottom:12px;color:var(--text);">'Appliance & Issue</h4>' +
                   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">' +
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Appliance</div><div style="font-size:0.92rem;font-weight:500;">' + (t.Appliance_Type || 'N/A') + '</div></div>' +
-                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Issue</div><div style="font-size:0.92rem;font-weight:500;">' + issueList + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Type of Service</div><div style="font-size:0.92rem;font-weight:500;">' + typeBadge + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Full Issue Description</div><div style="font-size:0.92rem;font-weight:500;line-height:1.6;">' + issueList + '</div></div>' +' +
                   '</div>' +
                   '<h4 style="font-size:0.92rem;font-weight:700;margin-bottom:12px;color:var(--text);">Schedule &amp; Assignment</h4>' +
                   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">' +

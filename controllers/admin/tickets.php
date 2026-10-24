@@ -71,6 +71,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         reassignAdminTicket($ticketId, $newRepairmanId);
 
+        // Send email notification to new repairman
+        $ticketDetail = getAdminTicketById($ticketId);
+        if ($ticketDetail && !empty($repairman['Email'])) {
+            // Parse schedule date/time
+            $preferred_date = '';
+            $preferred_time = '';
+            if (!empty($ticketDetail['ScheduleDate'])) {
+                $dt = new DateTime($ticketDetail['ScheduleDate']);
+                $preferred_date = $dt->format('M j, Y');
+                $preferred_time = $dt->format('g:i A');
+            }
+            
+            require_once __DIR__ . '/../../controllers/mailer.php';
+            send_new_ticket_notification(
+                $repairman['Email'],
+                $repairman['Name'],
+                $ticketId,
+                $ticketDetail['ClientName'] ?? 'Unknown Client',
+                $ticketDetail['ApplianceName'] ?? 'Unknown Appliance',
+                $ticketDetail['ApplianceType'] ?? 'Unknown',
+                $ticketDetail['Details'] ?? 'No description',
+                $preferred_date,
+                $preferred_time,
+                $ticketDetail['Type_Of_Service'] ?? 'Repair',
+                $ticketDetail['Schedule_ID'] ?? null,
+                $ticketDetail['Formatted_Address'] ?? ''
+            );
+        }
+
         echo json_encode([
             'success' => true,
             'message' => 'Ticket reassigned successfully'

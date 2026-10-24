@@ -134,6 +134,7 @@
       <button class="tab active" onclick="filterTickets('all', this)">All</button>
       <button class="tab" onclick="filterTickets('open', this)">Open</button>
       <button class="tab" onclick="filterTickets('in_progress', this)">In Progress</button>
+      <button class="tab" onclick="filterTickets('declined', this)">Declined</button>
       <button class="tab" onclick="filterTickets('completed', this)">Completed</button>
     </div>
 
@@ -147,6 +148,7 @@
                 <th>Ticket ID</th>
                 <th>Appliance</th>
                 <th>Issue</th>
+                <th>Type</th>
                 <th>Date</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -172,6 +174,7 @@
           <div><strong>Date Opened:</strong> <span id="modalTicketDate">—</span></div>
           <div><strong>Appliance:</strong> <span id="modalAppliance">—</span></div>
           <div><strong>Status:</strong> <span id="modalTicketStatus">—</span></div>
+          <div><strong>Type of Service:</strong> <span id="modalTypeOfService">—</span></div>
         </div>
         <div style="margin-top:18px;">
           <strong>Issue Description:</strong>
@@ -294,7 +297,8 @@
           'open': 'badge-info', 
           'in-progress': 'badge-warning', 
           'completed': 'badge-success', 
-          'cancelled': 'badge-danger'
+          'cancelled': 'badge-danger',
+          'declined': 'badge-danger'
         };
         var cls = map[(status || '').toLowerCase().replace(/_/g, '-')] || 'badge-info';
         return '<span class="badge ' + cls + '">' + (status || 'Unknown') + '</span>';
@@ -375,6 +379,9 @@
         document.getElementById('modalTicketDate').textContent = formatDate(ticket.schedule_date) || formatDate(ticket.created_at) || '—';
         document.getElementById('modalAppliance').textContent = buildTicketDetails(ticket);
         document.getElementById('modalTicketStatus').innerHTML = statusBadge(ticket.ticket_status || ticket.status);
+        var typeOfService = ticket.type_of_service || 'Repair';
+        var typeBadgeClass = typeOfService === 'Maintenance' ? 'badge-info' : 'badge-warning';
+        document.getElementById('modalTypeOfService').innerHTML = '<span class="badge ' + typeBadgeClass + '">' + typeOfService + '</span>';
         document.getElementById('modalIssue').textContent = ticket.issue || ticket.issue_details || ticket.ticket_details || ticket.Details || '—';
         document.getElementById('modalSchedule').textContent = formatDate(ticket.schedule_date) || '—';
         document.getElementById('modalAddress').textContent = buildAddress(ticket);
@@ -385,7 +392,7 @@
       function renderTickets(tickets) {
         var tbody = document.querySelector('#ticketsTable tbody');
         if (!tickets.length) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted);">No tickets found.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">No tickets found.</td></tr>';
           return;
         }
         tbody.innerHTML = tickets.map(function(t) {
@@ -395,8 +402,12 @@
           var appliance = buildTicketDetails(t);
           var issue = t.issue || t.issue_details || t.ticket_details || t.Details || '';
           var date = t.schedule_date || t.created_at || t.ScheduleDate || '';
+          var typeOfService = t.type_of_service || 'Repair';
+          var typeBadgeClass = typeOfService === 'Maintenance' ? 'badge-info' : 'badge-warning';
+          var typeBadge = '<span class="badge ' + typeBadgeClass + '">' + typeOfService + '</span>';
 var actions = '<div class="action-btns">';
-        if (status !== 'Completed' && status !== 'Cancelled') {
+        // For declined tickets, only show View button
+        if (status !== 'Completed' && status !== 'Cancelled' && status !== 'Declined') {
           actions += '<button class="btn btn-primary btn-sm" onclick="viewTicketAndChat(\'' + id + '\')">Chat</button>';
         }
         actions += '<button class="btn btn-secondary btn-sm" onclick="viewTicket(\'' + id + '\')">View</button>';
@@ -421,6 +432,7 @@ var actions = '<div class="action-btns">';
             '<td data-label="Ticket ID"><strong>#' + id + '</strong></td>' +
             '<td data-label="Appliance">' + appliance + '</td>' +
             '<td data-label="Issue">' + issue + '</td>' +
+            '<td data-label="Type">' + typeBadge + '</td>' +
             '<td data-label="Date">' + formatDate(date) + '</td>' +
             '<td data-label="Status">' + statusBadge(status) + '</td>' +
             '<td data-label="Actions">' + actions + '</td></tr>';
@@ -448,6 +460,9 @@ var actions = '<div class="action-btns">';
         document.getElementById('modalTicketDate').textContent = formatDate(ticket.schedule_date) || formatDate(ticket.created_at) || '—';
         document.getElementById('modalAppliance').textContent = buildTicketDetails(ticket);
         document.getElementById('modalTicketStatus').innerHTML = statusBadge(ticket.ticket_status || ticket.status);
+        var typeOfService = ticket.type_of_service || 'Repair';
+        var typeBadgeClass = typeOfService === 'Maintenance' ? 'badge-info' : 'badge-warning';
+        document.getElementById('modalTypeOfService').innerHTML = '<span class="badge ' + typeBadgeClass + '">' + typeOfService + '</span>';
         document.getElementById('modalIssue').textContent = ticket.issue || ticket.issue_details || ticket.ticket_details || ticket.Details || '—';
         document.getElementById('modalSchedule').textContent = formatDate(ticket.schedule_date) || '—';
         document.getElementById('modalAddress').textContent = buildAddress(ticket);

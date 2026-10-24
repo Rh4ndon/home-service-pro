@@ -44,7 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $client_lng,
                 $route_distance_km,
                 $route_duration_min,
-                $_POST['detailed_report'] ?? null
+                $_POST['detailed_report'] ?? null,
+                $_POST['type_of_service'] ?? 'Repair'
             );
 
             // Store booking media (3 images + 1 video) if uploaded

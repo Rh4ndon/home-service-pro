@@ -172,6 +172,16 @@
             <p style="font-size:0.78rem;color:var(--muted);margin-top:4px;">Include things like: error codes, unusual sounds, when the problem started, troubleshooting steps already tried, etc.</p>
           </div>
 
+          <div class="form-group">
+            <label for="typeOfService">Type of Service <span style="color:#ef4444;font-weight:700;">*</span></label>
+            <select id="typeOfService" required>
+              <option value="">Select type of service...</option>
+              <option value="Repair">Repair</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+            <p style="font-size:0.78rem;color:var(--muted);margin-top:4px;">Choose whether this is a repair service or routine maintenance.</p>
+          </div>
+
 
           <!-- BOOKING MEDIA: 3 PHOTOS + 1 VIDEO -->
           <div class="form-group">
@@ -330,8 +340,13 @@
         <p>Are you sure you want to submit this service booking? You will be able to track the status from your dashboard.</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary btn-cancel" onclick="closeModal('confirmBookingModal')">Cancel</button>
-        <button class="btn btn-primary" id="confirmBtn">Confirm</button>
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('confirmBookingModal')" id="confirmCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="confirmBtn">
+          <span class="btn-text">Confirm</span>
+          <span class="btn-loading" style="display:none;">
+            <span class="spinner"></span> Submitting...
+          </span>
+        </button>
       </div>
     </div>
   </div>
@@ -870,6 +885,12 @@
         return;
       }
 
+      // 2b. Validate type of service
+      if (!document.getElementById('typeOfService').value) {
+        showAlert('Please select a type of service (Repair or Maintenance).', 'warning');
+        return;
+      }
+
       // 3. Validate date & time
       if (!document.getElementById('preferredDate').value) {
         showAlert('Please select a preferred date.', 'warning');
@@ -917,6 +938,17 @@
 
     // === SUBMIT BOOKING ===
     document.getElementById('confirmBtn').addEventListener('click', function() {
+      var confirmBtn = this;
+      var cancelBtn = document.getElementById('confirmCancelBtn');
+      var btnText = confirmBtn.querySelector('.btn-text');
+      var btnLoading = confirmBtn.querySelector('.btn-loading');
+
+      // Show loading state
+      confirmBtn.disabled = true;
+      cancelBtn.disabled = true;
+      if (btnText) btnText.style.display = 'none';
+      if (btnLoading) btnLoading.style.display = 'inline-flex';
+
       var selected = applianceSelect.value;
       var applianceType, applianceName, makeBrand, yearModel, applianceId = null;
       if (selected === 'new') {
@@ -935,6 +967,8 @@
         }
       }
       var issueDesc = document.getElementById('issueDesc').value;
+      var detailedReport = document.getElementById('detailedReport').value.trim();
+      var typeOfService = document.getElementById('typeOfService').value;
       var preferredDate = document.getElementById('preferredDate').value;
       var preferredTime = document.getElementById('preferredTime').value;
       var repairmanId = selectedRepairmanIdEl.value;
@@ -948,7 +982,8 @@
       fd.append('year_model', yearModel);
       if (applianceId) fd.append('appliance_id', applianceId);
       fd.append('issue_desc', issueDesc);
-      fd.append('detailed_report', document.getElementById('detailedReport').value.trim());
+      fd.append('detailed_report', detailedReport);
+      fd.append('type_of_service', typeOfService);
       fd.append('preferred_date', preferredDate);
       fd.append('preferred_time', preferredTime);
       fd.append('repairman_id', repairmanId);
@@ -961,9 +996,16 @@
       if (bookingMedia.img2) fd.append('image_2', bookingMedia.img2, 'photo2.jpg');
       if (bookingMedia.img3) fd.append('image_3', bookingMedia.img3, 'photo3.jpg');
       if (bookingMedia.vid) fd.append('video', bookingMedia.vid);
+      
       fetch('../../controllers/customer/tickets.php', { method: 'POST', body: fd })
         .then(function(r){ return r.json(); })
         .then(function(data){
+          // Restore button state
+          confirmBtn.disabled = false;
+          cancelBtn.disabled = false;
+          if (btnText) btnText.style.display = '';
+          if (btnLoading) btnLoading.style.display = 'none';
+
           if (isSuccess(data)) {
             closeModal('confirmBookingModal');
             openModal('successBookingModal');
@@ -971,7 +1013,14 @@
             showAlert(data.message || 'Error submitting booking.', 'error');
           }
         })
-        .catch(function(){ showAlert('Network error. Please try again.', 'error'); });
+        .catch(function(){
+          // Restore button state on error
+          confirmBtn.disabled = false;
+          cancelBtn.disabled = false;
+          if (btnText) btnText.style.display = '';
+          if (btnLoading) btnLoading.style.display = 'none';
+          showAlert('Network error. Please try again.', 'error');
+        });
     });
 
     document.getElementById('logoutBtn').addEventListener('click', function() {

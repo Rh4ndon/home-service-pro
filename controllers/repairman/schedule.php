@@ -73,11 +73,27 @@ function handle_accept($user_id) {
         return;
     }
 
-    if (updateRepairmanScheduleStatus($schedule_id, $repairman_id, 'In Progress')) {
+    global $conn;
+    startTransaction();
+    try {
+        // Update repairschedule
+        $stmt = $conn->prepare("UPDATE repairschedule SET Status = 'In Progress' WHERE ID = ? AND Repairman_ID = ?");
+        $stmt->bind_param("si", $schedule_id, $repairman_id);
+        $stmt->execute();
+
+        if ($stmt->affected_rows > 0) {
+            // Also update repairticket
+            $stmt = $conn->prepare("UPDATE repairticket rt JOIN repairschedule rs ON rt.Schedule_ID = rs.ID SET rt.Status = 'In Progress', rt.Repairman_ID = ? WHERE rs.ID = ? AND rs.Repairman_ID = ?");
+            $stmt->bind_param("iii", $repairman_id, $schedule_id, $repairman_id);
+            $stmt->execute();
+        }
+
+        commitTransaction();
         echo json_encode(["success" => true, "message" => "Schedule accepted successfully."]);
-    } else {
-        http_response_code(404);
-        echo json_encode(["success" => false, "message" => "Schedule not found or not assigned to you."]);
+    } catch (Exception $e) {
+        rollbackTransaction();
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => $e->getMessage()]);
     }
 }
 
@@ -97,11 +113,27 @@ function handle_decline($user_id) {
         return;
     }
 
-    if (updateRepairmanScheduleStatus($schedule_id, $repairman_id, 'Declined')) {
+    global $conn;
+    startTransaction();
+    try {
+        // Update repairschedule
+        $stmt = $conn->prepare("UPDATE repairschedule SET Status = 'Declined' WHERE ID = ? AND Repairman_ID = ?");
+        $stmt->bind_param("si", $schedule_id, $repairman_id);
+        $stmt->execute();
+
+        if ($stmt->affected_rows > 0) {
+            // Also update repairticket - set status to Declined and clear Repairman_ID so it can be reassigned
+            $stmt = $conn->prepare("UPDATE repairticket rt JOIN repairschedule rs ON rt.Schedule_ID = rs.ID SET rt.Status = 'Declined', rt.Repairman_ID = NULL WHERE rs.ID = ? AND rs.Repairman_ID = ?");
+            $stmt->bind_param("ii", $schedule_id, $repairman_id);
+            $stmt->execute();
+        }
+
+        commitTransaction();
         echo json_encode(["success" => true, "message" => "Schedule declined successfully."]);
-    } else {
-        http_response_code(404);
-        echo json_encode(["success" => false, "message" => "Schedule not found or not assigned to you."]);
+    } catch (Exception $e) {
+        rollbackTransaction();
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => $e->getMessage()]);
     }
 }
 
@@ -121,11 +153,54 @@ function handle_complete($user_id) {
         return;
     }
 
-    if (updateRepairmanScheduleStatus($schedule_id, $repairman_id, 'Completed')) {
+    global $conn;
+    startTransaction();
+    try {
+        // Get ticket_id from schedule
+        $stmt = $conn->prepare("SELECT rt.ID as ticket_id, rt.Appliance_ID FROM repairticket rt JOIN repairschedule rs ON rt.Schedule_ID = rs.ID WHERE rs.ID = ? AND rs.Repairman_ID = ?");
+        $stmt->bind_param("ii", $schedule_id, $repairman_id);
+        $stmt->execute();
+        $ticket = $stmt->get_result()->fetch_assoc();
+
+        if (!$ticket) {
+            throw new Exception('Schedule not found or not assigned to you.');
+        }
+
+        $ticket_id = $ticket['ticket_id'];
+        $appliance_id = $ticket['Appliance_ID'] ?? 0;
+
+        // Update repairschedule
+        $stmt = $conn->prepare("UPDATE repairschedule SET Status = 'Completed' WHERE ID = ? AND Repairman_ID = ?");
+        $stmt->bind_param("si", $schedule_id, $repairman_id);
+        $stmt->execute();
+
+        // Update repairticket
+        $stmt = $conn->prepare("UPDATE repairticket SET Status = 'Completed' WHERE ID = ? AND Repairman_ID = ?");
+        $stmt->bind_param("ii", $ticket_id, $repairman_id);
+        $stmt->execute();
+
+        if (!$appliance_id) {
+            $stmt = $conn->prepare("SELECT ID FROM clientappliances WHERE Issue_ID = (SELECT ID FROM applianceissue WHERE Ticket_ID = ?)");
+            $stmt->bind_param("i", $ticket_id);
+            $stmt->execute();
+            $appliance = $stmt->get_result()->fetch_assoc();
+            $appliance_id = $appliance ? $appliance['ID'] : 0;
+        }
+
+        insertRecord('repairhistory', [
+            'Repairman_ID' => $repairman_id,
+            'Schedule_ID' => $schedule_id,
+            'Ticket_ID' => $ticket_id,
+            'ClientAppliances_ID' => $appliance_id,
+            'Status' => 'Completed'
+        ]);
+
+        commitTransaction();
         echo json_encode(["success" => true, "message" => "Schedule completed successfully."]);
-    } else {
-        http_response_code(404);
-        echo json_encode(["success" => false, "message" => "Schedule not found or not assigned to you."]);
+    } catch (Exception $e) {
+        rollbackTransaction();
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => $e->getMessage()]);
     }
 }
 

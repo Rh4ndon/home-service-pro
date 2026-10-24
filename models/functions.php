@@ -390,6 +390,7 @@ function getCustomerTickets($client_id)
     global $conn;
     $stmt = $conn->prepare("
         SELECT repairticket.ID as ticket_id, repairticket.Status as ticket_status, repairticket.Details as ticket_details,
+               repairticket.Type_Of_Service as type_of_service,
                repairticket.Repairman_ID as repairman_id,
                repairticket.Client_Lat, repairticket.Client_Lng, repairticket.Route_Distance_Km, repairticket.Route_Duration_Min,
                cp.Name as client_name, cp.Latitude as client_lat, cp.Longitude as client_lng,
@@ -433,7 +434,7 @@ function getBookingMedia($ticket_id)
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function createCustomerTicket($client_id, $appliance_type, $appliance_name, $make_brand, $year, $issue_desc, $date_time, $appliance_id = null, $repairman_id = null, $client_lat = null, $client_lng = null, $route_distance_km = null, $route_duration_min = null, $detailed_report = null)
+function createCustomerTicket($client_id, $appliance_type, $appliance_name, $make_brand, $year, $issue_desc, $date_time, $appliance_id = null, $repairman_id = null, $client_lat = null, $client_lng = null, $route_distance_km = null, $route_duration_min = null, $detailed_report = null, $type_of_service = 'Repair')
 {
     global $conn;
     startTransaction();
@@ -443,11 +444,21 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
             throw new Exception('The selected repairman is no longer available.');
         }
 
+        // Validate type_of_service
+        if (!in_array($type_of_service, ['Repair', 'Maintenance'])) {
+            $type_of_service = 'Repair';
+        }
+
+        // Get client name for notification
+        $client = getRecord('user_clientprofile', "ID = $client_id");
+        $client_name = $client ? $client['Name'] : 'Unknown Client';
+
         // 1. Insert ticket first (no schedule yet)
         $ticket_id = insertOrder('repairticket', [
             'Client_ID' => $client_id,
             'Status' => 'Open',
             'Details' => $issue_desc,
+            'Type_Of_Service' => $type_of_service,
             'Repairman_ID' => $repairman_id,
             'Client_Lat' => $client_lat,
             'Client_Lng' => $client_lng,
@@ -465,10 +476,18 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
 
         // 3. Link to an existing appliance, or create a new one
         $linked_appliance_id = null;
+        $final_appliance_name = $appliance_name;
+        $final_appliance_type = $appliance_type;
         if ($appliance_id) {
             $linked = linkApplianceToIssue($appliance_id, $client_id, $issue_id, $issue_desc);
             if (!$linked) throw new Exception('Selected appliance not found.');
             $linked_appliance_id = $appliance_id;
+            // Get the actual appliance details
+            $appliance = getRecord('clientappliances', "ID = $appliance_id");
+            if ($appliance) {
+                $final_appliance_name = $appliance['Name'];
+                $final_appliance_type = $appliance['Type'];
+            }
         } else {
             $linked_appliance_id = insertOrder('clientappliances', [
                 'Client_ID' => $client_id,
@@ -496,6 +515,35 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
         editRecord('repairticket', ['Schedule_ID' => $schedule_id], "ID = $ticket_id");
 
         commitTransaction();
+
+        // Send email notification to repairman if assigned
+        if ($repairman_id) {
+            $repairman = getRepairmanById($repairman_id);
+            if ($repairman && !empty($repairman['Email'])) {
+                // Parse date and time from date_time
+                $dt = new DateTime($date_time);
+                $preferred_date = $dt->format('M j, Y');
+                $preferred_time = $dt->format('g:i A');
+
+                // Include mailer and send notification
+                require_once __DIR__ . '/../controllers/mailer.php';
+                send_new_ticket_notification(
+                    $repairman['Email'],
+                    $repairman['Name'],
+                    $ticket_id,
+                    $client_name,
+                    $final_appliance_name,
+                    $final_appliance_type,
+                    $issue_desc,
+                    $preferred_date,
+                    $preferred_time,
+                    $type_of_service,
+                    $schedule_id,
+                    $client['Formatted_Address'] ?? ''
+                );
+            }
+        }
+
         return ['ticket_id' => $ticket_id, 'schedule_id' => $schedule_id];
     } catch (Exception $e) {
         rollbackTransaction();
@@ -515,9 +563,38 @@ function linkApplianceToIssue($appliance_id, $client_id, $issue_id, $issue_desc)
 function cancelCustomerTicket($ticket_id, $client_id)
 {
     global $conn;
-    $stmt = $conn->prepare("UPDATE repairticket SET Status='Cancelled' WHERE ID=? AND Client_ID=? AND Status NOT IN ('Completed','Cancelled')");
-    $stmt->bind_param("ii", $ticket_id, $client_id);
-    return $stmt->execute();
+    startTransaction();
+    try {
+        // Get schedule_id first
+        $stmt = $conn->prepare("SELECT Schedule_ID FROM repairticket WHERE ID = ? AND Client_ID = ?");
+        $stmt->bind_param("ii", $ticket_id, $client_id);
+        $stmt->execute();
+        $ticket = $stmt->get_result()->fetch_assoc();
+
+        if (!$ticket) {
+            throw new Exception('Ticket not found or not yours.');
+        }
+
+        $schedule_id = $ticket['Schedule_ID'] ?? null;
+
+        // Update repairticket
+        $stmt = $conn->prepare("UPDATE repairticket SET Status='Cancelled' WHERE ID=? AND Client_ID=? AND Status NOT IN ('Completed','Cancelled')");
+        $stmt->bind_param("ii", $ticket_id, $client_id);
+        $stmt->execute();
+
+        // Update repairschedule if exists
+        if ($schedule_id) {
+            $stmt = $conn->prepare("UPDATE repairschedule SET Status='Cancelled' WHERE ID=?");
+            $stmt->bind_param("i", $schedule_id);
+            $stmt->execute();
+        }
+
+        commitTransaction();
+        return true;
+    } catch (Exception $e) {
+        rollbackTransaction();
+        throw $e;
+    }
 }
 
 function completeCustomerTicket($ticket_id, $client_id)
@@ -744,6 +821,20 @@ function getRepairmanIdFromUser($user_id)
     return $result ? $result['ID'] : null;
 }
 
+function getRepairmanById($profile_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("
+        SELECT rp.*, u.Status AS UserStatus
+        FROM user_repairmanprofile rp 
+        LEFT JOIN users u ON u.ID = rp.User_ID
+        WHERE rp.ID = ?
+    ");
+    $stmt->bind_param("i", $profile_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
 function getRepairmanProfile($user_id)
 {
     global $conn;
@@ -802,7 +893,7 @@ function getRepairmanTickets($repairman_id)
 {
     global $conn;
     $stmt = $conn->prepare("
-        SELECT t.ID as ticket_id, t.Status as ticket_status, t.Details as ticket_details, 
+        SELECT t.ID as ticket_id, t.Status as ticket_status, t.Details as ticket_details,
                t.Client_ID as client_id,
                t.Client_Lat, t.Client_Lng, t.Route_Distance_Km, t.Route_Duration_Min,
                 cp.Name as client_name, cp.Latitude as client_lat, cp.Longitude as client_lng,
@@ -837,35 +928,47 @@ function completeRepairmanTicket($ticket_id, $repairman_id)
     global $conn;
     startTransaction();
     try {
+        // Get ticket details first (need Schedule_ID)
+        $stmt = $conn->prepare("SELECT Schedule_ID, Appliance_ID FROM repairticket WHERE ID = ? AND Repairman_ID = ?");
+        $stmt->bind_param("ii", $ticket_id, $repairman_id);
+        $stmt->execute();
+        $ticket = $stmt->get_result()->fetch_assoc();
+
+        if (!$ticket) {
+            throw new Exception('Ticket not found or not assigned to you.');
+        }
+
+        $schedule_id = $ticket['Schedule_ID'] ?? null;
+
+        // Update repairticket
         $stmt = $conn->prepare("UPDATE repairticket SET Status = 'Completed' WHERE ID = ? AND Repairman_ID = ?");
         $stmt->bind_param("ii", $ticket_id, $repairman_id);
         $stmt->execute();
 
-        // Get ticket details for history
-        $stmt = $conn->prepare("SELECT Client_ID, Schedule_ID, Appliance_ID FROM repairticket WHERE ID = ?");
-        $stmt->bind_param("i", $ticket_id);
-        $stmt->execute();
-        $ticket = $stmt->get_result()->fetch_assoc();
-
-        if ($ticket) {
-            // Get the appliance ID for this ticket (recorded on the ticket itself)
-            $appliance_id = $ticket['Appliance_ID'] ? $ticket['Appliance_ID'] : 0;
-            if (!$appliance_id) {
-                $stmt = $conn->prepare("SELECT ID FROM clientappliances WHERE Issue_ID = (SELECT ID FROM applianceissue WHERE Ticket_ID = ?)");
-                $stmt->bind_param("i", $ticket_id);
-                $stmt->execute();
-                $appliance = $stmt->get_result()->fetch_assoc();
-                $appliance_id = $appliance ? $appliance['ID'] : 0;
-            }
-
-            insertRecord('repairhistory', [
-                'Repairman_ID' => $repairman_id,
-                'Schedule_ID' => $ticket['Schedule_ID'],
-                'Ticket_ID' => $ticket_id,
-                'ClientAppliances_ID' => $appliance_id,
-                'Status' => 'Completed'
-            ]);
+        // Update repairschedule if exists
+        if ($schedule_id) {
+            $stmt = $conn->prepare("UPDATE repairschedule SET Status = 'Completed' WHERE ID = ?");
+            $stmt->bind_param("i", $schedule_id);
+            $stmt->execute();
         }
+
+        // Get the appliance ID for this ticket (recorded on the ticket itself)
+        $appliance_id = $ticket['Appliance_ID'] ? $ticket['Appliance_ID'] : 0;
+        if (!$appliance_id) {
+            $stmt = $conn->prepare("SELECT ID FROM clientappliances WHERE Issue_ID = (SELECT ID FROM applianceissue WHERE Ticket_ID = ?)");
+            $stmt->bind_param("i", $ticket_id);
+            $stmt->execute();
+            $appliance = $stmt->get_result()->fetch_assoc();
+            $appliance_id = $appliance ? $appliance['ID'] : 0;
+        }
+
+        insertRecord('repairhistory', [
+            'Repairman_ID' => $repairman_id,
+            'Schedule_ID' => $schedule_id,
+            'Ticket_ID' => $ticket_id,
+            'ClientAppliances_ID' => $appliance_id,
+            'Status' => 'Completed'
+        ]);
 
         commitTransaction();
         return true;
@@ -885,7 +988,8 @@ function getRepairmanSchedule($repairman_id)
                cp.Name as client_name, t.ID as ticket_id, t.Details as ticket_details,
                 ca.Name as appliance_name, ca.Type as appliance_type, 
                 ai.Issue as issue, ai.Details as issue_details,
-                CONCAT_WS(', ', cp.Address_Line1, cp.City_Min, cp.Province) as client_address
+                cp.Formatted_Address as client_formatted_address,
+               CONCAT_WS(', ', cp.Address_Line1, cp.City_Min, cp.Province) as client_address
          FROM repairschedule rs 
          LEFT JOIN user_clientprofile cp ON rs.Client_ID = cp.ID 
          LEFT JOIN users cu ON cu.ID = cp.User_ID
@@ -1280,13 +1384,18 @@ function getAdminTicketById($id)
 {
     global $conn;
     $stmt = $conn->prepare("
-        SELECT repairticket.*, user_clientprofile.Name AS ClientName, user_clientprofile.Email AS ClientEmail,
+        SELECT repairticket.*, 
+               user_clientprofile.Name AS ClientName, user_clientprofile.Email AS ClientEmail,
+               user_clientprofile.Formatted_Address,
                user_repairmanprofile.Name AS RepairmanName, user_repairmanprofile.Email AS RepairmanEmail,
-               repairschedule.Date_Time AS ScheduleDate, repairschedule.Status AS ScheduleStatus
+               repairschedule.Date_Time AS ScheduleDate, repairschedule.Status AS ScheduleStatus,
+               clientappliances.Name AS ApplianceName, clientappliances.Type AS ApplianceType
         FROM repairticket 
         LEFT JOIN user_clientprofile ON repairticket.Client_ID = user_clientprofile.ID 
         LEFT JOIN user_repairmanprofile ON repairticket.Repairman_ID = user_repairmanprofile.ID 
         LEFT JOIN repairschedule ON repairticket.Schedule_ID = repairschedule.ID 
+        LEFT JOIN applianceissue ON applianceissue.Ticket_ID = repairticket.ID
+        LEFT JOIN clientappliances ON clientappliances.ID = COALESCE(repairticket.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = applianceissue.ID LIMIT 1))
         WHERE repairticket.ID = ?
     ");
     $stmt->bind_param("i", $id);
@@ -1299,15 +1408,39 @@ function reassignAdminTicket($ticket_id, $new_repairman_id)
     global $conn;
     $stmt = $conn->prepare("UPDATE repairticket SET Repairman_ID=? WHERE ID=?");
     $stmt->bind_param("ii", $new_repairman_id, $ticket_id);
+    $stmt->execute();
+
+    // Also update repairschedule
+    $stmt = $conn->prepare("UPDATE repairschedule rs JOIN repairticket rt ON rs.ID = rt.Schedule_ID SET rs.Repairman_ID=? WHERE rt.ID=?");
+    $stmt->bind_param("ii", $new_repairman_id, $ticket_id);
     return $stmt->execute();
 }
 
 function closeAdminTicket($ticket_id)
 {
     global $conn;
+    $stmt = $conn->prepare("SELECT Schedule_ID FROM repairticket WHERE ID = ?");
+    $stmt->bind_param("i", $ticket_id);
+    $stmt->execute();
+    $ticket = $stmt->get_result()->fetch_assoc();
+
+    if (!$ticket) {
+        return false;
+    }
+
+    $schedule_id = $ticket['Schedule_ID'] ?? null;
+
     $stmt = $conn->prepare("UPDATE repairticket SET Status='Completed' WHERE ID=?");
     $stmt->bind_param("i", $ticket_id);
-    return $stmt->execute();
+    $stmt->execute();
+
+    if ($schedule_id) {
+        $stmt = $conn->prepare("UPDATE repairschedule SET Status='Completed' WHERE ID=?");
+        $stmt->bind_param("i", $schedule_id);
+        $stmt->execute();
+    }
+
+    return true;
 }
 
 // ==========================================

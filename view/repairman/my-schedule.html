@@ -298,6 +298,7 @@
         if (s === 'completed') return { cls: 'badge-success', label: 'Completed' };
         if (s === 'pending') return { cls: 'badge-warning', label: 'Pending' };
         if (s === 'declined') return { cls: 'badge-danger', label: 'Declined' };
+        if (s === 'cancelled') return { cls: 'badge-danger', label: 'Cancelled' };
         return { cls: 'badge-neutral', label: status || 'Unknown' };
       }
 
@@ -305,6 +306,12 @@
         var s = (item.schedule_status || '').toLowerCase();
         if (s === 'completed') {
           return '<button class="btn btn-secondary btn-sm" onclick="viewScheduleDetail(this)">View</button>';
+        }
+        if (s === 'cancelled') {
+          return '<span class="btn btn-secondary btn-sm" style="pointer-events:none;opacity:0.7;">Cancelled</span>';
+        }
+        if (s === 'declined') {
+          return '<span class="btn btn-danger btn-sm" style="pointer-events:none;opacity:0.7;">Declined</span>';
         }
         if (s === 'in_progress' || s === 'progress') {
           return '<a href="chat.html" class="btn btn-primary btn-sm">Chat</a>' +
@@ -485,7 +492,7 @@
                 '<td data-label="Client">' + escHtml(item.client_name || '') + '</td>' +
                 '<td data-label="Appliance">' + escHtml(item.appliance_name || '') + '</td>' +
                 '<td data-label="Issue">' + escHtml(item.issue || '') + '</td>' +
-                '<td data-label="Address">' + escHtml(item.client_address || '') + '</td>' +
+                '<td data-label="Address">' + escHtml(item.client_formatted_address || item.client_address || '') + '</td>' +
                 '<td data-label="Status"><span class="badge ' + st.cls + '">' + st.label + '</span></td>' +
                 '<td data-label="Actions" class="action-btns">' + buildActionBtns(item) + '</td></tr>';
             }).join('');

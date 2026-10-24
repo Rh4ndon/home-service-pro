@@ -152,6 +152,7 @@
                 <th>Client</th>
                 <th>Appliance</th>
                 <th>Issue</th>
+                <th>Type</th>
                 <th>Date Opened</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -177,6 +178,7 @@
           <div><strong>Date Opened:</strong> <span id="viewTicketDate">—</span></div>
           <div><strong>Appliance:</strong> <span id="viewTicketAppliance">—</span></div>
           <div><strong>Status:</strong> <span id="viewTicketStatus">—</span></div>
+          <div><strong>Type of Service:</strong> <span id="viewTicketTypeOfService">—</span></div>
         </div>
         <div style="margin-bottom: 14px;">
           <strong>Issue Description:</strong>
@@ -472,6 +474,9 @@
         document.getElementById('viewTicketAppliance').textContent = (ticket.appliance_name || '') + (ticket.appliance_type ? ' (' + ticket.appliance_type + ')' : '');
         var st = getStatusMap(ticket.ticket_status || ticket.status);
         document.getElementById('viewTicketStatus').innerHTML = '<span class="badge ' + st.cls + '">' + st.label + '</span>';
+        var typeOfService = ticket.type_of_service || 'Repair';
+        var typeBadgeClass = typeOfService === 'Maintenance' ? 'badge-info' : 'badge-warning';
+        document.getElementById('viewTicketTypeOfService').innerHTML = '<span class="badge ' + typeBadgeClass + '">' + typeOfService + '</span>';
         document.getElementById('viewTicketIssue').textContent = ticket.issue || ticket.issue_details || ticket.ticket_details || '—';
         
         var detailsParts = [];
@@ -601,10 +606,13 @@
             counts[st.ds]++;
             var row = document.createElement('tr');
             row.setAttribute('data-status', st.ds);
+            var typeOfService = t.type_of_service || 'Repair';
+            var typeBadgeClass = typeOfService === 'Maintenance' ? 'badge-info' : 'badge-warning';
             row.innerHTML = '<td data-label="Ticket ID">#' + (t.ticket_id || t.id || '') + '</td>' +
               '<td data-label="Client">' + (t.client_name || '') + '</td>' +
               '<td data-label="Appliance">' + (t.appliance_name || t.appliance || '') + '</td>' +
               '<td data-label="Issue">' + (t.issue || t.description || '') + '</td>' +
+              '<td data-label="Type"><span class="badge ' + typeBadgeClass + '">' + typeOfService + '</span></td>' +
               '<td data-label="Date">' + (t.schedule_date || t.date_opened || t.created_at || '') + '</td>' +
               '<td data-label="Status"><span class="badge ' + st.cls + '">' + st.label + '</span></td>' +
               '<td data-label="Actions" class="action-btns">' + buildActionBtns(t) + '</td>';
