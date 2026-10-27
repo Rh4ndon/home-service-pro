@@ -22,6 +22,22 @@ if ($method === 'GET') {
 
     $messages = [];
     foreach ($raw_messages as $row) {
+        $message_type = $row['Message_Type'] ?? 'text';
+        $reference_id = isset($row['Reference_ID']) && $row['Reference_ID'] !== null ? (int)$row['Reference_ID'] : null;
+        $estimate = null;
+        if ($message_type === 'estimate' && $reference_id) {
+            $estimate = getLatestRepairEstimate($reference_id);
+            if ($estimate) {
+                $estimate['Ticket_ID'] = (int)$estimate['Ticket_ID'];
+                $estimate['Schedule_ID'] = $estimate['Schedule_ID'] !== null ? (int)$estimate['Schedule_ID'] : null;
+                $estimate['Repairman_ID'] = (int)$estimate['Repairman_ID'];
+                $estimate['Total'] = (float)($estimate['Total'] ?? 0);
+                if (!isset($estimate['Items']) || !is_array($estimate['Items'])) {
+                    $estimate['Items'] = [];
+                }
+            }
+        }
+
         $messages[] = [
             'id'            => (int)$row['ID'],
             'sender_id'     => (int)$row['Sender_ID'],
@@ -29,6 +45,9 @@ if ($method === 'GET') {
             'receiver_id'   => (int)$row['Receiver_ID'],
             'receiver_role' => $row['Receiver_Role'],
             'message'       => $row['Message'],
+            'message_type'  => $message_type,
+            'reference_id'  => $reference_id,
+            'estimate'      => $estimate,
             'is_read'       => (int)$row['Is_Read'],
             'created_at'    => $row['Created_At'],
         ];

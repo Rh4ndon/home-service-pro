@@ -115,6 +115,12 @@ function send_new_ticket_notification($repairman_email, $repairman_name, $ticket
         ? '<span style="background:#3b82f6;color:#fff;padding:4px 8px;border-radius:4px;font-size:12px;">Maintenance</span>'
         : '<span style="background:#f59e0b;color:#fff;padding:4px 8px;border-radius:4px;font-size:12px;">Repair</span>';
 
+    // The appliance name already contains the type when it is built from make + type.
+    $appliance_display = $appliance_name;
+    if ($appliance_type !== '' && stripos($appliance_name, $appliance_type) === false) {
+        $appliance_display .= ' (' . $appliance_type . ')';
+    }
+
     $message = '
         <h3>' . $greeting . '</h3>
         <p>' . htmlspecialchars($intro, ENT_QUOTES, 'UTF-8') . '</p>
@@ -123,7 +129,7 @@ function send_new_ticket_notification($repairman_email, $repairman_name, $ticket
             <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Type of Service</td><td style="padding:8px;border:1px solid #ddd;">' . $type_badge . '</td></tr>
             <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Client</td><td style="padding:8px;border:1px solid #ddd;">' . htmlspecialchars($client_name, ENT_QUOTES, 'UTF-8') . '</td></tr>
             <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Client Address</td><td style="padding:8px;border:1px solid #ddd;">' . htmlspecialchars($client_address, ENT_QUOTES, 'UTF-8') . '</td></tr>
-            <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Appliance</td><td style="padding:8px;border:1px solid #ddd;">' . htmlspecialchars($appliance_name, ENT_QUOTES, 'UTF-8') . ' (' . htmlspecialchars($appliance_type, ENT_QUOTES, 'UTF-8') . ')</td></tr>
+            <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Appliance</td><td style="padding:8px;border:1px solid #ddd;">' . htmlspecialchars($appliance_display, ENT_QUOTES, 'UTF-8') . '</td></tr>
             <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Issue</td><td style="padding:8px;border:1px solid #ddd;">' . htmlspecialchars($issue_desc, ENT_QUOTES, 'UTF-8') . '</td></tr>
             <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Preferred Date</td><td style="padding:8px;border:1px solid #ddd;">' . $preferred_date . '</td></tr>
             <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold;">Preferred Time</td><td style="padding:8px;border:1px solid #ddd;">' . $preferred_time . '</td></tr>
@@ -138,7 +144,7 @@ function send_new_ticket_notification($repairman_email, $repairman_name, $ticket
         . "Type of Service: $type_of_service\n"
         . "Client: $client_name\n"
         . "Client Address: $client_address\n"
-        . "Appliance: $appliance_name ($appliance_type)\n"
+        . "Appliance: $appliance_display\n"
         . "Issue: $issue_desc\n"
         . "Preferred Date: $preferred_date\n"
         . "Preferred Time: $preferred_time\n\n"

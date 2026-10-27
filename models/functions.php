@@ -360,20 +360,22 @@ function getCustomerAppliances($client_id)
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function addCustomerAppliance($client_id, $type, $name, $make, $year, $details)
+function addCustomerAppliance($client_id, $type, $make, $year, $details)
 {
     global $conn;
-    $stmt = $conn->prepare("INSERT INTO clientappliances (Client_ID, Type, Name, Make, Year, Details) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("isssis", $client_id, $type, $name, $make, $year, $details);
+    $year = ($year === null || $year === '') ? null : (int) $year;
+    $stmt = $conn->prepare("INSERT INTO clientappliances (Client_ID, Type, Make, Year, Details) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("issis", $client_id, $type, $make, $year, $details);
     $stmt->execute();
     return $conn->insert_id;
 }
 
-function updateCustomerAppliance($id, $client_id, $type, $name, $make, $year, $details)
+function updateCustomerAppliance($id, $client_id, $type, $make, $year, $details)
 {
     global $conn;
-    $stmt = $conn->prepare("UPDATE clientappliances SET Type=?, Name=?, Make=?, Year=?, Details=? WHERE ID=? AND Client_ID=?");
-    $stmt->bind_param("sssssii", $type, $name, $make, $year, $details, $id, $client_id);
+    $year = ($year === null || $year === '') ? null : (int) $year;
+    $stmt = $conn->prepare("UPDATE clientappliances SET Type=?, Make=?, Year=?, Details=? WHERE ID=? AND Client_ID=?");
+    $stmt->bind_param("ssisii", $type, $make, $year, $details, $id, $client_id);
     return $stmt->execute();
 }
 
@@ -396,7 +398,11 @@ function getCustomerTickets($client_id)
                cp.Name as client_name, cp.Latitude as client_lat, cp.Longitude as client_lng,
                cp.Formatted_Address as client_formatted_address,
                cp.Address_Line1, cp.Address_Line2, cp.Brgy, cp.City_Min, cp.Province,
-               ca.Name as appliance_name, ca.Type as appliance_type, ca.Make as appliance_make, ca.Year as appliance_year,
+               CONCAT_WS(' ', NULLIF(ca.Make, ''), NULLIF(ca.Type, '')) as appliance_name,
+               ca.Type as appliance_type, ca.Make as appliance_make, ca.Year as appliance_year,
+               re.ID as estimate_id, re.Appliance_Name as estimate_appliance_name,
+               re.Created_At as estimate_created_at,
+               (SELECT COALESCE(SUM(rei.Price), 0) FROM repair_estimate_items rei WHERE rei.Estimate_ID = re.ID) as estimate_total,
                ai.Issue as issue, ai.Details as issue_details, ai.Detailed_Report as detailed_report,
 rs.Date_Time as schedule_date, rs.Status as schedule_status,
                 urp.Name as repairman_name,
@@ -408,6 +414,7 @@ rs.Date_Time as schedule_date, rs.Status as schedule_status,
         LEFT JOIN user_repairmanprofile urp ON repairticket.Repairman_ID = urp.ID
         LEFT JOIN applianceissue ai ON repairticket.ID = ai.Ticket_ID
         LEFT JOIN clientappliances ca ON ca.ID = COALESCE(repairticket.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = ai.ID LIMIT 1))
+        LEFT JOIN repair_estimates re ON re.ID = (SELECT MAX(re2.ID) FROM repair_estimates re2 WHERE re2.Ticket_ID = repairticket.ID)
         LEFT JOIN customer_reviews cr ON cr.Ticket_ID = repairticket.ID
         WHERE repairticket.Client_ID = ?
         ORDER BY repairticket.ID DESC
@@ -434,7 +441,7 @@ function getBookingMedia($ticket_id)
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
-function createCustomerTicket($client_id, $appliance_type, $appliance_name, $make_brand, $year, $issue_desc, $date_time, $appliance_id = null, $repairman_id = null, $client_lat = null, $client_lng = null, $route_distance_km = null, $route_duration_min = null, $detailed_report = null, $type_of_service = 'Repair')
+function createCustomerTicket($client_id, $appliance_type, $make_brand, $issue_desc, $date_time, $appliance_id = null, $repairman_id = null, $client_lat = null, $client_lng = null, $route_distance_km = null, $route_duration_min = null, $detailed_report = null, $type_of_service = 'Repair', $year = null)
 {
     global $conn;
     startTransaction();
@@ -448,6 +455,9 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
         if (!in_array($type_of_service, ['Repair', 'Maintenance'])) {
             $type_of_service = 'Repair';
         }
+
+        // Year is optional; keep it NULL when the customer leaves it blank.
+        $year = ($year === null || $year === '') ? null : (int) $year;
 
         // Get client name for notification
         $client = getRecord('user_clientprofile', "ID = $client_id");
@@ -476,7 +486,7 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
 
         // 3. Link to an existing appliance, or create a new one
         $linked_appliance_id = null;
-        $final_appliance_name = $appliance_name;
+        $final_appliance_name = trim($make_brand . ' ' . $appliance_type);
         $final_appliance_type = $appliance_type;
         if ($appliance_id) {
             $linked = linkApplianceToIssue($appliance_id, $client_id, $issue_id, $issue_desc);
@@ -485,14 +495,13 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
             // Get the actual appliance details
             $appliance = getRecord('clientappliances', "ID = $appliance_id");
             if ($appliance) {
-                $final_appliance_name = $appliance['Name'];
+                $final_appliance_name = trim($appliance['Make'] . ' ' . $appliance['Type']);
                 $final_appliance_type = $appliance['Type'];
             }
         } else {
             $linked_appliance_id = insertOrder('clientappliances', [
                 'Client_ID' => $client_id,
                 'Type' => $appliance_type,
-                'Name' => $appliance_name,
                 'Make' => $make_brand,
                 'Year' => $year,
                 'Details' => $issue_desc,
@@ -549,6 +558,148 @@ function createCustomerTicket($client_id, $appliance_type, $appliance_name, $mak
         rollbackTransaction();
         throw $e;
     }
+}
+
+function getRepairScheduleDetails($schedule_id, $repairman_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("
+        SELECT rs.ID as schedule_id, rs.Status as schedule_status, rs.Date_Time as schedule_date,
+               rt.ID as ticket_id, rt.Status as ticket_status, rt.Client_ID, rt.Appliance_ID,
+               rt.Type_Of_Service as type_of_service,
+               cp.User_ID as client_user_id, cp.Name as client_name,
+               CONCAT_WS(' ', NULLIF(ca.Make, ''), NULLIF(ca.Type, '')) as appliance_name,
+               ca.Type as appliance_type, ca.Make as appliance_make,
+               ai.Issue as issue, ai.Details as issue_details
+        FROM repairschedule rs
+        INNER JOIN repairticket rt ON rt.Schedule_ID = rs.ID
+        LEFT JOIN user_clientprofile cp ON cp.ID = rs.Client_ID
+        LEFT JOIN applianceissue ai ON ai.Ticket_ID = rt.ID
+        LEFT JOIN clientappliances ca ON ca.ID = COALESCE(rt.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = ai.ID LIMIT 1))
+        WHERE rs.ID = ? AND rs.Repairman_ID = ?
+        LIMIT 1
+    ");
+    $stmt->bind_param("ii", $schedule_id, $repairman_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
+function createRepairEstimate($ticket_id, $schedule_id, $repairman_id, $appliance_name)
+{
+    global $conn;
+    $stmt = $conn->prepare("INSERT INTO repair_estimates (Ticket_ID, Schedule_ID, Repairman_ID, Appliance_Name) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("iiis", $ticket_id, $schedule_id, $repairman_id, $appliance_name);
+    $stmt->execute();
+    return $conn->insert_id;
+}
+
+function addRepairEstimateItem($estimate_id, $materials, $service, $price, $sort_order = 0)
+{
+    global $conn;
+    $stmt = $conn->prepare("INSERT INTO repair_estimate_items (Estimate_ID, Materials, Service, Price, Sort_Order) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("issdi", $estimate_id, $materials, $service, $price, $sort_order);
+    $stmt->execute();
+    return $conn->insert_id;
+}
+
+function getLatestRepairEstimate($ticket_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM repair_estimates WHERE Ticket_ID = ? ORDER BY ID DESC LIMIT 1");
+    $stmt->bind_param("i", $ticket_id);
+    $stmt->execute();
+    $estimate = $stmt->get_result()->fetch_assoc();
+    if (!$estimate) return null;
+
+    $stmt = $conn->prepare("SELECT * FROM repair_estimate_items WHERE Estimate_ID = ? ORDER BY Sort_Order ASC, ID ASC");
+    $stmt->bind_param("i", $estimate['ID']);
+    $stmt->execute();
+    $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    $total = 0;
+    foreach ($items as &$item) {
+        $item['Price'] = (float)$item['Price'];
+        $total += $item['Price'];
+    }
+    unset($item);
+
+    $estimate['Items'] = $items;
+    $estimate['Total'] = $total;
+    return $estimate;
+}
+
+function getRepairEstimateBySchedule($schedule_id, $repairman_id)
+{
+    global $conn;
+    // Get the latest estimate for this schedule/repairman
+    $stmt = $conn->prepare("SELECT re.* FROM repair_estimates re WHERE re.Schedule_ID = ? AND re.Repairman_ID = ? ORDER BY re.ID DESC LIMIT 1");
+    $stmt->bind_param("ii", $schedule_id, $repairman_id);
+    $stmt->execute();
+    $estimate = $stmt->get_result()->fetch_assoc();
+    if (!$estimate) return null;
+
+    $stmt = $conn->prepare("SELECT * FROM repair_estimate_items WHERE Estimate_ID = ? ORDER BY Sort_Order ASC, ID ASC");
+    $stmt->bind_param("i", $estimate['ID']);
+    $stmt->execute();
+    $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    $total = 0;
+    foreach ($items as &$item) {
+        $item['Price'] = (float)$item['Price'];
+        $total += $item['Price'];
+    }
+    unset($item);
+
+    $estimate['Items'] = $items;
+    $estimate['Total'] = $total;
+    return $estimate;
+}
+
+function updateRepairEstimate($estimate_id, $repairman_id, $line_items)
+{
+    global $conn;
+    // Verify the estimate belongs to this repairman
+    $stmt = $conn->prepare("SELECT ID FROM repair_estimates WHERE ID = ? AND Repairman_ID = ?");
+    $stmt->bind_param("ii", $estimate_id, $repairman_id);
+    $stmt->execute();
+    if (!$stmt->get_result()->fetch_assoc()) {
+        throw new Exception('Estimate not found or access denied.');
+    }
+
+    startTransaction();
+    try {
+        // Delete existing items
+        $stmt = $conn->prepare("DELETE FROM repair_estimate_items WHERE Estimate_ID = ?");
+        $stmt->bind_param("i", $estimate_id);
+        $stmt->execute();
+
+        // Add new items
+        foreach ($line_items as $index => $item) {
+            addRepairEstimateItem($estimate_id, $item['materials'], $item['service'], $item['price'], $index);
+        }
+
+        commitTransaction();
+        return true;
+    } catch (Exception $e) {
+        rollbackTransaction();
+        throw $e;
+    }
+}
+
+function deleteRepairEstimateItem($item_id, $repairman_id)
+{
+    global $conn;
+    // Verify the item belongs to an estimate owned by this repairman
+    $stmt = $conn->prepare("SELECT rei.ID FROM repair_estimate_items rei JOIN repair_estimates re ON rei.Estimate_ID = re.ID WHERE rei.ID = ? AND re.Repairman_ID = ?");
+    $stmt->bind_param("ii", $item_id, $repairman_id);
+    $stmt->execute();
+    if (!$stmt->get_result()->fetch_assoc()) {
+        throw new Exception('Estimate item not found or access denied.');
+    }
+
+    $stmt = $conn->prepare("DELETE FROM repair_estimate_items WHERE ID = ?");
+    $stmt->bind_param("i", $item_id);
+    return $stmt->execute();
 }
 
 function linkApplianceToIssue($appliance_id, $client_id, $issue_id, $issue_desc)
@@ -756,10 +907,11 @@ function getCustomerDashboardStats($client_id)
 
     // Recent tickets
     $stmt = $conn->prepare("
-        SELECT repairticket.*, applianceissue.Issue, clientappliances.Name AS ApplianceName 
+        SELECT repairticket.*, applianceissue.Issue,
+               CONCAT_WS(' ', NULLIF(clientappliances.Make, ''), NULLIF(clientappliances.Type, '')) AS ApplianceName
         FROM repairticket 
         LEFT JOIN applianceissue ON applianceissue.Ticket_ID = repairticket.ID 
-        LEFT JOIN clientappliances ON clientappliances.Issue_ID = applianceissue.ID 
+        LEFT JOIN clientappliances ON clientappliances.ID = COALESCE(repairticket.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = applianceissue.ID LIMIT 1))
         WHERE repairticket.Client_ID = ? 
         ORDER BY repairticket.ID DESC LIMIT 5
     ");
@@ -899,13 +1051,18 @@ function getRepairmanTickets($repairman_id)
                 cp.Name as client_name, cp.Latitude as client_lat, cp.Longitude as client_lng,
                 cp.Formatted_Address as client_formatted_address,
                 cp.Address_Line1, cp.Address_Line2, cp.Brgy, cp.City_Min, cp.Province,
-                ca.Name as appliance_name, ca.Type as appliance_type, ca.Make as appliance_make, ca.Year as appliance_year,
+                CONCAT_WS(' ', NULLIF(ca.Make, ''), NULLIF(ca.Type, '')) as appliance_name,
+                ca.Type as appliance_type, ca.Make as appliance_make, ca.Year as appliance_year,
+                re.ID as estimate_id, re.Appliance_Name as estimate_appliance_name,
+                re.Created_At as estimate_created_at,
+                (SELECT COALESCE(SUM(rei.Price), 0) FROM repair_estimate_items rei WHERE rei.Estimate_ID = re.ID) as estimate_total,
                 ai.Issue as issue, ai.Details as issue_details, ai.Detailed_Report as detailed_report,
                  rs.Date_Time as schedule_date, rs.Status as schedule_status
         FROM repairticket t 
         LEFT JOIN user_clientprofile cp ON t.Client_ID = cp.ID 
         LEFT JOIN applianceissue ai ON t.ID = ai.Ticket_ID 
         LEFT JOIN clientappliances ca ON ca.ID = COALESCE(t.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = ai.ID LIMIT 1))
+        LEFT JOIN repair_estimates re ON re.ID = (SELECT MAX(re2.ID) FROM repair_estimates re2 WHERE re2.Ticket_ID = t.ID)
         LEFT JOIN repairschedule rs ON t.Schedule_ID = rs.ID 
         WHERE t.Repairman_ID = ? 
         ORDER BY t.ID DESC
@@ -986,16 +1143,19 @@ function getRepairmanSchedule($repairman_id)
                rs.Client_ID as client_id,
                cu.ID as client_user_id,
                cp.Name as client_name, t.ID as ticket_id, t.Details as ticket_details,
-                ca.Name as appliance_name, ca.Type as appliance_type, 
+                CONCAT_WS(' ', NULLIF(ca.Make, ''), NULLIF(ca.Type, '')) as appliance_name,
+                ca.Type as appliance_type, ca.Make as appliance_make,
                 ai.Issue as issue, ai.Details as issue_details,
                 cp.Formatted_Address as client_formatted_address,
-               CONCAT_WS(', ', cp.Address_Line1, cp.City_Min, cp.Province) as client_address
+               CONCAT_WS(', ', cp.Address_Line1, cp.City_Min, cp.Province) as client_address,
+               re.ID as estimate_id
          FROM repairschedule rs 
          LEFT JOIN user_clientprofile cp ON rs.Client_ID = cp.ID 
          LEFT JOIN users cu ON cu.ID = cp.User_ID
          LEFT JOIN repairticket t ON rs.ID = t.Schedule_ID
         LEFT JOIN applianceissue ai ON t.ID = ai.Ticket_ID 
         LEFT JOIN clientappliances ca ON ca.ID = COALESCE(t.Appliance_ID, (SELECT ca2.ID FROM clientappliances ca2 WHERE ca2.Issue_ID = ai.ID LIMIT 1))
+        LEFT JOIN repair_estimates re ON re.ID = (SELECT MAX(re2.ID) FROM repair_estimates re2 WHERE re2.Schedule_ID = rs.ID)
         WHERE rs.Repairman_ID = ? 
         ORDER BY rs.Date_Time DESC
     ");
@@ -1042,7 +1202,7 @@ function getRepairmanDashboardStats($repairman_id)
     // Today's schedule
     $stmt = $conn->prepare("
         SELECT rs.ID as schedule_id, rs.Date_Time as schedule_date, rs.Status as schedule_status, 
-               cp.Name as client_name, ca.Name as appliance_name, ai.Issue as issue
+               cp.Name as client_name, CONCAT_WS(' ', NULLIF(ca.Make, ''), NULLIF(ca.Type, '')) as appliance_name, ai.Issue as issue
         FROM repairschedule rs 
         LEFT JOIN user_clientprofile cp ON rs.Client_ID = cp.ID 
         LEFT JOIN repairticket t ON rs.ID = t.Schedule_ID 
@@ -1083,7 +1243,8 @@ function getRepairmanHistory($repairman_id, $date_from = null, $date_to = null, 
 
     $sql = "SELECT rh.ID as history_id, rh.Date as repair_date, rh.Status as repair_status, 
                    rs.Date_Time as schedule_date, t.ID as ticket_id, t.Details as ticket_details,
-                   ca.Name as appliance_name, ca.Type as appliance_type, 
+                   CONCAT_WS(' ', NULLIF(ca.Make, ''), NULLIF(ca.Type, '')) as appliance_name,
+                   ca.Type as appliance_type,
                ai.Issue as issue, ai.Details as issue_details, ai.Detailed_Report as detailed_report,
                    cp.Name as client_name, cp.Email as client_email
             FROM repairhistory rh 
@@ -1363,7 +1524,8 @@ function getAdminTickets($status = null)
     global $conn;
     $with = "repairticket.*, user_clientprofile.Name AS ClientName, 
                    user_repairmanprofile.Name AS RepairmanName, repairschedule.Date_Time,
-                   clientappliances.Name AS ApplianceName, clientappliances.Type AS ApplianceType";
+                   CONCAT_WS(' ', NULLIF(clientappliances.Make, ''), NULLIF(clientappliances.Type, '')) AS ApplianceName,
+                   clientappliances.Type AS ApplianceType";
     $from = " FROM repairticket 
             LEFT JOIN user_clientprofile ON repairticket.Client_ID = user_clientprofile.ID 
             LEFT JOIN user_repairmanprofile ON repairticket.Repairman_ID = user_repairmanprofile.ID 
@@ -1389,7 +1551,8 @@ function getAdminTicketById($id)
                user_clientprofile.Formatted_Address,
                user_repairmanprofile.Name AS RepairmanName, user_repairmanprofile.Email AS RepairmanEmail,
                repairschedule.Date_Time AS ScheduleDate, repairschedule.Status AS ScheduleStatus,
-               clientappliances.Name AS ApplianceName, clientappliances.Type AS ApplianceType
+               CONCAT_WS(' ', NULLIF(clientappliances.Make, ''), NULLIF(clientappliances.Type, '')) AS ApplianceName,
+               clientappliances.Type AS ApplianceType
         FROM repairticket 
         LEFT JOIN user_clientprofile ON repairticket.Client_ID = user_clientprofile.ID 
         LEFT JOIN user_repairmanprofile ON repairticket.Repairman_ID = user_repairmanprofile.ID 
@@ -1501,11 +1664,11 @@ function markChatMessagesRead($user_id, $user_role, $contact_id, $contact_role)
     return $stmt->execute();
 }
 
-function sendChatMessage($sender_id, $sender_role, $receiver_id, $receiver_role, $message)
+function sendChatMessage($sender_id, $sender_role, $receiver_id, $receiver_role, $message, $message_type = 'text', $reference_id = null)
 {
     global $conn;
-    $stmt = $conn->prepare("INSERT INTO chat_messages (Sender_ID, Sender_Role, Receiver_ID, Receiver_Role, Message) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("issss", $sender_id, $sender_role, $receiver_id, $receiver_role, $message);
+    $stmt = $conn->prepare("INSERT INTO chat_messages (Sender_ID, Sender_Role, Receiver_ID, Receiver_Role, Message, Message_Type, Reference_ID) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isssssi", $sender_id, $sender_role, $receiver_id, $receiver_role, $message, $message_type, $reference_id);
     $stmt->execute();
     return $conn->insert_id;
 }

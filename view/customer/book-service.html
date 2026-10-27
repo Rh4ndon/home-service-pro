@@ -127,35 +127,28 @@
           </div>
 
           <div id="newApplianceFields" style="display:none;">
-            <div class="grid-2">
-              <div class="form-group">
-                <label for="applianceType">Appliance Type</label>
-                <select id="applianceType">
-                  <option value="">Select appliance type...</option>
-                  <option value="refrigerator">Refrigerator</option>
-                  <option value="washing-machine">Washing Machine</option>
-                  <option value="air-conditioner">Air Conditioner</option>
-                  <option value="microwave">Microwave</option>
-                  <option value="oven">Oven / Stove</option>
-                  <option value="dishwasher">Dishwasher</option>
-                  <option value="electric-fan">Electric Fan</option>
-                  <option value="water-heater">Water Heater</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="applianceName">Appliance Name</label>
-                <input type="text" id="applianceName" placeholder="e.g. Samsung RT38 Refrigerator" />
-              </div>
+            <div class="form-group">
+              <label for="applianceType">Appliance Type</label>
+              <select id="applianceType">
+                <option value="">Select appliance type...</option>
+                <option value="refrigerator">Refrigerator</option>
+                <option value="washing-machine">Washing Machine</option>
+                <option value="air-conditioner">Air Conditioner</option>
+                <option value="microwave">Microwave</option>
+                <option value="oven">Oven / Stove</option>
+                <option value="dishwasher">Dishwasher</option>
+                <option value="electric-fan">Electric Fan</option>
+                <option value="water-heater">Water Heater</option>
+                <option value="other">Other</option>
+              </select>
             </div>
-
             <div class="grid-2">
               <div class="form-group">
                 <label for="makeBrand">Make / Brand</label>
                 <input type="text" id="makeBrand" placeholder="e.g. Samsung, LG, Panasonic" />
               </div>
               <div class="form-group">
-                <label for="yearModel">Year</label>
+                <label for="yearModel">Year <span style="font-weight:400;color:var(--muted);font-size:0.85rem;">(optional)</span></label>
                 <input type="number" id="yearModel" placeholder="e.g. 2022" min="1990" max="2026" />
               </div>
             </div>
@@ -415,7 +408,6 @@
       if (!a) a = {};
       return {
         id: a.ID || a.id,
-        name: a.Name || a.name || a.appliance_name || '',
         type: a.Type || a.type || a.appliance_type || '',
         make: a.Make || a.make || a.make_brand || a.brand || '',
         year: a.Year || a.year || a.year_model || ''
@@ -438,10 +430,8 @@
           allAppliances.forEach(function(a) {
             var opt = document.createElement('option');
             opt.value = a.id;
-            var label = a.name || '';
+            var label = a.make ? a.make : '';
             if (a.type) { if (label) label += ' — '; label += typeLabel(a.type); }
-            if (a.make) label += ' (' + a.make + ')';
-            if (a.year) label += ', ' + a.year;
             opt.textContent = label;
             applianceSelect.appendChild(opt);
           });
@@ -527,10 +517,8 @@
       if (selected !== 'new' && selected !== '') { /* ok */ }
       else if (selected === 'new') {
         var at = document.getElementById('applianceType').value;
-        var an = document.getElementById('applianceName').value;
         var mk = document.getElementById('makeBrand').value;
-        var yr = document.getElementById('yearModel').value;
-        if (!at || !an || !mk || !yr) { showAlert('Please fill in all appliance details before finding repairmen.', 'warning'); return; }
+        if (!at || !mk) { showAlert('Please fill in all appliance details before finding repairmen.', 'warning'); return; }
       } else { showAlert('Please select an appliance first.', 'warning'); return; }
       if (!document.getElementById('issueDesc').value) { showAlert('Please describe the issue.', 'warning'); return; }
       if (!document.getElementById('preferredDate').value || !document.getElementById('preferredTime').value) { showAlert('Please set a preferred date and time.', 'warning'); return; }
@@ -870,13 +858,9 @@
       }
       if (selected === 'new') {
         var at = document.getElementById('applianceType').value;
-        var an = document.getElementById('applianceName').value;
         var mk = document.getElementById('makeBrand').value;
-        var yr = document.getElementById('yearModel').value;
         if (!at) { showAlert('Please select an appliance type.', 'warning'); return; }
-        if (!an) { showAlert('Please enter the appliance name.', 'warning'); return; }
         if (!mk) { showAlert('Please enter the make / brand.', 'warning'); return; }
-        if (!yr) { showAlert('Please enter the year.', 'warning'); return; }
       }
 
       // 2. Validate issue
@@ -950,10 +934,9 @@
       if (btnLoading) btnLoading.style.display = 'inline-flex';
 
       var selected = applianceSelect.value;
-      var applianceType, applianceName, makeBrand, yearModel, applianceId = null;
+      var applianceType, makeBrand, yearModel, applianceId = null;
       if (selected === 'new') {
         applianceType = document.getElementById('applianceType').value;
-        applianceName = document.getElementById('applianceName').value;
         makeBrand = document.getElementById('makeBrand').value;
         yearModel = document.getElementById('yearModel').value;
       } else {
@@ -961,7 +944,6 @@
         if (a) {
           applianceId = a.id;
           applianceType = a.type;
-          applianceName = a.name;
           makeBrand = a.make;
           yearModel = a.year;
         }
@@ -977,7 +959,6 @@
       fd.append('action', 'book');
       fd.append('user_id', userId);
       fd.append('appliance_type', applianceType);
-      fd.append('appliance_name', applianceName);
       fd.append('make_brand', makeBrand);
       fd.append('year_model', yearModel);
       if (applianceId) fd.append('appliance_id', applianceId);

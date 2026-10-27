@@ -471,7 +471,7 @@
         document.getElementById('viewTicketTitle').textContent = 'Ticket Detail - #' + (ticket.ticket_id || ticket.id || '');
         document.getElementById('viewTicketClient').textContent = ticket.client_name || '—';
         document.getElementById('viewTicketDate').textContent = ticket.schedule_date || ticket.date_opened || '—';
-        document.getElementById('viewTicketAppliance').textContent = (ticket.appliance_name || '') + (ticket.appliance_type ? ' (' + ticket.appliance_type + ')' : '');
+        document.getElementById('viewTicketAppliance').textContent = ticket.appliance_name || ((ticket.appliance_make || '') + (ticket.appliance_type ? ' ' + ticket.appliance_type : '')).trim() || '—';
         var st = getStatusMap(ticket.ticket_status || ticket.status);
         document.getElementById('viewTicketStatus').innerHTML = '<span class="badge ' + st.cls + '">' + st.label + '</span>';
         var typeOfService = ticket.type_of_service || 'Repair';

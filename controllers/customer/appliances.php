@@ -24,7 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = addCustomerAppliance(
             $client_id,
             $_POST['type'] ?? $_POST['appliance_type'] ?? '',
-            $_POST['name'] ?? $_POST['appliance_name'] ?? '',
             $_POST['make'] ?? $_POST['make_brand'] ?? '',
             $_POST['year'] ?? $_POST['year_model'] ?? '',
             $_POST['details'] ?? ''
@@ -42,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         updateCustomerAppliance(
             $id, $client_id,
             $_POST['type'] ?? $_POST['appliance_type'] ?? '',
-            $_POST['name'] ?? $_POST['appliance_name'] ?? '',
             $_POST['make'] ?? $_POST['make_brand'] ?? '',
             $_POST['year'] ?? $_POST['year_model'] ?? '',
             $_POST['details'] ?? ''

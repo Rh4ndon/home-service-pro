@@ -33,9 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = createCustomerTicket(
                 $client_id,
                 $_POST['appliance_type'] ?? '',
-                $_POST['appliance_name'] ?? '',
                 $_POST['make_brand'] ?? '',
-                $_POST['year'] ?? $_POST['year_model'] ?? '',
                 $_POST['issue_desc'] ?? '',
                 $date_time,
                 $_POST['appliance_id'] ?? null,
@@ -45,7 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $route_distance_km,
                 $route_duration_min,
                 $_POST['detailed_report'] ?? null,
-                $_POST['type_of_service'] ?? 'Repair'
+                $_POST['type_of_service'] ?? 'Repair',
+                $_POST['year'] ?? $_POST['year_model'] ?? ''
             );
 
             // Store booking media (3 images + 1 video) if uploaded

@@ -113,12 +113,15 @@ CREATE TABLE `chat_messages` (
   `Receiver_ID` int(11) NOT NULL,
   `Receiver_Role` enum('customer','repairman','admin') NOT NULL,
   `Message` text NOT NULL,
+  `Message_Type` varchar(20) NOT NULL DEFAULT 'text',
+  `Reference_ID` int(11) DEFAULT NULL,
   `Is_Read` tinyint(1) NOT NULL DEFAULT 0,
   `Created_At` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`ID`),
   KEY `idx_chat_sender` (`Sender_ID`,`Sender_Role`),
   KEY `idx_chat_receiver` (`Receiver_ID`,`Receiver_Role`),
-  KEY `idx_chat_created` (`Created_At`)
+  KEY `idx_chat_created` (`Created_At`),
+  KEY `idx_chat_reference` (`Reference_ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -132,7 +135,6 @@ DROP TABLE IF EXISTS `clientappliances`;
 CREATE TABLE `clientappliances` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Client_ID` int(11) NOT NULL,
-  `Name` varchar(255) NOT NULL,
   `Type` varchar(100) NOT NULL,
   `Make` varchar(100) DEFAULT NULL,
   `Year` int(11) DEFAULT NULL,
@@ -144,6 +146,46 @@ CREATE TABLE `clientappliances` (
   CONSTRAINT `fk_appliance_client` FOREIGN KEY (`Client_ID`) REFERENCES `user_clientprofile` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_appliance_issue` FOREIGN KEY (`Issue_ID`) REFERENCES `applianceissue` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `repair_estimates`
+--
+
+DROP TABLE IF EXISTS `repair_estimates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `repair_estimates` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Ticket_ID` int(11) NOT NULL,
+  `Schedule_ID` int(11) DEFAULT NULL,
+  `Repairman_ID` int(11) NOT NULL,
+  `Appliance_Name` varchar(255) NOT NULL DEFAULT '',
+  `Created_At` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`ID`),
+  KEY `idx_estimate_ticket` (`Ticket_ID`),
+  KEY `idx_estimate_schedule` (`Schedule_ID`),
+  KEY `idx_estimate_repairman` (`Repairman_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `repair_estimate_items`
+--
+
+DROP TABLE IF EXISTS `repair_estimate_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `repair_estimate_items` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Estimate_ID` int(11) NOT NULL,
+  `Materials` varchar(255) NOT NULL DEFAULT '',
+  `Service` varchar(255) NOT NULL DEFAULT '',
+  `Price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `Sort_Order` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`ID`),
+  KEY `idx_estimate_item_estimate` (`Estimate_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -283,6 +325,7 @@ CREATE TABLE `repairticket` (
   `Repairman_ID` int(11) DEFAULT NULL,
   `Status` varchar(50) NOT NULL DEFAULT 'Open',
   `Details` text DEFAULT NULL,
+  `Type_Of_Service` enum('Repair','Maintenance') NOT NULL DEFAULT 'Repair',
   `Schedule_ID` int(11) DEFAULT NULL,
   PRIMARY KEY (`ID`),
   KEY `fk_ticket_client` (`Client_ID`),

@@ -188,6 +188,11 @@
           <strong>Client Address:</strong>
           <p id="modalAddress">—</p>
         </div>
+        <div style="margin-top:18px;" id="modalEstimateSection">
+          <strong>Repair Estimate:</strong>
+          <div id="modalEstimateBody" style="margin-top:6px;color:var(--muted);font-size:0.9rem;">—</div>
+          <button class="btn btn-primary btn-sm" id="modalEstimateDownloadBtn" type="button" style="margin-top:10px;display:none;">Download Estimate PDF</button>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('viewTicketModal')">Close</button>
@@ -271,9 +276,20 @@
 
   <script src="../shared.js"></script>
   <script src="../is-active.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+  <script src="../estimate-pdf.js"></script>
   <script>
     (function() {
       if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
+
+      // Reload when the page is restored from the browser's back/forward cache
+      // so ticket statuses are always up to date.
+      window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+          window.location.reload();
+        }
+      });
 
       var userId = localStorage.getItem('id');
       var userName = localStorage.getItem('name');
@@ -300,7 +316,7 @@
           'cancelled': 'badge-danger',
           'declined': 'badge-danger'
         };
-        var cls = map[(status || '').toLowerCase().replace(/_/g, '-')] || 'badge-info';
+        var cls = map[(status || '').toLowerCase().replace(/[\s_]+/g, '-')] || 'badge-info';
         return '<span class="badge ' + cls + '">' + (status || 'Unknown') + '</span>';
       }
 
@@ -367,28 +383,6 @@
         window.location.href = 'chat.html?ticket_id=' + ticketId + '&repairman_id=' + repairmanId;
       };
 
-      window.viewTicket = function(ticketId) {
-        var ticket = allTickets.find(function(t) { 
-          return (t.ticket_id || t.id || t.ID) === ticketId; 
-        });
-        if (!ticket) return;
-
-        // Show ticket details in modal
-        document.getElementById('modalTicketTitle').textContent = 'Ticket #' + ticketId + ' Details';
-        document.getElementById('modalClientName').textContent = ticket.client_name || '—';
-        document.getElementById('modalTicketDate').textContent = formatDate(ticket.schedule_date) || formatDate(ticket.created_at) || '—';
-        document.getElementById('modalAppliance').textContent = buildTicketDetails(ticket);
-        document.getElementById('modalTicketStatus').innerHTML = statusBadge(ticket.ticket_status || ticket.status);
-        var typeOfService = ticket.type_of_service || 'Repair';
-        var typeBadgeClass = typeOfService === 'Maintenance' ? 'badge-info' : 'badge-warning';
-        document.getElementById('modalTypeOfService').innerHTML = '<span class="badge ' + typeBadgeClass + '">' + typeOfService + '</span>';
-        document.getElementById('modalIssue').textContent = ticket.issue || ticket.issue_details || ticket.ticket_details || ticket.Details || '—';
-        document.getElementById('modalSchedule').textContent = formatDate(ticket.schedule_date) || '—';
-        document.getElementById('modalAddress').textContent = buildAddress(ticket);
-        
-        openModal('modalViewTicket');
-      };
-
       function renderTickets(tickets) {
         var tbody = document.querySelector('#ticketsTable tbody');
         if (!tickets.length) {
@@ -398,7 +392,8 @@
         tbody.innerHTML = tickets.map(function(t) {
           var id = t.ticket_id || t.id || t.ID || '';
           var status = t.ticket_status || t.status || 'Open';
-          var statusLower = status.toLowerCase().replace(/_/g, '-');
+          var statusKey = status.toLowerCase().replace(/[\s-]+/g, '_');
+          var statusLower = status.toLowerCase().replace(/[\s_]+/g, '-');
           var appliance = buildTicketDetails(t);
           var issue = t.issue || t.issue_details || t.ticket_details || t.Details || '';
           var date = t.schedule_date || t.created_at || t.ScheduleDate || '';
@@ -407,20 +402,20 @@
           var typeBadge = '<span class="badge ' + typeBadgeClass + '">' + typeOfService + '</span>';
 var actions = '<div class="action-btns">';
         // For declined tickets, only show View button
-        if (status !== 'Completed' && status !== 'Cancelled' && status !== 'Declined') {
+        if (statusKey !== 'completed' && statusKey !== 'cancelled' && statusKey !== 'declined') {
           actions += '<button class="btn btn-primary btn-sm" onclick="viewTicketAndChat(\'' + id + '\')">Chat</button>';
         }
         actions += '<button class="btn btn-secondary btn-sm" onclick="viewTicket(\'' + id + '\')">View</button>';
-        if (status === 'Open') {
+        if (statusKey === 'open') {
           actions += '<button class="btn btn-secondary btn-sm" onclick="cancelTicket(\'' + id + '\')">Cancel</button>';
         }
         // Show Mark Complete when ticket or schedule is In Progress
-        var scheduleStatus = (t.schedule_status || '').toLowerCase().replace(/_/g, '-').replace(/\s+/g, '-');
-        if (status === 'In Progress' || status === 'in-progress' || scheduleStatus === 'in-progress' || scheduleStatus === 'in_progress') {
+        var scheduleStatus = (t.schedule_status || '').toLowerCase().replace(/[\s-]+/g, '_');
+        if (statusKey === 'in_progress' || scheduleStatus === 'in_progress') {
           actions += '<button class="btn btn-success btn-sm" onclick="completeTicket(\'' + id + '\')">Mark Complete</button>';
         }
         // Show Rate once completed (hide the button if already reviewed)
-        if (status === 'Completed' || status === 'completed') {
+        if (statusKey === 'completed') {
           if (t.review_id) {
             actions += '<button class="btn btn-secondary btn-sm" onclick="viewRatings(\'' + id + '\')" title="Already reviewed">Rated &#9733;</button>';
           } else if (t.repairman_id) {
@@ -443,9 +438,10 @@ var actions = '<div class="action-btns">';
         document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
         btn.classList.add('active');
         if (status === 'all') { renderTickets(allTickets); return; }
+        var target = String(status || '').toLowerCase().replace(/[\s-]+/g, '_');
         renderTickets(allTickets.filter(function(t) { 
-          var s = (t.ticket_status || t.status || '').toLowerCase().replace(/_/g, '-');
-          return s === status;
+          var s = (t.ticket_status || t.status || '').toLowerCase().replace(/[\s-]+/g, '_');
+          return s === target;
         }));
       };
 
@@ -466,9 +462,72 @@ var actions = '<div class="action-btns">';
         document.getElementById('modalIssue').textContent = ticket.issue || ticket.issue_details || ticket.ticket_details || ticket.Details || '—';
         document.getElementById('modalSchedule').textContent = formatDate(ticket.schedule_date) || '—';
         document.getElementById('modalAddress').textContent = buildAddress(ticket);
-        
+
+        loadEstimateForModal(ticketId, ticket);
+
         openModal('viewTicketModal');
       };
+
+      function loadEstimateForModal(ticketId, ticket) {
+        var section = document.getElementById('modalEstimateSection');
+        var body = document.getElementById('modalEstimateBody');
+        var downloadBtn = document.getElementById('modalEstimateDownloadBtn');
+        if (!section || !body || !downloadBtn) return;
+
+        if (!ticket || !ticket.estimate_id) {
+          section.style.display = 'none';
+          body.innerHTML = '—';
+          downloadBtn.style.display = 'none';
+          return;
+        }
+
+        section.style.display = '';
+        body.textContent = 'Loading estimate...';
+        downloadBtn.style.display = 'none';
+        downloadBtn.onclick = function() { window.downloadEstimatePDF(ticketId); };
+
+        fetch('../../controllers/customer/estimate.php?user_id=' + encodeURIComponent(userId) + '&ticket_id=' + encodeURIComponent(ticketId))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (!data || data.status !== 'success' || !data.estimate) {
+              body.textContent = (data && data.message) || 'Estimate not available.';
+              return;
+            }
+
+            var est = data.estimate;
+            var items = est.Items || [];
+            var html = '';
+            items.forEach(function(item, index) {
+              html += '<div style="padding:8px 0;border-bottom:1px solid var(--line);">' +
+                '<div style="font-weight:600;color:var(--text);">' + (index + 1) + '. ' + escapeHtml(est.Appliance_Name || '') + '</div>' +
+                '<div><strong>Materials:</strong> ' + escapeHtml(item.Materials || '') + '</div>' +
+                '<div><strong>Service:</strong> ' + escapeHtml(item.Service || '') + '</div>' +
+                '<div><strong>Price:</strong> ' + peso(item.Price) + '</div>' +
+              '</div>';
+            });
+            html += '<div style="margin-top:10px;font-weight:700;color:var(--text);">Total: ' + peso(est.Total) + '</div>';
+            body.innerHTML = html;
+            downloadBtn.style.display = '';
+          })
+          .catch(function() {
+            body.textContent = 'Unable to load the estimate.';
+          });
+      }
+
+      function escapeHtml(value) {
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function peso(value) {
+        var n = parseFloat(value);
+        if (isNaN(n)) n = 0;
+        return '\u20B1' + n.toFixed(2);
+      }
 
       window.cancelTicket = function(ticketId) {
         window._cancelTicketId = ticketId;

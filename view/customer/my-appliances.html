@@ -206,18 +206,14 @@
             <option value="other">Other</option>
           </select>
         </div>
-        <div class="form-group">
-          <label for="addApplianceName">Appliance Name</label>
-          <input type="text" id="addApplianceName" placeholder="e.g. Samsung RT38" required />
-        </div>
         <div class="grid-2">
           <div class="form-group">
             <label for="addApplianceMake">Make / Brand</label>
             <input type="text" id="addApplianceMake" placeholder="e.g. Samsung" required />
           </div>
           <div class="form-group">
-            <label for="addApplianceYear">Year</label>
-            <input type="number" id="addApplianceYear" placeholder="e.g. 2023" min="1990" max="2026" required />
+            <label for="addApplianceYear">Year <span style="font-weight:400;color:var(--muted);font-size:0.85rem;">(optional)</span></label>
+            <input type="number" id="addApplianceYear" placeholder="e.g. 2023" min="1990" max="2026" />
           </div>
         </div>
         <div class="form-group">
@@ -254,18 +250,14 @@
             <option value="other">Other</option>
           </select>
         </div>
-        <div class="form-group">
-          <label for="editApplianceName">Appliance Name</label>
-          <input type="text" id="editApplianceName" value="Samsung RT38" />
-        </div>
         <div class="grid-2">
           <div class="form-group">
             <label for="editApplianceMake">Make / Brand</label>
             <input type="text" id="editApplianceMake" value="Samsung" />
           </div>
           <div class="form-group">
-            <label for="editApplianceYear">Year</label>
-            <input type="number" id="editApplianceYear" value="2022" min="1990" max="2026" />
+            <label for="editApplianceYear">Year <span style="font-weight:400;color:var(--muted);font-size:0.85rem;">(optional)</span></label>
+            <input type="number" id="editApplianceYear" placeholder="e.g. 2023" min="1990" max="2026" />
           </div>
         </div>
         <div class="form-group">
@@ -353,7 +345,6 @@
       if (!a) a = {};
       return {
         id: a.ID || a.id,
-        name: a.Name || a.name || a.appliance_name || '',
         type: a.Type || a.type || a.appliance_type || '',
         make: a.Make || a.make || a.make_brand || a.brand || '',
         year: a.Year || a.year || a.year_model || '',
@@ -368,17 +359,20 @@
       }
       grid.innerHTML = appliances.map(function(raw) {
         var a = normalize(raw);
+        var title = [a.make, typeLabel(a.type)].filter(Boolean).join(' ').trim() || 'Appliance';
+        var yearDisplay = a.year ? escapeHtml(String(a.year)) : '<span style="color:var(--muted);">—</span>';
         return '<div class="appliance-card">' +
           '<div class="appliance-card-top">' +
             '<div class="appliance-card-info">' +
-              '<h3>' + escapeHtml(a.name) + '</h3>' +
+              '<h3>' + escapeHtml(title) + '</h3>' +
               '<p>' + escapeHtml(typeLabel(a.type)) + '</p>' +
             '</div>' +
             '<span class="badge badge-success">Active</span>' +
           '</div>' +
           '<div class="appliance-card-details">' +
+            '<div><div class="appliance-detail-label">Type</div><div class="appliance-detail-value">' + escapeHtml(typeLabel(a.type)) + '</div></div>' +
             '<div><div class="appliance-detail-label">Make / Brand</div><div class="appliance-detail-value">' + escapeHtml(a.make) + '</div></div>' +
-            '<div><div class="appliance-detail-label">Year</div><div class="appliance-detail-value">' + escapeHtml(String(a.year)) + '</div></div>' +
+            '<div><div class="appliance-detail-label">Year</div><div class="appliance-detail-value">' + yearDisplay + '</div></div>' +
             '<div style="grid-column: span 2;"><div class="appliance-detail-label">Details</div><div class="appliance-detail-value">' + escapeHtml(a.details) + '</div></div>' +
           '</div>' +
           '<div class="appliance-card-actions">' +
@@ -402,7 +396,6 @@
           editingId = id;
           var a = normalize(appliance);
           document.getElementById('editApplianceType').value = a.type;
-          document.getElementById('editApplianceName').value = a.name;
           document.getElementById('editApplianceMake').value = a.make;
           document.getElementById('editApplianceYear').value = a.year;
           document.getElementById('editApplianceDetails').value = a.details;
@@ -417,24 +410,21 @@
     });
 
     document.getElementById('addApplianceBtn').addEventListener('click', function() {
-      //required all inputs
+      //required all inputs (year is optional)
       if (document.getElementById('addApplianceType').value == '') { showAlert('Please select an appliance type.', 'error'); return; }
-      if (document.getElementById('addApplianceName').value == '') { showAlert('Please enter an appliance name.', 'error'); return; }
       if (document.getElementById('addApplianceMake').value == '') { showAlert('Please enter an appliance make.', 'error'); return; }
-      if (document.getElementById('addApplianceYear').value == '') { showAlert('Please enter an appliance year.', 'error'); return; }
       if (document.getElementById('addApplianceDetails').value == '') { showAlert('Please enter an appliance details.', 'error'); return; }
       var fd = new FormData();
       fd.append('action', 'add');
       fd.append('user_id', userId);
       fd.append('appliance_type', document.getElementById('addApplianceType').value);
-      fd.append('appliance_name', document.getElementById('addApplianceName').value);
       fd.append('make_brand', document.getElementById('addApplianceMake').value);
       fd.append('year_model', document.getElementById('addApplianceYear').value);
       fd.append('details', document.getElementById('addApplianceDetails').value);
       fetch('../../controllers/customer/appliances.php', { method: 'POST', body: fd })
         .then(function(r){ return r.json(); })
         .then(function(data){
-          if (isSuccess(data)) { closeModal('addApplianceModal'); document.getElementById('addApplianceType').value=''; document.getElementById('addApplianceName').value=''; document.getElementById('addApplianceMake').value=''; document.getElementById('addApplianceYear').value=''; document.getElementById('addApplianceDetails').value=''; showAlert(data.message || 'Appliance added successfully.', 'success'); loadAppliances(); } else { showAlert(data.message || 'Error adding appliance.', 'error'); }
+          if (isSuccess(data)) { closeModal('addApplianceModal'); document.getElementById('addApplianceType').value=''; document.getElementById('addApplianceMake').value=''; document.getElementById('addApplianceYear').value=''; document.getElementById('addApplianceDetails').value=''; showAlert(data.message || 'Appliance added successfully.', 'success'); loadAppliances(); } else { showAlert(data.message || 'Error adding appliance.', 'error'); }
         })
         .catch(function(){ showAlert('Network error.', 'error'); });
     });
@@ -446,7 +436,6 @@
       fd.append('id', editingId);
       fd.append('user_id', userId);
       fd.append('appliance_type', document.getElementById('editApplianceType').value);
-      fd.append('appliance_name', document.getElementById('editApplianceName').value);
       fd.append('make_brand', document.getElementById('editApplianceMake').value);
       fd.append('year_model', document.getElementById('editApplianceYear').value);
       fd.append('details', document.getElementById('editApplianceDetails').value);

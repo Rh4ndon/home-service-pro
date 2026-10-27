@@ -59,6 +59,40 @@
       td .badge{margin-left:auto;}
       td .action-btns{margin-left:auto;flex-wrap:wrap;}
     }
+
+    /* Accept & estimate modal */
+    #modalAccept .modal{width:min(720px,calc(100% - 32px));}
+    .modal-subtitle{margin-top:3px;font-size:.82rem;font-weight:400;color:var(--muted);}
+    .estimate-summary{display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:18px;border:1px solid rgba(27,141,232,.18);border-radius:12px;background:linear-gradient(135deg,rgba(27,141,232,.08),rgba(27,141,232,.02));}
+    .estimate-summary-icon{width:40px;height:40px;border-radius:10px;background:var(--card);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(11,26,38,.06);}
+    .estimate-summary-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .estimate-summary-label{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+    .estimate-summary-value{margin-top:2px;font-size:.98rem;font-weight:600;color:var(--text);}
+    .estimate-summary-meta{margin-top:2px;font-size:.8rem;color:var(--muted);}
+    .estimate-table-head{display:grid;grid-template-columns:1.25fr 1.25fr 120px 40px;gap:10px;padding:0 2px 8px;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+    .estimate-row{display:grid;grid-template-columns:1.25fr 1.25fr 120px 40px;gap:10px;align-items:end;margin-bottom:10px;}
+    .estimate-field label{display:none;margin-bottom:5px;font-size:.78rem;font-weight:600;color:var(--muted);}
+    .estimate-field input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);font:inherit;font-size:.9rem;outline:none;transition:border-color .15s ease,box-shadow .15s ease;}
+    .estimate-field input::placeholder{color:#9aa7b4;}
+    .estimate-field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(27,141,232,.1);}
+    .estimate-remove-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--muted);transition:all .15s ease;}
+    .estimate-remove-btn:hover{color:var(--danger);border-color:rgba(239,68,68,.35);background:var(--danger-bg);}
+    .estimate-remove-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .estimate-add-btn{display:inline-flex;align-items:center;gap:7px;margin-top:2px;padding:9px 12px;border:1px dashed var(--primary);border-radius:10px;background:transparent;color:var(--primary);font-size:.84rem;font-weight:600;transition:background .15s ease;}
+    .estimate-add-btn:hover{background:rgba(27,141,232,.06);}
+    .estimate-add-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+    .estimate-total{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);}
+    .estimate-total span{font-size:.82rem;font-weight:600;color:var(--muted);}
+    .estimate-total strong{font-size:1.1rem;color:var(--text);letter-spacing:-.02em;}
+    .estimate-hint{margin-top:10px;font-size:.78rem;line-height:1.5;color:var(--muted);}
+    @media(max-width:640px){
+      #modalAccept .modal{width:calc(100% - 24px);}
+      .estimate-table-head{display:none;}
+      .estimate-row{grid-template-columns:1fr 1fr;align-items:end;}
+      .estimate-field label{display:block;}
+      .estimate-field-price{grid-column:1/2;}
+      .estimate-remove-btn{grid-column:2/3;justify-self:end;}
+    }
   </style>
   <script>
     (function(){
@@ -177,15 +211,100 @@
   <div class="modal-overlay" id="modalAccept">
     <div class="modal">
       <div class="modal-header">
-        <h3>Accept Assignment</h3>
+        <div>
+          <h3>Accept Assignment &amp; Send Estimate</h3>
+          <p class="modal-subtitle">Add the materials, service, and price for this repair.</p>
+        </div>
         <button class="modal-close" onclick="closeModal('modalAccept')">&times;</button>
       </div>
       <div class="modal-body">
-        <p>Are you sure you want to accept this scheduled appointment? You will be responsible for completing the repair.</p>
+        <div class="estimate-summary">
+          <div class="estimate-summary-icon">
+            <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+          </div>
+          <div>
+            <div class="estimate-summary-label">Appliance</div>
+            <div class="estimate-summary-value" id="estimateAppliance">—</div>
+            <div class="estimate-summary-meta" id="estimateSummaryMeta">Scheduled appointment</div>
+          </div>
+        </div>
+
+        <div class="estimate-table-head">
+          <span>Materials</span>
+          <span>Service</span>
+          <span>Price (&#8369;)</span>
+          <span></span>
+        </div>
+        <div id="estimateRows"></div>
+
+        <button type="button" class="estimate-add-btn" id="addEstimateRowBtn">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add another item
+        </button>
+
+        <div class="estimate-total">
+          <span>Estimated total</span>
+          <strong id="estimateTotal">&#8369;0.00</strong>
+        </div>
+        <p class="estimate-hint">This estimate will be sent to the customer in chat and can be downloaded as a PDF invoice.</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalAccept')">Cancel</button>
-        <button class="btn btn-success" onclick="doAction('modalAccept','Appointment accepted successfully!')">Accept</button>
+        <button class="btn btn-success" id="acceptEstimateBtn">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="acceptEstimateBtnText">Accept &amp; Send Estimate</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Update Estimate Cost -->
+  <div class="modal-overlay" id="modalUpdateEstimate">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3>Update Estimate Cost</h3>
+          <p class="modal-subtitle">Modify the materials, service, and price for this repair.</p>
+        </div>
+        <button class="modal-close" onclick="closeModal('modalUpdateEstimate')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="estimate-summary">
+          <div class="estimate-summary-icon">
+            <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+          </div>
+          <div>
+            <div class="estimate-summary-label">Appliance</div>
+            <div class="estimate-summary-value" id="updateEstimateAppliance">—</div>
+            <div class="estimate-summary-meta" id="updateEstimateSummaryMeta">In Progress appointment</div>
+          </div>
+        </div>
+
+        <div class="estimate-table-head">
+          <span>Materials</span>
+          <span>Service</span>
+          <span>Price (&#8369;)</span>
+          <span></span>
+        </div>
+        <div id="updateEstimateRows"></div>
+
+        <button type="button" class="estimate-add-btn" id="addUpdateEstimateRowBtn">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add another item
+        </button>
+
+        <div class="estimate-total">
+          <span>Estimated total</span>
+          <strong id="updateEstimateTotal">&#8369;0.00</strong>
+        </div>
+        <p class="estimate-hint">Changes will be sent to the customer in chat and the PDF will be updated.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-cancel" onclick="closeModal('modalUpdateEstimate')">Cancel</button>
+        <button class="btn btn-warning" id="updateEstimateBtn">
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span id="updateEstimateBtnText">Update Estimate</span>
+        </button>
       </div>
     </div>
   </div>
@@ -290,9 +409,10 @@
       document.querySelectorAll('#logoutModal .btn-danger').forEach(function(btn) { btn.onclick = logout; });
 
       var currentScheduleId = null;
+      var currentEstimateId = null;
 
       function getStatusMap(status) {
-        var s = (status || '').toLowerCase();
+        var s = (status || '').toLowerCase().replace(/[\s-]+/g, '_');
         if (s === 'assigned') return { cls: 'badge-neutral', label: 'Assigned' };
         if (s === 'in_progress' || s === 'progress') return { cls: 'badge-info', label: 'In Progress' };
         if (s === 'completed') return { cls: 'badge-success', label: 'Completed' };
@@ -303,7 +423,7 @@
       }
 
       function buildActionBtns(item) {
-        var s = (item.schedule_status || '').toLowerCase();
+        var s = (item.schedule_status || '').toLowerCase().replace(/[\s-]+/g, '_');
         if (s === 'completed') {
           return '<button class="btn btn-secondary btn-sm" onclick="viewScheduleDetail(this)">View</button>';
         }
@@ -315,7 +435,8 @@
         }
         if (s === 'in_progress' || s === 'progress') {
           return '<a href="chat.html" class="btn btn-primary btn-sm">Chat</a>' +
-            '<button class="btn btn-success btn-sm" onclick="completeSchedule(' + item.schedule_id + ')">Complete</button>';
+            '<button class="btn btn-success btn-sm" onclick="completeSchedule(' + item.schedule_id + ')">Complete</button>' +
+            '<button class="btn btn-warning btn-sm" onclick="updateEstimate(' + item.schedule_id + ', ' + (item.estimate_id || 0) + ')">Update Estimate Cost</button>';
         }
         if (s === 'assigned' || s === 'pending' || s === 'scheduled') {
           return '<button class="btn btn-success btn-sm" onclick="acceptSchedule(' + item.schedule_id + ')">Accept</button>' +
@@ -324,9 +445,262 @@
         return '<a href="tickets.html" class="btn btn-secondary btn-sm">View</a>';
       }
 
+      function updateEstimateTotal() {
+        var total = 0;
+        document.querySelectorAll('#estimateRows .est-price').forEach(function(input) {
+          var value = parseFloat(input.value);
+          if (!isNaN(value)) total += value;
+        });
+        var el = document.getElementById('estimateTotal');
+        if (el) {
+          el.textContent = '\u20B1' + total.toLocaleString('en-PH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          });
+        }
+      }
+
+      function updateUpdateEstimateTotal() {
+        var total = 0;
+        document.querySelectorAll('#updateEstimateRows .est-price').forEach(function(input) {
+          var value = parseFloat(input.value);
+          if (!isNaN(value)) total += value;
+        });
+        var el = document.getElementById('updateEstimateTotal');
+        if (el) {
+          el.textContent = '\u20B1' + total.toLocaleString('en-PH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          });
+        }
+      }
+
+      function addEstimateRow(materials, service, price) {
+        var wrap = document.getElementById('estimateRows');
+        if (!wrap) return;
+
+        var row = document.createElement('div');
+        row.className = 'estimate-row';
+        row.innerHTML =
+          '<div class="estimate-field">' +
+            '<label>Materials</label>' +
+            '<input type="text" class="est-materials" placeholder="e.g. Freon" />' +
+          '</div>' +
+          '<div class="estimate-field">' +
+            '<label>Service</label>' +
+            '<input type="text" class="est-service" placeholder="e.g. Installation of Freon" />' +
+          '</div>' +
+          '<div class="estimate-field estimate-field-price">' +
+            '<label>Price (\u20B1)</label>' +
+            '<input type="number" class="est-price" placeholder="0.00" min="0" step="0.01" />' +
+          '</div>' +
+          '<button type="button" class="estimate-remove-btn remove-est-row" title="Remove item" aria-label="Remove item">' +
+            '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+          '</button>';
+
+        row.querySelector('.est-materials').value = materials || '';
+        row.querySelector('.est-service').value = service || '';
+        row.querySelector('.est-price').value = price || '';
+        row.querySelector('.est-price').addEventListener('input', updateEstimateTotal);
+
+        row.querySelector('.remove-est-row').onclick = function () {
+          if (wrap.querySelectorAll('.estimate-row').length > 1) {
+            row.remove();
+          } else {
+            row.querySelector('.est-materials').value = '';
+            row.querySelector('.est-service').value = '';
+            row.querySelector('.est-price').value = '';
+          }
+          updateEstimateTotal();
+        };
+
+        wrap.appendChild(row);
+        updateEstimateTotal();
+      }
+
       window.acceptSchedule = function(id) {
         currentScheduleId = id;
+        var schedule = schedulesAll.find(function(s) { return String(s.schedule_id) == String(id); });
+
+        var applianceEl = document.getElementById('estimateAppliance');
+        if (applianceEl) applianceEl.textContent = schedule ? (schedule.appliance_name || 'Appliance') : 'Appliance';
+
+        var metaEl = document.getElementById('estimateSummaryMeta');
+        if (metaEl) {
+          var meta = [];
+          if (schedule && schedule.client_name) meta.push(schedule.client_name);
+          if (schedule && schedule.issue) meta.push('Issue: ' + schedule.issue);
+          metaEl.textContent = meta.join(' \u00B7 ') || 'Scheduled appointment';
+        }
+
+        document.getElementById('estimateRows').innerHTML = '';
+        addEstimateRow('', schedule ? (schedule.issue || '') : '', '');
         openModal('modalAccept');
+      };
+
+      var addEstimateRowBtn = document.getElementById('addEstimateRowBtn');
+      if (addEstimateRowBtn) {
+        addEstimateRowBtn.onclick = function() { addEstimateRow('', '', ''); };
+      }
+
+      // Update Estimate Cost functionality
+      window.updateEstimate = function(scheduleId, estimateId) {
+        currentScheduleId = scheduleId;
+        currentEstimateId = estimateId;
+        var schedule = schedulesAll.find(function(s) { return String(s.schedule_id) == String(scheduleId); });
+
+        var applianceEl = document.getElementById('updateEstimateAppliance');
+        if (applianceEl) applianceEl.textContent = schedule ? (schedule.appliance_name || 'Appliance') : 'Appliance';
+
+        var metaEl = document.getElementById('updateEstimateSummaryMeta');
+        if (metaEl) {
+          var meta = [];
+          if (schedule && schedule.client_name) meta.push(schedule.client_name);
+          if (schedule && schedule.issue) meta.push('Issue: ' + schedule.issue);
+          metaEl.textContent = meta.join(' \u00B7 ') || 'In Progress appointment';
+        }
+
+        document.getElementById('updateEstimateRows').innerHTML = '';
+
+        // Load existing estimate data
+        if (estimateId) {
+          var uid = (typeof userId !== 'undefined' && userId) ? userId : localStorage.getItem('id');
+          fetch('../../controllers/repairman/schedule.php?action=get_estimate&schedule_id=' + encodeURIComponent(scheduleId) + '&user_id=' + encodeURIComponent(uid))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              console.log('Estimate load result:', data);
+              if (data && data.success && data.estimate && data.estimate.Items) {
+                data.estimate.Items.forEach(function(item) {
+                  addUpdateEstimateRow(item.Materials || '', item.Service || '', item.Price || '');
+                });
+              } else {
+                // Fallback: add one empty row
+                addUpdateEstimateRow('', schedule ? (schedule.issue || '') : '', '');
+              }
+            })
+            .catch(function(err) {
+              console.error('Estimate load error:', err);
+              addUpdateEstimateRow('', schedule ? (schedule.issue || '') : '', '');
+            });
+        } else {
+          addUpdateEstimateRow('', schedule ? (schedule.issue || '') : '', '');
+        }
+
+        openModal('modalUpdateEstimate');
+      };
+
+      function addUpdateEstimateRow(materials, service, price) {
+        var wrap = document.getElementById('updateEstimateRows');
+        if (!wrap) return;
+
+        var row = document.createElement('div');
+        row.className = 'estimate-row';
+        row.innerHTML =
+          '<div class="estimate-field">' +
+            '<label>Materials</label>' +
+            '<input type="text" class="est-materials" placeholder="e.g. Freon" />' +
+          '</div>' +
+          '<div class="estimate-field">' +
+            '<label>Service</label>' +
+            '<input type="text" class="est-service" placeholder="e.g. Installation of Freon" />' +
+          '</div>' +
+          '<div class="estimate-field estimate-field-price">' +
+            '<label>Price (\u20B1)</label>' +
+            '<input type="number" class="est-price" placeholder="0.00" min="0" step="0.01" />' +
+          '</div>' +
+          '<button type="button" class="estimate-remove-btn remove-est-row" title="Remove item" aria-label="Remove item">' +
+            '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+          '</button>';
+
+        row.querySelector('.est-materials').value = materials || '';
+        row.querySelector('.est-service').value = service || '';
+        row.querySelector('.est-price').value = price || '';
+        row.querySelector('.est-price').addEventListener('input', updateUpdateEstimateTotal);
+
+        row.querySelector('.remove-est-row').onclick = function () {
+          if (wrap.querySelectorAll('.estimate-row').length > 1) {
+            row.remove();
+          } else {
+            row.querySelector('.est-materials').value = '';
+            row.querySelector('.est-service').value = '';
+            row.querySelector('.est-price').value = '';
+          }
+          updateUpdateEstimateTotal();
+        };
+
+        wrap.appendChild(row);
+        updateUpdateEstimateTotal();
+      }
+
+      var addUpdateEstimateRowBtn = document.getElementById('addUpdateEstimateRowBtn');
+      if (addUpdateEstimateRowBtn) {
+        addUpdateEstimateRowBtn.onclick = function() { addUpdateEstimateRow('', '', ''); };
+      }
+
+      document.getElementById('updateEstimateBtn').onclick = function() {
+        if (!currentScheduleId || !currentEstimateId || !userId) return;
+
+        var rows = document.querySelectorAll('#updateEstimateRows .estimate-row');
+        var params = new URLSearchParams();
+        params.append('user_id', userId);
+        params.append('action', 'update_estimate');
+        params.append('schedule_id', currentScheduleId);
+        params.append('estimate_id', currentEstimateId);
+
+        var added = 0;
+        for (var i = 0; i < rows.length; i++) {
+          var materials = rows[i].querySelector('.est-materials').value.trim();
+          var service = rows[i].querySelector('.est-service').value.trim();
+          var price = rows[i].querySelector('.est-price').value.trim();
+
+          // Skip completely empty rows.
+          if (!materials && !service && !price) continue;
+
+          if (!materials || !service || price === '' || isNaN(Number(price)) || Number(price) < 0) {
+            showAlert('Please complete the materials, service, and a valid price for every estimate row.', 'error');
+            return;
+          }
+
+          params.append('materials[]', materials);
+          params.append('service[]', service);
+          params.append('price[]', price);
+          added++;
+        }
+
+        if (!added) {
+          showAlert('Please add at least one estimate row.', 'warning');
+          return;
+        }
+
+        var btn = this;
+        var btnLabel = document.getElementById('updateEstimateBtnText');
+        var originalText = btnLabel ? btnLabel.textContent : btn.textContent;
+        btn.disabled = true;
+        if (btnLabel) btnLabel.textContent = 'Updating estimate...';
+        else btn.textContent = 'Updating estimate...';
+
+        fetch('../../controllers/repairman/schedule.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString()
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.success) {
+            btn.disabled = false;
+            if (btnLabel) btnLabel.textContent = originalText;
+            else btn.textContent = originalText;
+            showAlert(data.message || 'Failed to update estimate', 'error');
+            return;
+          }
+          location.reload();
+        })
+        .catch(function() {
+          btn.disabled = false;
+          if (btnLabel) btnLabel.textContent = originalText;
+          else btn.textContent = originalText;
+          showAlert('Network error. Please try again.', 'error');
+        });
       };
 
       window.declineSchedule = function(id) {
@@ -356,42 +730,69 @@
         openModal('modalDetail');
       };
 
-      document.querySelector('#modalAccept .btn-success').onclick = function() {
+      document.getElementById('acceptEstimateBtn').onclick = function() {
         if (!currentScheduleId || !userId) return;
-        
+
+        var rows = document.querySelectorAll('#estimateRows .estimate-row');
+        var params = new URLSearchParams();
+        params.append('user_id', userId);
+        params.append('action', 'accept');
+        params.append('schedule_id', currentScheduleId);
+
+        var added = 0;
+        for (var i = 0; i < rows.length; i++) {
+          var materials = rows[i].querySelector('.est-materials').value.trim();
+          var service = rows[i].querySelector('.est-service').value.trim();
+          var price = rows[i].querySelector('.est-price').value.trim();
+
+          // Skip completely empty rows.
+          if (!materials && !service && !price) continue;
+
+          if (!materials || !service || price === '' || isNaN(Number(price)) || Number(price) < 0) {
+            showAlert('Please complete the materials, service, and a valid price for every estimate row.', 'error');
+            return;
+          }
+
+          params.append('materials[]', materials);
+          params.append('service[]', service);
+          params.append('price[]', price);
+          added++;
+        }
+
+        if (!added) {
+          showAlert('Please add at least one estimate row.', 'warning');
+          return;
+        }
+
+        var btn = this;
+        var btnLabel = document.getElementById('acceptEstimateBtnText');
+        var originalText = btnLabel ? btnLabel.textContent : btn.textContent;
+        btn.disabled = true;
+        if (btnLabel) btnLabel.textContent = 'Sending estimate...';
+        else btn.textContent = 'Sending estimate...';
+
         fetch('../../controllers/repairman/schedule.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: 'user_id=' + userId + '&action=accept&schedule_id=' + currentScheduleId
+          body: params.toString()
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (!data.success) {
+            btn.disabled = false;
+            if (btnLabel) btnLabel.textContent = originalText;
+            else btn.textContent = originalText;
             showAlert(data.message || 'Failed to accept appointment', 'error');
             return;
           }
-
-          var schedule = schedulesAll.find(function(s) { return String(s.schedule_id) == String(currentScheduleId); });
-          var clientUserId = schedule ? (schedule.client_user_id || schedule.client_id) : null;
-          if (clientUserId) {
-            var formData = new FormData();
-            formData.append('sender_id', userId);
-            formData.append('sender_role', 'repairman');
-            formData.append('receiver_id', clientUserId);
-            formData.append('receiver_role', 'customer');
-            formData.append('message', 'Hello! I have accepted your repair appointment. I will be in touch shortly to confirm the details.');
-            
-            fetch('../../controllers/chat/messages.php', {
-              method: 'POST',
-              body: formData
-            })
-            .then(function() { location.reload(); })
-            .catch(function() { location.reload(); });
-          } else {
-            location.reload();
-          }
+          location.reload();
         })
-        .catch(function() { location.reload(); });
+        .catch(function() {
+          btn.disabled = false;
+          if (btnLabel) btnLabel.textContent = originalText;
+          else btn.textContent = originalText;
+          showAlert('Network error. Please try again.', 'error');
+        });
       };
 
       document.querySelector('#modalDecline .btn-danger').onclick = function() {

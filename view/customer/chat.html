@@ -705,6 +705,9 @@
   <script src="../shared.js"></script>
   <script src="../is-active.js"></script>
   <script src="repairman-profile-modal.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+  <script src="../estimate-pdf.js"></script>
   <script>
   (function() {
     if (!localStorage.getItem('is_logged_in')) { window.location.href = 'login.html'; return; }
@@ -975,7 +978,33 @@ function loadContacts() {
               }
               var div = document.createElement('div');
               div.className = 'chat-bubble ' + (isSent ? 'sent' : 'received');
-              div.innerHTML = (m.message || m.content || '') + '<div class="chat-bubble-time">' + time + '</div>';
+
+              if ((m.message_type || 'text') === 'estimate' && m.reference_id) {
+                div.classList.add('estimate-bubble');
+
+                var body = document.createElement('div');
+                body.style.whiteSpace = 'pre-line';
+                body.textContent = m.message || m.content || '';
+                div.appendChild(body);
+
+                var downloadBtn = document.createElement('button');
+                downloadBtn.type = 'button';
+                downloadBtn.className = 'btn btn-primary btn-sm';
+                downloadBtn.style.marginTop = '10px';
+                downloadBtn.textContent = 'Download Estimate PDF';
+                downloadBtn.onclick = (function(ticketId) {
+                  return function() { window.downloadEstimatePDF(ticketId); };
+                })(m.reference_id);
+                div.appendChild(downloadBtn);
+
+                var estimateTime = document.createElement('div');
+                estimateTime.className = 'chat-bubble-time';
+                estimateTime.textContent = time;
+                div.appendChild(estimateTime);
+              } else {
+                div.innerHTML = (m.message || m.content || '') + '<div class="chat-bubble-time">' + time + '</div>';
+              }
+
               messagesContainer.appendChild(div);
             });
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
