@@ -369,6 +369,7 @@ CREATE TABLE `user_clientprofile` (
   `User_ID` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
   `Email` varchar(255) NOT NULL,
+  `Valid_ID` varchar(255) DEFAULT NULL,
   `Address_Line1` varchar(255) DEFAULT NULL,
   `Address_Line2` varchar(255) DEFAULT NULL,
   `Brgy` varchar(100) DEFAULT NULL,
@@ -402,6 +403,7 @@ CREATE TABLE `user_repairmanprofile` (
   `User_ID` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
   `Email` varchar(255) NOT NULL,
+  `Valid_ID` varchar(255) DEFAULT NULL,
   `Address` text DEFAULT NULL,
   `Latitude` decimal(10,7) DEFAULT NULL,
   `Longitude` decimal(10,7) DEFAULT NULL,
@@ -500,7 +502,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `user_clientprofile` WRITE;
 /*!40000 ALTER TABLE `user_clientprofile` DISABLE KEYS */;
-INSERT INTO `user_clientprofile` VALUES (1,3,'Ben Dover','ben@gmail.com','Updated','','','Manila','Metro Manila','NCR','1000',15.4866934,120.5966154,'J573+WC8 Cruz, Bongabon, Nueva Ecija, Philippines','09179998888','','active'),(6,25,'Bat Man','batman@gmail.com',NULL,NULL,NULL,NULL,NULL,NULL,NULL,15.6696576,120.7566336,'MQ94+VM Guimba, Nueva Ecija, Philippines',NULL,NULL,'active'),(7,26,'Rhandon Dave','daverhandon@gmail.com',NULL,NULL,NULL,NULL,NULL,NULL,NULL,15.6729344,120.8254464,'MRCG+M27, Bunol, Guimba, Nueva Ecija, Philippines',NULL,NULL,'active'),(8,27,'Rhandon San Jose','rhandond@gmail.com',NULL,NULL,NULL,NULL,NULL,NULL,NULL,15.6100000,120.9000000,'JV5X+XX Santo Domingo, Nueva Ecija, Philippines','',NULL,'active');
+INSERT INTO `user_clientprofile` VALUES (1,3,'Ben Dover','ben@gmail.com',NULL,'Updated','','','Manila','Metro Manila','NCR','1000',15.4866934,120.5966154,'J573+WC8 Cruz, Bongabon, Nueva Ecija, Philippines','09179998888','','active'),(6,25,'Bat Man','batman@gmail.com',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15.6696576,120.7566336,'MQ94+VM Guimba, Nueva Ecija, Philippines',NULL,NULL,'active'),(7,26,'Rhandon Dave','daverhandon@gmail.com',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15.6729344,120.8254464,'MRCG+M27, Bunol, Guimba, Nueva Ecija, Philippines',NULL,NULL,'active'),(8,27,'Rhandon San Jose','rhandond@gmail.com',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15.6100000,120.9000000,'JV5X+XX Santo Domingo, Nueva Ecija, Philippines','',NULL,'active');
 /*!40000 ALTER TABLE `user_clientprofile` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -510,7 +512,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `user_repairmanprofile` WRITE;
 /*!40000 ALTER TABLE `user_repairmanprofile` DISABLE KEYS */;
-INSERT INTO `user_repairmanprofile` VALUES (1,1,'John Doe','john@gmail.com','',15.4866934,120.5966154,'Lolita Bldg., Lolita Bldg. (in front of Silayan) R-9, Tarlac City, 2300 Tarlac, Philippines','09171234567','','1',NULL,'refrigerator,washing-machine,air-conditioner,dryer','Updated Education','[{\"name\":\"Test Certification\",\"issued\":\"2024-01-15\",\"valid_until\":\"2025-01-15\"}]',NULL,4.50,NULL,'active','trial','2026-10-11 13:43:20',NULL),(2,2,'Jane Smith','jane@gmail.com',NULL,14.5547000,121.0244000,'Makati, Metro Manila',NULL,NULL,'1',NULL,NULL,NULL,NULL,NULL,0.00,NULL,'active','trial','2026-10-11 13:43:20',NULL),(7,8,'Juan Dela Cruz','dragecave@gmail.com','',15.7089792,120.9171968,'PW58+HV Muñoz, Nueva Ecija, Philippines','09123456789','','1',NULL,NULL,'','[{\"name\":\"Tesda\",\"file\":null},{\"name\":\"Tesda 2\",\"file\":null}]',NULL,4.00,NULL,'active','trial','2026-10-11 13:43:20',NULL);
+INSERT INTO `user_repairmanprofile` VALUES (1,1,'John Doe','john@gmail.com',NULL,'',15.4866934,120.5966154,'Lolita Bldg., Lolita Bldg. (in front of Silayan) R-9, Tarlac City, 2300 Tarlac, Philippines','09171234567','','1',NULL,'refrigerator,washing-machine,air-conditioner,dryer','Updated Education','[{\"name\":\"Test Certification\",\"issued\":\"2024-01-15\",\"valid_until\":\"2025-01-15\"}]',NULL,4.50,NULL,'active','trial','2026-10-11 13:43:20',NULL),(2,2,'Jane Smith','jane@gmail.com',NULL,NULL,14.5547000,121.0244000,'Makati, Metro Manila',NULL,NULL,'1',NULL,NULL,NULL,NULL,NULL,0.00,NULL,'active','trial','2026-10-11 13:43:20',NULL),(7,8,'Juan Dela Cruz','dragecave@gmail.com',NULL,'',15.7089792,120.9171968,'PW58+HV Muñoz, Nueva Ecija, Philippines','09123456789','','1',NULL,NULL,'','[{\"name\":\"Tesda\",\"file\":null},{\"name\":\"Tesda 2\",\"file\":null}]',NULL,4.00,NULL,'active','trial','2026-10-11 13:43:20',NULL);
 /*!40000 ALTER TABLE `user_repairmanprofile` ENABLE KEYS */;
 UNLOCK TABLES;
 

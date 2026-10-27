@@ -63,7 +63,7 @@
   <script>
     (function(){
       function hsToggleSidebar(){var open=document.body.classList.toggle('hs-sidebar-open');var b=document.getElementById('hsHamburger');if(b)b.setAttribute('aria-expanded',String(open));}
-      function hsCloseSidebar(){document.body.classList.remove('hs-sidebar-open');var b=document.getElement_ById('hsHamburger');if(b)b.setAttribute('aria-expanded','false');}
+      function hsCloseSidebar(){document.body.classList.remove('hs-sidebar-open');var b=document.getElementById('hsHamburger');if(b)b.setAttribute('aria-expanded','false');}
       window.hsToggleSidebar=hsToggleSidebar;window.hsCloseSidebar=hsCloseSidebar;
       document.addEventListener('click',function(e){if(e.target.closest('.sidebar-link')||e.target.closest('.sidebar-logout'))hsCloseSidebar();});
       window.addEventListener('resize',function(){if(window.innerWidth>980)hsCloseSidebar();});
@@ -586,6 +586,22 @@
               var mobile = r.MobileNo || '';
               var tel = r.TelNo || '';
               var skills = r.Skills || 'N/A';
+              var skillLabels = {
+                'refrigerator': 'Refrigerator Repair',
+                'air-conditioner': 'Air Conditioner Repair',
+                'washing-machine': 'Washing Machine Repair',
+                'dishwasher': 'Dishwasher Repair',
+                'oven': 'Oven/Stove Repair',
+                'microwave': 'Microwave Repair',
+                'television': 'Television Repair',
+                'water-heater': 'Water Heater Repair',
+                'dryer': 'Dryer Repair',
+                'other': 'Other'
+              };
+              var skillsDisplay = skills.split(',').map(function(skill) {
+                skill = skill.trim();
+                return skillLabels[skill] || skill;
+              }).join(', ') || 'N/A';
               var rating = parseFloat(r.Ratings) || 0;
               var education = r.Education || 'N/A';
               var certs = r.Certifications || '';
@@ -610,6 +626,10 @@
               }
               var ini = name.split(' ').map(function(w){return w.charAt(0);}).join('').substring(0,2).toUpperCase();
               var stars = renderStars(rating);
+              var validIdUrl = '../../controllers/admin/valid-id.php?type=repairman&id=' + encodeURIComponent(r.ID);
+              var validIdHtml = r.Valid_ID
+                ? '<a href="' + validIdUrl + '" target="_blank" rel="noopener"><img data-valid-id-preview src="' + validIdUrl + '" alt="Repairman valid ID" style="display:block;max-width:100%;max-height:300px;object-fit:contain;border-radius:8px;"></a>'
+                : '<span style="font-size:0.92rem;font-weight:500;">No valid ID uploaded.</span>';
               var body = document.querySelector('#viewProfileModal .modal-body');
               if (body) {
                 body.innerHTML = '<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">' +
@@ -623,7 +643,12 @@
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Rating</div><div style="font-size:0.92rem;"><span class="stars">' + stars + '</span> ' + rating.toFixed(1) + '</div></div>' +
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Education</div><div style="font-size:0.92rem;font-weight:500;">' + education + '</div></div>' +
                   '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;">Certifications</div><div style="font-size:0.92rem;font-weight:500;">' + certsHtml + '</div></div>' +
+                  '<div style="padding:12px 14px;background:var(--panel);border-radius:10px;grid-column:span 2;"><div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:8px;">Valid ID</div>' + validIdHtml + '</div>' +
                   '</div>';
+                var idPreview = body.querySelector('[data-valid-id-preview]');
+                if (idPreview) idPreview.addEventListener('error', function() {
+                  this.parentNode.replaceWith(document.createTextNode('ID image unavailable.'));
+                });
               }
               openModal('viewProfileModal');
             }

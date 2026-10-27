@@ -50,6 +50,11 @@
               </div>
             </div>
             <div class="form-group">
+              <label for="validId">Valid ID <span style="color:var(--danger);">*</span></label>
+              <input type="file" id="validId" accept="image/jpeg,image/png,image/webp" required />
+              <small style="color:var(--muted);font-size:0.78rem;">Upload a clear photo of a valid ID (JPG, PNG, or WEBP; maximum 5 MB).</small>
+            </div>
+            <div class="form-group">
               <label for="education">Educational Background</label>
               <textarea id="education" rows="3" placeholder="e.g. TESDA NC II Refrigeration and Air Conditioning, BS in Computer Science from AMA" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;font-family:inherit;resize:vertical;"></textarea>
               <small style="color: var(--muted); font-size: 0.78rem;">List your educational background and relevant training</small>
@@ -228,7 +233,10 @@
       var mobile = document.getElementById('mobile').value.trim();
       var password = document.getElementById('password').value;
       var confirmPassword = document.getElementById('confirmPassword').value;
+      var validId = document.getElementById('validId').files[0];
       if (!name || !email || !mobile || !password || !confirmPassword) { showAlert('Please fill in all fields', 'warning'); return; }
+      if (!validId) { showAlert('Please upload a valid ID image.', 'warning'); return; }
+      if (validId.size > 5 * 1024 * 1024) { showAlert('Valid ID image must be 5 MB or smaller.', 'warning'); return; }
       if (!isValidFullName(name)) { showAlert('Please enter your full name (first and last name, letters only).', 'warning'); return; }
       if (!isValidPassword(password)) { showAlert('Password must be at least 6 characters and include at least one number and one symbol (e.g. !@#$).', 'warning'); return; }
       if (!isPhMobile(mobile)) { showAlert('Please enter a valid Philippine mobile number (e.g. 09171234567 or +639171234567)', 'warning'); return; }
@@ -248,6 +256,8 @@
       var email = document.getElementById('email').value.trim();
       var mobile = document.getElementById('mobile').value.trim();
       var password = document.getElementById('password').value;
+      var validId = document.getElementById('validId').files[0];
+      if (!validId) { showAlert('Please upload a valid ID image.', 'warning'); return; }
       var btn = this; var orig = btn.innerHTML;
       btn.innerHTML = 'Creating Account...'; btn.disabled = true;
       var education = document.getElementById('education').value.trim();
@@ -256,6 +266,7 @@
         if (sel.value) skills.push(sel.value);
       });
       var fd = new FormData();
+      fd.append('valid_id', validId);
       fd.append('name', name); fd.append('email', email); fd.append('mobile', mobile);
       fd.append('password', password); fd.append('role', 'repairman'); fd.append('education', education);
       fd.append('agree_terms', document.getElementById('agreeTerms').checked ? '1' : '0');

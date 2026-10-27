@@ -1364,7 +1364,7 @@ function getAdminCustomerById($id)
     $stmt = $conn->prepare("
         SELECT users.*, user_clientprofile.ID AS ProfileID, user_clientprofile.Name AS ProfileName, 
                user_clientprofile.Email AS ProfileEmail, user_clientprofile.Status AS ProfileStatus,
-               user_clientprofile.Address_Line1, user_clientprofile.Address_Line2, user_clientprofile.Brgy, 
+        user_clientprofile.Valid_ID, user_clientprofile.Formatted_Address, user_clientprofile.Address_Line1, user_clientprofile.Address_Line2, user_clientprofile.Brgy,
                user_clientprofile.City_Min, user_clientprofile.Province, user_clientprofile.Region, user_clientprofile.Zip_Code
         FROM users 
         JOIN user_clientprofile ON users.ID = user_clientprofile.User_ID 

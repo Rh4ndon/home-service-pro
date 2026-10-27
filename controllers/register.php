@@ -105,6 +105,33 @@ if (isEmailTaken($email)) {
     exit;
 }
 
+$validIdUpload = $_FILES['valid_id'] ?? null;
+if (!$validIdUpload || !isset($validIdUpload['error']) || $validIdUpload['error'] === UPLOAD_ERR_NO_FILE) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Please upload a valid ID image.']);
+    exit;
+}
+if ($validIdUpload['error'] !== UPLOAD_ERR_OK) {
+    http_response_code(400);
+    echo json_encode(['error' => 'The valid ID upload failed. Please choose an image up to 5 MB and try again.']);
+    exit;
+}
+
+try {
+    $validIdPath = saveUploadedFileTo(
+        $validIdUpload['tmp_name'],
+        $validIdUpload['name'],
+        'uploads/ids',
+        'valid_id',
+        ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'],
+        5 * 1024 * 1024
+    );
+} catch (Exception $e) {
+    http_response_code(400);
+    echo json_encode(['error' => $e->getMessage()]);
+    exit;
+}
+
 $userId = createUser($name, $email, $password, $role, ($role === 'repairman' ? 'inactive' : 'active'));
 saveTermsAcceptance($userId);
 
@@ -113,6 +140,7 @@ if ($role === 'customer') {
         'Name' => $name,
         'Email' => $email,
         'User_ID' => $userId,
+        'Valid_ID' => $validIdPath,
         'Latitude' => $latitude,
         'Longitude' => $longitude,
         'Formatted_Address' => $formatted_address ?: null
@@ -133,6 +161,7 @@ if ($role === 'repairman') {
         'Skills' => $skills ?: null,
         'Certifications' => $certs_json,
         'User_ID' => $userId,
+        'Valid_ID' => $validIdPath,
         'Status' => 'inactive',
         'Latitude' => $latitude,
         'Longitude' => $longitude,
