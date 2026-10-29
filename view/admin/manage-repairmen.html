@@ -679,40 +679,6 @@
               }
               var educationInput = document.getElementById('editEducation');
               if (educationInput) educationInput.value = r.Education || '';
-              // Populate skills dropdown
-              if (r.Skills) {
-                var skillsArr = typeof r.Skills === 'string' ? r.Skills.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : r.Skills;
-                var skillRows = document.querySelectorAll('#addSkillRows .skill-row');
-                skillsArr.forEach(function(skill, i) {
-                  if (i === 0 && skillRows.length === 1) {
-                    skillRows[0].querySelector('.skill-select').value = skill;
-                    skillRows[0].querySelector('button').hidden = false;
-                  } else {
-                    // Add a new row
-                    var rows = document.getElementById('addSkillRows');
-                    var row = document.createElement('div');
-                    row.className = 'skill-row';
-                    row.style.cssText = 'display:flex; gap: 8px; margin-bottom: 8px; align-items: center;';
-                    row.innerHTML = '<select class="skill-select" style="flex:1; padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:0.88rem;">' +
-                      '<option value="">Select a skill...</option>' +
-                      '<option value="refrigerator">Refrigerator Repair</option>' +
-                      '<option value="air-conditioner">Air Conditioner Repair</option>' +
-                      '<option value="washing-machine">Washing Machine Repair</option>' +
-                      '<option value="dishwasher">Dishwasher Repair</option>' +
-                      '<option value="oven">Oven/Stove Repair</option>' +
-                      '<option value="microwave">Microwave Repair</option>' +
-                      '<option value="television">Television Repair</option>' +
-                      '<option value="water-heater">Water Heater Repair</option>' +
-                      '<option value="dryer">Dryer Repair</option>' +
-                      '<option value="other">Other</option>' +
-                      '</select>' +
-                      '<button type="button" class="btn btn-secondary btn-sm" style="padding:8px 10px; width: 36px;" onclick="removeAdminSkillRow(this)" title="Remove">&times;</button>';
-                    rows.appendChild(row);
-                    row.querySelector('.skill-select').value = skill;
-                    row.querySelector('button').hidden = false;
-                  }
-                })
-              }
               openModal('editRepairmanModal');
             }
           })
