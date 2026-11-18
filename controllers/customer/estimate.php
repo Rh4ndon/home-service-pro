@@ -37,6 +37,7 @@ if (!$estimate) {
 $estimate['Ticket_ID'] = (int)$estimate['Ticket_ID'];
 $estimate['Schedule_ID'] = $estimate['Schedule_ID'] !== null ? (int)$estimate['Schedule_ID'] : null;
 $estimate['Repairman_ID'] = (int)$estimate['Repairman_ID'];
+$estimate['Fix_Price'] = (float)($estimate['Fix_Price'] ?? 0);
 $estimate['Total'] = (float)($estimate['Total'] ?? 0);
 if (!isset($estimate['Items']) || !is_array($estimate['Items'])) {
     $estimate['Items'] = [];

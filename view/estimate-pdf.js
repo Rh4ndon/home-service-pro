@@ -63,6 +63,7 @@
       ticketId: est.Ticket_ID || est.ticket_id || est.ticketId || '',
       appliance: est.Appliance_Name || est.appliance_name || est.appliance || 'Appliance',
       items: items,
+      fixPrice: parseFloat(est.Fix_Price !== undefined ? est.Fix_Price : (est.fix_price !== undefined ? est.fix_price : 0)) || 0,
       total: total,
       createdAt: est.Created_At || est.created_at || ''
     };
@@ -94,6 +95,16 @@
         { text: '—', style: 'tableCell' },
         { text: '—', style: 'tableCell' },
         { text: money(0), style: 'tableCell', alignment: 'right' }
+      ]);
+    }
+
+    // Fix price (base service fee) row, before the total.
+    if (est.fixPrice > 0) {
+      body.push([
+        { text: est.appliance, style: 'tableCell' },
+        { text: '—', style: 'tableCell' },
+        { text: 'Fix Price', style: 'tableCell' },
+        { text: money(est.fixPrice), style: 'tableCell', alignment: 'right' }
       ]);
     }
 

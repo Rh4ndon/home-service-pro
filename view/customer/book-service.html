@@ -404,6 +404,11 @@
     if (sidebarAvatar) sidebarAvatar.textContent = (userName || 'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
 
     function typeLabel(t) { return TYPE_LABELS[t] || t || 'Appliance'; }
+    function peso(value) {
+      var n = parseFloat(value);
+      if (isNaN(n)) n = 0;
+      return '\u20B1' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
     function normalize(a) {
       if (!a) a = {};
       return {
@@ -622,6 +627,7 @@
           var certArr = JSON.parse(r.Certifications || '[]');
           certs = Array.isArray(certArr) ? certArr.length : 0;
         } catch(e) { certs = 0; }
+        var fixPrice = parseFloat(r.Fix_Price || 0) || 0;
 
         var infoHtml = '<div style="min-width:220px;max-width:300px;font-family:Inter,system-ui,sans-serif;font-size:13px;">' +
           '<div style="font-weight:800;font-size:1.05rem;margin-bottom:4px;">' + escHtml(r.Name || '') + '</div>' +
@@ -630,6 +636,7 @@
           '<div style="color:#6b7280;margin-bottom:3px;">Completed repairs: ' + (r.CompletedRepairs || 0) + '</div>' +
           (skills ? '<div style="color:#6b7280;margin-bottom:3px;">Skills: ' + escHtml(skills) + '</div>' : '') +
           (certs ? '<div style="color:#6b7280;margin-bottom:3px;">Certificates: ' + certs + '</div>' : '') +
+          '<div style="color:#6b7280;margin-bottom:3px;">Fix Price: ' + peso(fixPrice) + '</div>' +
           '<div style="margin-top:8px;display:flex;gap:6px;">' +
             '<button onclick="window._viewRepairmanFromMap(' + idx + ');" style="padding:6px 12px;background:#fff;color:#1f2937;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;font-weight:600;cursor:pointer;">View Profile</button>' +
             '<button onclick="window._selectRepairmanFromMap(' + idx + ');" style="padding:6px 14px;background:#2563eb;color:#fff;border:0;border-radius:6px;font-size:0.85rem;font-weight:600;cursor:pointer;">Select</button>' +
@@ -652,6 +659,7 @@
           '<div style="color:#6b7280;font-size:0.82rem;">Completed repairs: ' + (r.CompletedRepairs || 0) + '</div>' +
           (skills ? '<div style="color:#6b7280;font-size:0.82rem;margin-top:3px;">Skills: ' + escHtml(skills) + '</div>' : '') +
           (certs ? '<div style="color:#6b7280;font-size:0.82rem;">Certificates: ' + certs + '</div>' : '') +
+          '<div style="color:#6b7280;font-size:0.82rem;">Fix Price: ' + peso(fixPrice) + '</div>' +
           '</div>' +
           '<div style="text-align:right;"><div style="font-size:0.82rem;color:#6b7280;margin-bottom:6px;">' + (r.route_used ? 'Road distance' : 'Est. distance') + '</div>' +
           '<div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">' +

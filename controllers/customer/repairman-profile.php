@@ -75,6 +75,7 @@ echo json_encode([
         'user_id' => (int) $repairman['User_ID'],
         'name' => $repairman['Name'],
         'rating' => round((float) $repairman['Ratings'], 1),
+        'fix_price' => round((float) ($repairman['Fix_Price'] ?? 0), 2),
         'review_count' => (int) $repairman['ReviewCount'],
         'completed_repairs' => (int) $repairman['CompletedRepairs'],
         'member_since' => $repairman['Member_Since'],

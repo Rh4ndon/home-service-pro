@@ -505,6 +505,13 @@ var actions = '<div class="action-btns">';
                 '<div><strong>Price:</strong> ' + peso(item.Price) + '</div>' +
               '</div>';
             });
+            var fixPrice = parseFloat(est.Fix_Price || 0) || 0;
+            if (fixPrice > 0) {
+              html += '<div style="padding:8px 0;border-bottom:1px solid var(--line);">' +
+                '<div style="font-weight:600;color:var(--text);">Fix Price</div>' +
+                '<div><strong>Price:</strong> ' + peso(fixPrice) + '</div>' +
+              '</div>';
+            }
             html += '<div style="margin-top:10px;font-weight:700;color:var(--text);">Total: ' + peso(est.Total) + '</div>';
             body.innerHTML = html;
             downloadBtn.style.display = '';

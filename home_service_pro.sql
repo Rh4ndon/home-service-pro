@@ -161,6 +161,7 @@ CREATE TABLE `repair_estimates` (
   `Schedule_ID` int(11) DEFAULT NULL,
   `Repairman_ID` int(11) NOT NULL,
   `Appliance_Name` varchar(255) NOT NULL DEFAULT '',
+  `Fix_Price` decimal(10,2) NOT NULL DEFAULT 0.00,
   `Created_At` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`ID`),
   KEY `idx_estimate_ticket` (`Ticket_ID`),
@@ -417,6 +418,7 @@ CREATE TABLE `user_repairmanprofile` (
   `Certifications` text DEFAULT NULL,
   `Assessment` text DEFAULT NULL,
   `Ratings` decimal(3,2) DEFAULT 0.00,
+  `Fix_Price` decimal(10,2) NOT NULL DEFAULT 0.00,
   `Reviews` text DEFAULT NULL,
   `Status` enum('active','inactive') NOT NULL DEFAULT 'active',
   `Subscription_Status` enum('trial','subscribed','unsubscribed') NOT NULL DEFAULT 'unsubscribed',
@@ -512,7 +514,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `user_repairmanprofile` WRITE;
 /*!40000 ALTER TABLE `user_repairmanprofile` DISABLE KEYS */;
-INSERT INTO `user_repairmanprofile` VALUES (1,1,'John Doe','john@gmail.com',NULL,'',15.4866934,120.5966154,'Lolita Bldg., Lolita Bldg. (in front of Silayan) R-9, Tarlac City, 2300 Tarlac, Philippines','09171234567','','1',NULL,'refrigerator,washing-machine,air-conditioner,dryer','Updated Education','[{\"name\":\"Test Certification\",\"issued\":\"2024-01-15\",\"valid_until\":\"2025-01-15\"}]',NULL,4.50,NULL,'active','trial','2026-10-11 13:43:20',NULL),(2,2,'Jane Smith','jane@gmail.com',NULL,NULL,14.5547000,121.0244000,'Makati, Metro Manila',NULL,NULL,'1',NULL,NULL,NULL,NULL,NULL,0.00,NULL,'active','trial','2026-10-11 13:43:20',NULL),(7,8,'Juan Dela Cruz','dragecave@gmail.com',NULL,'',15.7089792,120.9171968,'PW58+HV Muñoz, Nueva Ecija, Philippines','09123456789','','1',NULL,NULL,'','[{\"name\":\"Tesda\",\"file\":null},{\"name\":\"Tesda 2\",\"file\":null}]',NULL,4.00,NULL,'active','trial','2026-10-11 13:43:20',NULL);
+INSERT INTO `user_repairmanprofile` VALUES (1,1,'John Doe','john@gmail.com',NULL,'',15.4866934,120.5966154,'Lolita Bldg., Lolita Bldg. (in front of Silayan) R-9, Tarlac City, 2300 Tarlac, Philippines','09171234567','','1',NULL,'refrigerator,washing-machine,air-conditioner,dryer','Updated Education','[{\"name\":\"Test Certification\",\"issued\":\"2024-01-15\",\"valid_until\":\"2025-01-15\"}]',NULL,4.50,0.00,NULL,'active','trial','2026-10-11 13:43:20',NULL),(2,2,'Jane Smith','jane@gmail.com',NULL,NULL,14.5547000,121.0244000,'Makati, Metro Manila',NULL,NULL,'1',NULL,NULL,NULL,NULL,NULL,0.00,0.00,NULL,'active','trial','2026-10-11 13:43:20',NULL),(7,8,'Juan Dela Cruz','dragecave@gmail.com',NULL,'',15.7089792,120.9171968,'PW58+HV Muñoz, Nueva Ecija, Philippines','09123456789','','1',NULL,NULL,'','[{\"name\":\"Tesda\",\"file\":null},{\"name\":\"Tesda 2\",\"file\":null}]',NULL,4.00,0.00,NULL,'active','trial','2026-10-11 13:43:20',NULL);
 /*!40000 ALTER TABLE `user_repairmanprofile` ENABLE KEYS */;
 UNLOCK TABLES;
 

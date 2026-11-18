@@ -27,6 +27,12 @@
     return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
+  function peso(value) {
+    var n = parseFloat(value);
+    if (isNaN(n)) n = 0;
+    return '\u20B1' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
   var SKILL_LABELS = {
     'refrigerator': 'Refrigerator Repair',
     'air-conditioner': 'Air Conditioner Repair',
@@ -109,6 +115,7 @@
         '<div class="rp-stat"><b>' + r.completed_repairs + '</b><span class="rp-muted">Completed repairs</span></div>' +
         '<div class="rp-stat"><b>' + r.review_count + '</b><span class="rp-muted">Customer reviews</span></div>' +
         '<div class="rp-stat"><b>' + (r.certifications ? r.certifications.length : 0) + '</b><span class="rp-muted">Certificates</span></div>' +
+        '<div class="rp-stat"><b>' + escHtml(peso(r.fix_price)) + '</b><span class="rp-muted">Fix price</span></div>' +
         (r.member_since ? '<div class="rp-stat"><b>' + escHtml(fmtDate(r.member_since)) + '</b><span class="rp-muted">Member since</span></div>' : '') +
       '</div>';
 
@@ -134,6 +141,7 @@
     } else {
       html += '<div class="rp-muted">No certificates uploaded.</div>';
     }
+    html += '<div style="margin-top:10px;font-size:0.9rem;border-top:1px solid var(--line);padding-top:10px;"><strong>Fix Price:</strong> ' + escHtml(peso(r.fix_price)) + '</div>';
     html += '</div>';
 
     html += '<div class="rp-section"><h4>Recent reviews</h4>';

@@ -46,6 +46,7 @@ function handle_get() {
         $estimate['Ticket_ID'] = (int)$estimate['Ticket_ID'];
         $estimate['Schedule_ID'] = $estimate['Schedule_ID'] !== null ? (int)$estimate['Schedule_ID'] : null;
         $estimate['Repairman_ID'] = (int)$estimate['Repairman_ID'];
+        $estimate['Fix_Price'] = (float)($estimate['Fix_Price'] ?? 0);
         $estimate['Total'] = (float)($estimate['Total'] ?? 0);
         if (!isset($estimate['Items']) || !is_array($estimate['Items'])) {
             $estimate['Items'] = [];
@@ -134,6 +135,14 @@ function handle_accept($user_id) {
         return;
     }
 
+    $fix_price_raw = $_POST['fix_price'] ?? 0;
+    if (!is_numeric($fix_price_raw) || (float)$fix_price_raw < 0) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Fix price must be a valid amount of zero or more."]);
+        return;
+    }
+    $fix_price = round((float)$fix_price_raw, 2);
+
     $repairman_id = getRepairmanIdFromUser($user_id);
     if (!$repairman_id) {
         http_response_code(404);
@@ -173,7 +182,8 @@ function handle_accept($user_id) {
             $ticket_id,
             (int)$schedule_id,
             $repairman_id,
-            $appliance_name
+            $appliance_name,
+            $fix_price
         );
 
         foreach ($line_items as $index => $item) {
@@ -184,7 +194,7 @@ function handle_accept($user_id) {
         $client_user_id = (int)($details['client_user_id'] ?? 0);
         if ($client_user_id) {
             $lines = [];
-            $total = 0;
+            $total = $fix_price;
             foreach ($line_items as $index => $item) {
                 $line_total = (float)$item['price'];
                 $total += $line_total;
@@ -195,6 +205,7 @@ function handle_accept($user_id) {
                 . "Ticket #{$ticket_id}\n"
                 . "Appliance: {$appliance_name}\n\n"
                 . implode("\n", $lines) . "\n\n"
+                . ($fix_price > 0 ? "Fix Price: ₱" . number_format($fix_price, 2) . "\n" : "")
                 . "Total Estimated Price: ₱" . number_format($total, 2) . "\n\n"
                 . "You can download the estimate PDF from this chat or from My Tickets.";
             sendChatMessage($user_id, 'repairman', $client_user_id, 'customer', $message, 'estimate', $ticket_id);
@@ -368,6 +379,14 @@ function handle_update_estimate($user_id) {
         return;
     }
 
+    $fix_price_raw = $_POST['fix_price'] ?? 0;
+    if (!is_numeric($fix_price_raw) || (float)$fix_price_raw < 0) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Fix price must be a valid amount of zero or more."]);
+        return;
+    }
+    $fix_price = round((float)$fix_price_raw, 2);
+
     $repairman_id = getRepairmanIdFromUser($user_id);
     if (!$repairman_id) {
         http_response_code(404);
@@ -391,7 +410,7 @@ function handle_update_estimate($user_id) {
         }
 
         // Update the estimate
-        updateRepairEstimate((int)$estimate_id, $repairman_id, $line_items);
+        updateRepairEstimate((int)$estimate_id, $repairman_id, $line_items, $fix_price);
 
         // Send updated estimate to chat
         $ticket_id = (int)$details['ticket_id'];
@@ -401,7 +420,7 @@ function handle_update_estimate($user_id) {
             if ($appliance_name === '') $appliance_name = 'Appliance';
 
             $lines = [];
-            $total = 0;
+            $total = $fix_price;
             foreach ($line_items as $index => $item) {
                 $line_total = (float)$item['price'];
                 $total += $line_total;
@@ -412,6 +431,7 @@ function handle_update_estimate($user_id) {
                 . "Ticket #{$ticket_id}\n"
                 . "Appliance: {$appliance_name}\n\n"
                 . implode("\n", $lines) . "\n\n"
+                . ($fix_price > 0 ? "Fix Price: ₱" . number_format($fix_price, 2) . "\n" : "")
                 . "Total Estimated Price: ₱" . number_format($total, 2) . "\n\n"
                 . "You can download the updated estimate PDF from this chat or from My Tickets.";
             sendChatMessage($user_id, 'repairman', $client_user_id, 'customer', $message, 'estimate', $ticket_id);

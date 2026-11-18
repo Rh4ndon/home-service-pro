@@ -78,10 +78,17 @@ function handle_update($user_id) {
     $latitude = $_POST['latitude'] ?? '';
     $longitude = $_POST['longitude'] ?? '';
     $formatted_address = $_POST['formatted_address'] ?? '';
+    $fix_price_raw = $_POST['fix_price'] ?? null;
 
     if (empty($name) || empty($email)) {
         http_response_code(400);
         echo json_encode(["success" => false, "message" => "Name and Email are required."]);
+        return;
+    }
+
+    if ($fix_price_raw !== null && $fix_price_raw !== '' && (!is_numeric($fix_price_raw) || (float)$fix_price_raw < 0)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Fix price must be a valid amount of zero or more."]);
         return;
     }
 
@@ -96,6 +103,9 @@ function handle_update($user_id) {
             if ($profile) {
                 updateRepairmanEducation($profile['ID'], $education);
             }
+        }
+        if ($fix_price_raw !== null && $fix_price_raw !== '') {
+            updateRepairmanFixPrice($user_id, (float)$fix_price_raw);
         }
         echo json_encode(["success" => true, "message" => "Profile updated successfully."]);
     } else {

@@ -584,11 +584,12 @@ function getRepairScheduleDetails($schedule_id, $repairman_id)
     return $stmt->get_result()->fetch_assoc();
 }
 
-function createRepairEstimate($ticket_id, $schedule_id, $repairman_id, $appliance_name)
+function createRepairEstimate($ticket_id, $schedule_id, $repairman_id, $appliance_name, $fix_price = 0)
 {
     global $conn;
-    $stmt = $conn->prepare("INSERT INTO repair_estimates (Ticket_ID, Schedule_ID, Repairman_ID, Appliance_Name) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("iiis", $ticket_id, $schedule_id, $repairman_id, $appliance_name);
+    $fix_price = (float)$fix_price;
+    $stmt = $conn->prepare("INSERT INTO repair_estimates (Ticket_ID, Schedule_ID, Repairman_ID, Appliance_Name, Fix_Price) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("iiisd", $ticket_id, $schedule_id, $repairman_id, $appliance_name, $fix_price);
     $stmt->execute();
     return $conn->insert_id;
 }
@@ -616,7 +617,8 @@ function getLatestRepairEstimate($ticket_id)
     $stmt->execute();
     $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-    $total = 0;
+    $estimate['Fix_Price'] = (float)($estimate['Fix_Price'] ?? 0);
+    $total = $estimate['Fix_Price'];
     foreach ($items as &$item) {
         $item['Price'] = (float)$item['Price'];
         $total += $item['Price'];
@@ -643,7 +645,8 @@ function getRepairEstimateBySchedule($schedule_id, $repairman_id)
     $stmt->execute();
     $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-    $total = 0;
+    $estimate['Fix_Price'] = (float)($estimate['Fix_Price'] ?? 0);
+    $total = $estimate['Fix_Price'];
     foreach ($items as &$item) {
         $item['Price'] = (float)$item['Price'];
         $total += $item['Price'];
@@ -655,7 +658,7 @@ function getRepairEstimateBySchedule($schedule_id, $repairman_id)
     return $estimate;
 }
 
-function updateRepairEstimate($estimate_id, $repairman_id, $line_items)
+function updateRepairEstimate($estimate_id, $repairman_id, $line_items, $fix_price = null)
 {
     global $conn;
     // Verify the estimate belongs to this repairman
@@ -672,6 +675,14 @@ function updateRepairEstimate($estimate_id, $repairman_id, $line_items)
         $stmt = $conn->prepare("DELETE FROM repair_estimate_items WHERE Estimate_ID = ?");
         $stmt->bind_param("i", $estimate_id);
         $stmt->execute();
+
+        // Store the accepted fix price with the estimate header.
+        if ($fix_price !== null) {
+            $fix_price = (float)$fix_price;
+            $stmt = $conn->prepare("UPDATE repair_estimates SET Fix_Price = ? WHERE ID = ? AND Repairman_ID = ?");
+            $stmt->bind_param("dii", $fix_price, $estimate_id, $repairman_id);
+            $stmt->execute();
+        }
 
         // Add new items
         foreach ($line_items as $index => $item) {
@@ -1006,6 +1017,15 @@ function updateRepairmanProfile($user_id, $name, $email, $address, $mobile, $fac
     global $conn;
     $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Name=?, Email=?, Address=?, MobileNo=?, FacebookPage=? WHERE User_ID=?");
     $stmt->bind_param("sssssi", $name, $email, $address, $mobile, $facebook_page, $user_id);
+    return $stmt->execute();
+}
+
+function updateRepairmanFixPrice($user_id, $fix_price)
+{
+    global $conn;
+    $fix_price = (float)$fix_price;
+    $stmt = $conn->prepare("UPDATE user_repairmanprofile SET Fix_Price=? WHERE User_ID=?");
+    $stmt->bind_param("di", $fix_price, $user_id);
     return $stmt->execute();
 }
 
@@ -1954,7 +1974,7 @@ function getAvailableRepairmenWithLocation($skill = null, $limit = 50)
     $sql = "
         SELECT urp.ID, urp.User_ID, urp.Name, urp.Email, urp.Latitude, urp.Longitude,
                urp.Formatted_Address, urp.MobileNo, urp.Availability, urp.Skills,
-               urp.Education, urp.Certifications, urp.Ratings, urp.Reviews, urp.Details,
+               urp.Education, urp.Certifications, urp.Ratings, urp.Fix_Price, urp.Reviews, urp.Details,
                u.Status AS AccountStatus,
                (SELECT COUNT(*) FROM repairhistory rh WHERE rh.Repairman_ID = urp.ID) AS CompletedRepairs
         FROM user_repairmanprofile urp
@@ -2485,7 +2505,7 @@ function getRepairmanPublicProfile($profile_id = null, $user_id = null)
     $where = $profile_id !== null ? "urp.ID = ?" : "urp.User_ID = ?";
     $key = $profile_id !== null ? $profile_id : $user_id;
     $stmt = $conn->prepare("
-        SELECT urp.ID, urp.User_ID, urp.Name, urp.Ratings, urp.Skills, urp.Education,
+        SELECT urp.ID, urp.User_ID, urp.Name, urp.Ratings, urp.Fix_Price, urp.Skills, urp.Education,
                urp.Certifications, urp.Availability, urp.FacebookPage, urp.Status,
                u.Created_At AS Member_Since,
                (SELECT COUNT(*) FROM repairhistory rh WHERE rh.Repairman_ID = urp.ID) AS CompletedRepairs,
